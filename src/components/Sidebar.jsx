@@ -8,7 +8,7 @@ const Sidebar = () => {
     { icon: 'bi-speedometer2', text: 'Dashboard', path: '/dashboard' },
     { icon: 'bi-book', text: 'Stories', path: '/stories' },
     { icon: 'bi-geo-alt', text: 'Locality', path: '/locality' },
-    { icon: 'bi-people', text: 'Users', path: '/users' },
+    // { icon: 'bi-people', text: 'Users', path: '/users' },
     // { icon: 'bi-gear', text: 'Settings', path: '/settings' },
   ];
 
