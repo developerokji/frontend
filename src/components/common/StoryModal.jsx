@@ -1,4 +1,6 @@
 import React from 'react';
+import CustomButton from './CustomButton';
+import CustomInput from './CustomInput';
 
 const StoryModal = ({ show, handleClose, handleSave }) => {
   return (
@@ -22,31 +24,36 @@ const StoryModal = ({ show, handleClose, handleSave }) => {
                 </small>
               </div>
               
-              {/* <div className="mb-3">
-                <label htmlFor="storyTitle" className="form-label fw-medium">
-                  <i className="bi bi-type me-2"></i>
-                  Story Title
-                </label>
-                <input type="text" className="form-control" id="storyTitle" placeholder="Enter story title..." />
-              </div>
+              <CustomInput
+                label="Story Title"
+                type="text"
+                id="storyTitle"
+                name="storyTitle"
+                placeholder="Enter story title..."
+                icon="bi-type"
+                helperText="Give your story a catchy title"
+              />
               
-              <div className="mb-3">
-                <label htmlFor="storyDescription" className="form-label fw-medium">
-                  <i className="bi bi-text-paragraph me-2"></i>
-                  Description
-                </label>
-                <textarea className="form-control" id="storyDescription" rows="3" placeholder="Enter story description..."></textarea>
-              </div> */}
+              <CustomInput
+                label="Description"
+                type="textarea"
+                id="storyDescription"
+                name="storyDescription"
+                placeholder="Enter story description..."
+                rows="3"
+                icon="bi-text-paragraph"
+                helperText="Describe your story in a few sentences"
+              />
             </div>
             <div className="modal-footer border-top">
-              <button type="button" className="btn btn-secondary" onClick={handleClose}>
+              <CustomButton variant="secondary" onClick={handleClose}>
                 <i className="bi bi-x-circle me-2"></i>
                 Close
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleSave}>
+              </CustomButton>
+              <CustomButton variant="primary" onClick={handleSave}>
                 <i className="bi bi-check-circle me-2"></i>
                 Save changes
-              </button>
+              </CustomButton>
             </div>
           </div>
         </div>

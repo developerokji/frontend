@@ -10,7 +10,7 @@ const DataTable = ({ data, columns, loading = false, className = '' }) => {
     );
   }
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div className="text-center py-4">
         <i className="bi bi-inbox fs-1 text-muted d-block mb-2"></i>

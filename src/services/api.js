@@ -1,6 +1,6 @@
 // API Service with Mock Data for testing
 
-const API_BASE_URL = 'http://localhost:3000/api';
+import { api } from './apiClient';
 
 // Mock data for testing
 const mockStories = [
@@ -26,6 +26,12 @@ const mockLocalities = [
   { id: 3, name: 'East Zone', state: 'Texas', city: 'Houston', stories: 2, users: 18 }
 ];
 
+const mockBanners = [
+  { id: 1, title: 'Summer Sale Banner', description: 'Get 50% off on all summer collection items. Limited time offer!', status: 'Active', createdAt: '2024-01-15' },
+  { id: 2, title: 'New Year Special', description: 'Celebrate New Year with amazing discounts and special offers on all products.', status: 'Active', createdAt: '2024-01-10' },
+  { id: 3, title: 'Welcome Banner', description: 'Welcome to our amazing platform. Explore our features and services.', status: 'Inactive', createdAt: '2024-01-05' }
+];
+
 const mockDashboardStats = {
   totalStories: 24,
   activeUsers: 156,
@@ -40,81 +46,112 @@ const mockDashboardStats = {
 // Stories API
 export const storiesAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Filter mock data based on search and pagination
-    let filteredData = mockStories;
-    if (search) {
-      filteredData = filteredData.filter(story => 
-        story.image.toLowerCase().includes(search.toLowerCase()) ||
-        story.date.toLowerCase().includes(search.toLowerCase())
-      );
+    try {
+      const response = await api.get('/v1/stories', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Stories API Error:', error);
+      // Fallback to mock data
+      let filteredData = mockStories;
+      if (search) {
+        filteredData = filteredData.filter(story => 
+          story.date.toLowerCase().includes(search.toLowerCase()) ||
+          story.image.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedData = filteredData.slice(startIndex, endIndex);
+      
+      return {
+        data: paginatedData,
+        total: filteredData.length,
+        page: page,
+        limit: limit
+      };
     }
-    
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-    
-    return {
-      data: paginatedData,
-      total: filteredData.length,
-      page,
-      limit
-    };
   },
 
   getById: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const story = mockStories.find(s => s.id === id);
-    return {
-      data: story
-    };
+    try {
+      const response = await api.get(`/stories/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Story API Error:', error);
+      const story = mockStories.find(s => s.id === parseInt(id));
+      if (!story) throw new Error('Story not found');
+      return { data: story };
+    }
   },
 
   create: async (storyData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newStory = {
-      id: mockStories.length + 1,
-      date: new Date().toLocaleString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: '2-digit', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-      image: new Date().getFullYear().toString(),
-      status: 'On',
-      ...storyData
-    };
-    mockStories.push(newStory);
-    return {
-      data: newStory,
-      message: 'Story created successfully'
-    };
+    try {
+      const response = await api.post('/stories', storyData);
+      return response;
+    } catch (error) {
+      console.error('Create Story Error:', error);
+      // Fallback to mock
+      const newStory = {
+        id: mockStories.length + 1,
+        date: new Date().toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        image: new Date().getFullYear().toString(),
+        status: 'On',
+        ...storyData
+      };
+      mockStories.push(newStory);
+      return {
+        data: newStory,
+        message: 'Story created successfully'
+      };
+    }
   },
 
   update: async (id, storyData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const index = mockStories.findIndex(s => s.id === id);
-    if (index !== -1) {
-      mockStories[index] = { ...mockStories[index], ...storyData };
+    try {
+      const response = await api.put(`/stories/${id}`, storyData);
+      return response;
+    } catch (error) {
+      console.error('Update Story Error:', error);
+      // Fallback to mock
+      const index = mockStories.findIndex(s => s.id === parseInt(id));
+      if (index === -1) throw new Error('Story not found');
+      
+      mockStories[index] = {
+        ...mockStories[index],
+        ...storyData
+      };
+      
+      return {
+        data: mockStories[index],
+        message: 'Story updated successfully'
+      };
     }
-    return {
-      data: mockStories[index],
-      message: 'Story updated successfully'
-    };
   },
 
   delete: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const index = mockStories.findIndex(s => s.id === id);
-    if (index !== -1) {
+    try {
+      const response = await api.delete(`/stories/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Story Error:', error);
+      // Fallback to mock
+      const index = mockStories.findIndex(s => s.id === parseInt(id));
+      if (index === -1) throw new Error('Story not found');
+      
       mockStories.splice(index, 1);
+      return {
+        message: 'Story deleted successfully'
+      };
     }
-    return {
-      message: 'Story deleted successfully'
-    };
   }
 };
 
@@ -184,7 +221,87 @@ export const localitiesAPI = {
   }
 };
 
-// Dashboard API
+// Banners API
+export const bannersAPI = {
+  getAll: async (page = 1, limit = 10, search = '') => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    let filteredData = mockBanners;
+    if (search) {
+      filteredData = filteredData.filter(banner => 
+        banner.title.toLowerCase().includes(search.toLowerCase()) ||
+        banner.description.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+    
+    return {
+      data: paginatedData,
+      total: filteredData.length,
+      page: page,
+      limit: limit
+    };
+  },
+
+  getById: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const banner = mockBanners.find(b => b.id === parseInt(id));
+    if (!banner) {
+      throw new Error('Banner not found');
+    }
+    return {
+      data: banner
+    };
+  },
+
+  create: async (bannerData) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const newBanner = {
+      id: mockBanners.length + 1,
+      createdAt: new Date().toISOString().split('T')[0],
+      ...bannerData
+    };
+    mockBanners.push(newBanner);
+    return {
+      data: newBanner,
+      message: 'Banner created successfully'
+    };
+  },
+
+  update: async (id, bannerData) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const index = mockBanners.findIndex(b => b.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Banner not found');
+    }
+    
+    mockBanners[index] = {
+      ...mockBanners[index],
+      ...bannerData
+    };
+    
+    return {
+      data: mockBanners[index],
+      message: 'Banner updated successfully'
+    };
+  },
+
+  delete: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const index = mockBanners.findIndex(b => b.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Banner not found');
+    }
+    
+    mockBanners.splice(index, 1);
+    return {
+      message: 'Banner deleted successfully'
+    };
+  }
+};
 export const dashboardAPI = {
   getStats: async () => {
     await new Promise(resolve => setTimeout(resolve, 500));

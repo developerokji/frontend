@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import StoryModal from '../components/common/StoryModal';
 import DataTable from '../components/common/DataTable';
+import CustomButton from '../components/common/CustomButton';
 import { useStories } from '../hooks/useApi';
 
 const StoriesPage = () => {
@@ -38,20 +39,33 @@ const StoriesPage = () => {
 
   const columns = [
     {
-      title: 'Date',
-      key: 'date',
+      title: 'Created Date',
+      key: 'created_at',
       className: 'd-none d-md-table-cell',
-      render: (text) => <small className="text-muted">{text}</small>
+      render: (text) => <small className="text-muted">{new Date(text).toLocaleDateString()}</small>
     },
     {
       title: 'Image',
-      key: 'image',
+      key: 'image_name',
+      render: (text, record) => {
+        if (record.image_name && record.image_path) {
+          // API response - construct full image path
+          const imagePath = `${record.image_path}${record.image_name}`;
+          return (
+            <div className="d-flex align-items-center">
+              <img src={imagePath} alt="Story" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+            </div>
+          );
+        } 
+      }
+    },
+    {
+      title: 'Status',
+      key: 'status',
       render: (text) => (
-        <div className="d-flex align-items-center">
-          <div className="bg-primary text-white rounded d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px', minWidth: '50px' }}>
-            <span className="fw-bold">{text}</span>
-          </div>
-        </div>
+        <span className={`badge ${text === 'on' ? 'bg-success' : 'bg-secondary'}`}>
+          {text === 'on' ? 'Active' : 'Inactive'}
+        </span>
       )
     },
     {
@@ -60,12 +74,22 @@ const StoriesPage = () => {
       className: 'd-none d-lg-table-cell',
       render: (_, record) => (
         <div className="btn-group btn-group-sm" role="group">
-          <button type="button" className="btn btn-outline-primary" onClick={() => handleEditStory(record.id)}>
-            <i className="bi bi-pencil"></i>
-          </button>
-          <button type="button" className="btn btn-outline-danger" onClick={() => handleDeleteStory(record.id)}>
-            <i className="bi bi-trash"></i>
-          </button>
+          <CustomButton 
+            variant="primary" 
+            size="sm"
+            icon="bi-pencil"
+            onClick={() => handleEditStory(record.id)}
+            tooltip="Edit Story"
+          >
+          </CustomButton>
+          <CustomButton 
+            variant="danger" 
+            size="sm"
+            icon="bi-trash"
+            onClick={() => handleDeleteStory(record.id)}
+            tooltip="Delete Story"
+          >
+          </CustomButton>
         </div>
       )
     }
@@ -90,14 +114,26 @@ const StoriesPage = () => {
     setCurrentPage(page);
   };
 
+  console.log('Stories data:', stories);
+  // Extract stories array and format according to columns
+  const storiesData = stories?.items?.map(item => ({
+    id: item.id,
+    created_at: item.created_at,      // Column 1: Created Date
+    image_name: item.image_name,        // Column 2: Image  
+    image_path: item.image_path,        // For image rendering
+    status: item.status                 // Column 3: Status
+  })) || [];
+  
+  const meta = stories?.data?.data?.meta || {};
+  const totalItems = meta.totalItems || storiesData.length;
+
   return (
     <div className="container-fluid p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
         <h4 className="mb-0">Stories List</h4>
-        <button className="btn btn-primary" onClick={handleShowModal}>
-          <i className="bi bi-plus-circle me-2"></i>
+        <CustomButton variant="primary" icon="bi-plus-circle" onClick={handleShowModal}>
           Add Stories
-        </button>
+        </CustomButton>
       </div>
 
       <div className="card">
@@ -127,18 +163,18 @@ const StoriesPage = () => {
 
           <DataTable
             columns={columns}
-            data={stories}
+            data={storiesData}
             loading={loading}
             className="flex-grow-1"
           />
 
           <ReactPaginate
             currentPage={currentPage}
-            totalPages={Math.ceil(stories.length / 3)}
+            totalPages={Math.ceil(totalItems / 3)}
             onPageChange={handlePageChange}
             showingFrom={(currentPage - 1) * 3 + 1}
-            showingTo={Math.min(currentPage * 3, stories.length)}
-            totalItems={stories.length}
+            showingTo={Math.min(currentPage * 3, totalItems)}
+            totalItems={totalItems}
           />
         </div>
       </div>

@@ -9,10 +9,23 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import StoriesPage from './pages/StoriesPage';
 import LocalityPage from './pages/LocalityPage';
+import BannerPage from './pages/BannerPage';
 import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+
+// Placeholder components for new routes
+const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
+const ClientPage = () => <div className="p-4"><h2>Client Management</h2><p>Client content will go here...</p></div>;
+const PartnerPage = () => <div className="p-4"><h2>Partner Management</h2><p>Partner content will go here...</p></div>;
+const PartnerAddPage = () => <div className="p-4"><h2>Add Partner</h2><p>Add partner form will go here...</p></div>;
+const PartnerListPage = () => <div className="p-4"><h2>Partner List</h2><p>Partner list will go here...</p></div>;
+const PartnerAnalyticsPage = () => <div className="p-4"><h2>Partner Analytics</h2><p>Partner analytics will go here...</p></div>;
+const PartnerPerformancePage = () => <div className="p-4"><h2>Partner Performance</h2><p>Partner performance will go here...</p></div>;
+const ServicesPage = () => <div className="p-4"><h2>Services Management</h2><p>Services content will go here...</p></div>;
+const PackagePage = () => <div className="p-4"><h2>Package Management</h2><p>Package content will go here...</p></div>;
+const LeadPage = () => <div className="p-4"><h2>Lead Management</h2><p>Lead content will go here...</p></div>;
 
 function App() {
   return (
@@ -33,6 +46,17 @@ function App() {
                       <Route path="/dashboard" element={<DashboardPage />} />
                       <Route path="/stories" element={<StoriesPage />} />
                       <Route path="/locality" element={<LocalityPage />} />
+                      <Route path="/banner" element={<BannerPage />} />
+                      <Route path="/categories" element={<CategoriesPage />} />
+                      <Route path="/client" element={<ClientPage />} />
+                      <Route path="/partner" element={<PartnerPage />} />
+                      <Route path="/partner/add" element={<PartnerAddPage />} />
+                      <Route path="/partner/list" element={<PartnerListPage />} />
+                      <Route path="/partner/analytics" element={<PartnerAnalyticsPage />} />
+                      <Route path="/partner/performance" element={<PartnerPerformancePage />} />
+                      <Route path="/services" element={<ServicesPage />} />
+                      <Route path="/package" element={<PackagePage />} />
+                      <Route path="/lead" element={<LeadPage />} />
                       <Route path="/users" element={<UsersPage />} />
                       <Route path="/settings" element={<SettingsPage />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
