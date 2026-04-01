@@ -1,225 +1,179 @@
-import React from 'react';
+import React from "react";
 
-const CustomInput = ({ 
-  label, 
-  type = 'text', 
-  placeholder = '', 
-  value, 
-  onChange, 
+const CustomInput = ({
+  label,
+  type = "text",
   name,
   id,
+  value,
+  onChange,
+  register,
   required = false,
+  placeholder = "",
   disabled = false,
   readOnly = false,
-  size = 'md',
-  variant = 'default',
-  icon,
-  iconPosition = 'left',
   error,
   helperText,
-  className = '',
+  options = [],
   rows = 3,
-  maxLength,
-  minLength,
-  pattern,
-  autoComplete = 'off',
-  autoFocus = false,
-  options = [], // For select
-  wrapperClass = '',
-  labelClass = '',
-  ...props 
+  icon,
+  iconPosition = "left",
+  className = "",
+  wrapperClass = "",
+  labelClass = "",
+  ...props
 }) => {
-  const baseClass = 'form-control';
-  
-  // Size classes
-  const sizeClass = size !== 'md' ? `form-control-${size}` : '';
-  
-  // Variant classes
-  const variantClass = variant !== 'default' ? `form-control-${variant}` : '';
-  
-  // State classes
-  const errorClass = error ? 'is-invalid' : '';
-  const disabledClass = disabled ? 'disabled' : '';
-  const readOnlyClass = readOnly ? 'bg-light' : '';
-  
-  // Combine all classes
-  const inputClass = [
-    baseClass,
-    sizeClass,
-    variantClass,
-    errorClass,
-    disabledClass,
-    readOnlyClass,
-    className
-  ].filter(Boolean).join(' ');
 
-  const renderIcon = () => {
-    if (!icon) return null;
-    
-    const iconElement = <i className={`${icon} ${iconPosition === 'right' ? 'ms-2' : 'me-2'}`}></i>;
-    
-    if (iconPosition === 'right') {
-      return (
-        <>
-          {inputElement}
-          {iconElement}
-        </>
-      );
-    }
-    
-    return (
-      <>
-        {iconElement}
-        {inputElement}
-      </>
-    );
+  /* ---------------- COMMON PROPS ---------------- */
+
+  const inputClass = [
+    "form-control",
+    error && "is-invalid",
+    readOnly && "bg-light",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const commonProps = {
+    id: id || name,
+    placeholder,
+    disabled,
+    readOnly,
+    ...props,
   };
 
+  /* ---------------- FORM BINDING ---------------- */
+
+  const formBinding = register
+    ? register(name)
+    : {
+        name,
+        value,
+        onChange,
+        required,
+      };
+
+  /* ---------------- INPUT RENDER ---------------- */
+
   const renderInput = () => {
-    if (type === 'textarea') {
-      return (
-        <textarea
-          id={id || name}
-          name={name}
-          className={inputClass}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          readOnly={readOnly}
-          required={required}
-          rows={rows}
-          maxLength={maxLength}
-          minLength={minLength}
-          autoFocus={autoFocus}
-          autoComplete={autoComplete}
-          {...props}
-        />
-      );
-    }
+    switch (type) {
+      case "textarea":
+        return (
+          <textarea
+            className={inputClass}
+            rows={rows}
+            {...commonProps}
+            {...formBinding}
+          />
+        );
 
-    if (type === 'select') {
-      return (
-        <select
-          id={id || name}
-          name={name}
-          className={inputClass}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          required={required}
-          autoFocus={autoFocus}
-          {...props}
-        >
-          {options.map((option, index) => (
-            <option key={index} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      );
-    }
+      case "select":
+        return (
+          <select
+            className={inputClass}
+            {...commonProps}
+            {...formBinding}
+          >
+            {options.map((opt, i) => (
+              <option key={i} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        );
 
-    if (type === 'checkbox' || type === 'radio') {
-      return (
-        <input
-          type={type}
-          id={id || name}
-          name={name}
-          className="form-check-input"
-          checked={value}
-          onChange={onChange}
-          disabled={disabled}
-          required={required}
-          autoFocus={autoFocus}
-          {...props}
-        />
-      );
-    }
+      case "checkbox":
+      case "radio":
+        return (
+          <div className="form-check">
+            <input
+              type={type}
+              className="form-check-input"
+              {...commonProps}
+              {...formBinding}
+            />
+            {label && (
+              <label
+                className={`form-check-label ${labelClass}`}
+                htmlFor={id || name}
+              >
+                {label}
+                {required && (
+                  <span className="text-danger ms-1">*</span>
+                )}
+              </label>
+            )}
+          </div>
+        );
 
-    return (
-      <input
-        type={type}
-        id={id || name}
-        name={name}
-        className={inputClass}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        readOnly={readOnly}
-        required={required}
-        maxLength={maxLength}
-        minLength={minLength}
-        pattern={pattern}
-        autoFocus={autoFocus}
-        autoComplete={autoComplete}
-        {...props}
-      />
-    );
+      default:
+        return (
+          <input
+            type={type}
+            className={inputClass}
+            {...commonProps}
+            {...formBinding}
+          />
+        );
+    }
   };
 
   const inputElement = renderInput();
 
-  // For checkbox/radio, return directly (no wrapper needed)
-  if (type === 'checkbox' || type === 'radio') {
+  /* ---------------- ICON SUPPORT ---------------- */
+
+  const renderWithIcon = () => {
+    if (!icon || type === "checkbox" || type === "radio")
+      return inputElement;
+
     return (
-      <div className={`form-check mb-3 ${wrapperClass}`}>
-        <inputElement />
-        <label className={`form-check-label ${labelClass}`} htmlFor={id || name}>
-          {label}
-          {required && <span className="text-danger ms-1">*</span>}
-        </label>
-        {error && (
-          <div className="invalid-feedback">
-            {error}
-          </div>
+      <div className="input-group">
+        {iconPosition === "left" && (
+          <span className="input-group-text">
+            <i className={icon}></i>
+          </span>
         )}
-        {helperText && (
-          <div className="form-text text-muted">
-            {helperText}
-          </div>
+
+        {inputElement}
+
+        {iconPosition === "right" && (
+          <span className="input-group-text">
+            <i className={icon}></i>
+          </span>
         )}
       </div>
     );
-  }
-
-  // For other inputs, wrap with label and helper text
-  const renderWithWrapper = () => {
-    if (icon) {
-      return (
-        <div className="input-group">
-          {renderIcon()}
-        </div>
-      );
-    }
-    
-    return inputElement;
   };
+
+  /* ---------------- FINAL UI ---------------- */
 
   return (
     <div className={`mb-3 ${wrapperClass}`}>
-      {label && type !== 'checkbox' && type !== 'radio' && (
-        <label htmlFor={id || name} className={`form-label ${labelClass}`}>
-          {icon && iconPosition === 'left' && <i className={`${icon} me-2`}></i>}
-          {label}
-          {required && <span className="text-danger ms-1">*</span>}
-          {icon && iconPosition === 'right' && <i className={`${icon} ms-2`}></i>}
-        </label>
-      )}
-      
-      {renderWithWrapper()}
-      
+      {label &&
+        type !== "checkbox" &&
+        type !== "radio" && (
+          <label
+            htmlFor={id || name}
+            className={`form-label ${labelClass}`}
+          >
+            {label}
+            {required && (
+              <span className="text-danger ms-1">*</span>
+            )}
+          </label>
+        )}
+
+      {renderWithIcon()}
+
       {error && (
-        <div className="invalid-feedback">
+        <div className="invalid-feedback d-block">
           {error}
         </div>
       )}
-      
+
       {helperText && (
-        <div className="form-text text-muted">
-          {helperText}
-        </div>
+        <div className="form-text">{helperText}</div>
       )}
     </div>
   );

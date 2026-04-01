@@ -11,6 +11,7 @@ export const useApi = (apiFunction, dependencies = []) => {
     try {
       setLoading(true);
       setError(null);
+      console.log('API call with args:', args); // Debug log
       const result = await apiFunction(...args);
       setData(result.data || result);
     } catch (err) {
@@ -31,8 +32,8 @@ export const useApi = (apiFunction, dependencies = []) => {
 };
 
 // Specific hooks for different data types
-export const useStories = (page = 1, limit = 10, search = '') => {
-  return useApi(storiesAPI.getAll, [page, limit, search]);
+export const useStories = (page = 1, limit, search = '') => {
+  return useApi(() => storiesAPI.getAll(page, limit, search),[page, limit, search]);
 };
 
 export const useUsers = (page = 1, limit = 10, search = '') => {

@@ -36,7 +36,7 @@ const ReactPaginate = ({
   return (
     <div className={`d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 ${className}`}>
       <span className="text-muted small">
-        Showing {showingFrom} to {showingTo} of {totalItems} entries
+        Showing {showingFrom} to {showingTo} of {totalItems} items
       </span>
       
       <nav>

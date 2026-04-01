@@ -45,7 +45,8 @@ const mockDashboardStats = {
 
 // Stories API
 export const storiesAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit, search = '') => {
+    console.log('Fetching stories with params:', { page, limit, search });
     try {
       const response = await api.get('/v1/stories', {
         params: { page, limit, search }
@@ -75,71 +76,37 @@ export const storiesAPI = {
     }
   },
 
-  getById: async (id) => {
-    try {
-      const response = await api.get(`/stories/${id}`);
-      return response;
-    } catch (error) {
-      console.error('Story API Error:', error);
-      const story = mockStories.find(s => s.id === parseInt(id));
-      if (!story) throw new Error('Story not found');
-      return { data: story };
-    }
-  },
 
   create: async (storyData) => {
     try {
-      const response = await api.post('/stories', storyData);
+      const response = await api.post('/v1/stories', storyData);
       return response;
     } catch (error) {
       console.error('Create Story Error:', error);
-      // Fallback to mock
-      const newStory = {
-        id: mockStories.length + 1,
-        date: new Date().toLocaleString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: '2-digit', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        image: new Date().getFullYear().toString(),
-        status: 'On',
-        ...storyData
-      };
-      mockStories.push(newStory);
       return {
-        data: newStory,
-        message: 'Story created successfully'
+        data: {},
+        message: error.message
       };
     }
   },
 
   update: async (id, storyData) => {
     try {
-      const response = await api.put(`/stories/${id}`, storyData);
+      const response = await api.patch(`/v1/stories/${id}`, storyData);
       return response;
     } catch (error) {
       console.error('Update Story Error:', error);
       // Fallback to mock
-      const index = mockStories.findIndex(s => s.id === parseInt(id));
-      if (index === -1) throw new Error('Story not found');
-      
-      mockStories[index] = {
-        ...mockStories[index],
-        ...storyData
-      };
-      
       return {
-        data: mockStories[index],
-        message: 'Story updated successfully'
+        data: {},
+        message: error.message
       };
     }
   },
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/stories/${id}`);
+      const response = await api.delete(`/v1/stories/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Story Error:', error);

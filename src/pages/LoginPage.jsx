@@ -1,34 +1,43 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { loginValidationSchema } from '../utils/validation';
 import CustomButton from '../components/common/CustomButton';
 import CustomInput from '../components/common/CustomInput';
 import { api } from '../services/apiClient';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: yupResolver(loginValidationSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
+
+  const onSubmit = async (data) => {
     setLoading(true);
     setError('');
 
     try {
       // Simulate login API call with axios
-      const response = await api.post('/auth/login', {
-        email,
-        password
-      });
+      const response = await api.post('/auth/login', data);
       
       // Set auth token using axios interceptor
       api.setAuthToken(response.data.token);
       
       // Save user preferences
       localStorage.setItem('userPreferences', JSON.stringify({
-        email: response.data.user?.email || email,
+        email: response.data.user?.email || data.email,
         name: response.data.user?.name || 'User'
       }));
       
@@ -41,7 +50,7 @@ const LoginPage = () => {
         const mockToken = 'mock-jwt-token-' + Date.now();
         api.setAuthToken(mockToken);
         localStorage.setItem('userPreferences', JSON.stringify({
-          email,
+          email: data.email,
           name: 'Demo User'
         }));
         navigate('/dashboard');
@@ -70,20 +79,20 @@ const LoginPage = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <CustomInput
                 label="Email Address"
                 type="email"
                 id="email"
                 name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                required
+                register={register}
+                error={errors.email?.message}
                 autoComplete="email"
                 autoFocus
                 icon="bi-envelope"
                 helperText="We'll never share your email with anyone else"
+                required
               />
 
               <CustomInput
@@ -91,13 +100,13 @@ const LoginPage = () => {
                 type="password"
                 id="password"
                 name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                required
+                register={register}
+                error={errors.password?.message}
                 autoComplete="current-password"
                 icon="bi-lock"
                 helperText="Your password must be 8-20 characters long"
+                required
               />
 
               <div className="form-check mb-3">
@@ -115,10 +124,10 @@ const LoginPage = () => {
                 type="submit"
                 variant="primary"
                 fullWidth
-                loading={loading}
+                loading={loading || isSubmitting}
                 icon="bi-box-arrow-in-right"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading || isSubmitting ? 'Signing in...' : 'Sign In'}
               </CustomButton>
             </form>
 

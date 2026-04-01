@@ -100,7 +100,13 @@ const CustomButton = ({
       );
     }
     
-    return renderIcon();
+    // Default case: render icon and children
+    if (icon) {
+      return renderIcon();
+    }
+    
+    // No icon case: just render children
+    return children;
   };
 
   const buttonElement = (

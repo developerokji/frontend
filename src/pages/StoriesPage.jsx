@@ -4,22 +4,50 @@ import StoryModal from '../components/common/StoryModal';
 import DataTable from '../components/common/DataTable';
 import CustomButton from '../components/common/CustomButton';
 import { useStories } from '../hooks/useApi';
+import { storiesAPI } from '../services/api';
 
 const StoriesPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [limit, setLimit] = useState(1);
 
   // Use API hook for stories data
-  const { data: stories, loading, error, refetch } = useStories(currentPage, 3, searchTerm);
+  const { data: stories, loading, error, refetch } = useStories(currentPage, limit, searchTerm);
 
   const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
   const handleSaveStory = async (storyData) => {
     try {
-      // Here you'll call your backend API
-      await storiesAPI.create(storyData);
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Add file
+      if (storyData.image) {
+        formData.append('image', storyData.image);
+      }
+      
+      // Add other fields
+      formData.append('status', storyData.status);
+      if (storyData.image) {
+        formData.append('imageName', storyData.image.name);
+      }
+      
+      // Check if it's edit mode or create mode
+      if (editMode && editData.id) {
+        // Update existing story
+        await storiesAPI.update(editData.id, formData);
+      } else {
+        // Create new story
+        await storiesAPI.create(formData);
+      }
+      
       setShowModal(false);
+      setEditMode(false);
+      setEditData({});
       refetch(); // Refresh stories list
     } catch (error) {
       console.error('Error saving story:', error);
@@ -97,11 +125,13 @@ const StoriesPage = () => {
 
   const handleEditStory = (id) => {
     // Find story data and populate modal for editing
-    const story = stories.find(s => s.id === id);
+    const story = stories?.items.find(s => s.id === id);
+    console.log('Editing story:', story);
     if (story) {
-      // Set modal data for editing
-      // You can add state for edit modal here
+      setEditData(story)
       setShowModal(true);
+      setEditMode(true);
+
     }
   };
 
@@ -124,7 +154,7 @@ const StoriesPage = () => {
     status: item.status                 // Column 3: Status
   })) || [];
   
-  const meta = stories?.data?.data?.meta || {};
+  const meta = stories?.meta || {};
   const totalItems = meta.totalItems || storiesData.length;
 
   return (
@@ -170,11 +200,11 @@ const StoriesPage = () => {
 
           <ReactPaginate
             currentPage={currentPage}
-            totalPages={Math.ceil(totalItems / 3)}
+            totalPages={meta.totalPages}
             onPageChange={handlePageChange}
-            showingFrom={(currentPage - 1) * 3 + 1}
-            showingTo={Math.min(currentPage * 3, totalItems)}
-            totalItems={totalItems}
+            showingFrom={(currentPage - 1) * limit + 1}
+            showingTo={Math.min(currentPage * limit, meta.totalItems)}
+            totalItems={meta.totalItems}
           />
         </div>
       </div>
@@ -183,6 +213,10 @@ const StoriesPage = () => {
         show={showModal}
         handleClose={handleCloseModal}
         handleSave={handleSaveStory}
+        setSelectedFile={setSelectedFile}
+        selectedFile={selectedFile}
+        editMode={editMode}
+        storyData={editData}
       />
     </div>
   );
