@@ -29,29 +29,17 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // Simulate login API call with axios
-      const response = await api.post('/auth/login', data);
+      console.log('Login data:', data);
       
-      // Set auth token using axios interceptor
-      api.setAuthToken(response.data.token);
-      
-      // Save user preferences
-      localStorage.setItem('userPreferences', JSON.stringify({
-        email: response.data.user?.email || data.email,
-        name: response.data.user?.name || 'User'
-      }));
-      
-      // Navigate to dashboard
-      navigate('/dashboard');
-    } catch (err) {
-      // Fallback for demo (when backend is not available)
-      if (err.code === 'NETWORK_ERROR' || err.message.includes('Network Error')) {
-        // Mock successful login for demo
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        api.setAuthToken(mockToken);
+      // Dummy login validation
+      if (data.email === 'test@gmail.com' && data.password === '123456') {
+        // Set dummy auth token
+        localStorage.setItem('authToken', 'dummy-token-for-testing');
+        
+        // Save user preferences
         localStorage.setItem('userPreferences', JSON.stringify({
           email: data.email,
-          name: 'Demo User'
+          name: 'Test User'
         }));
         navigate('/dashboard');
       } else {
