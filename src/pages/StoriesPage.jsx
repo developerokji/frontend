@@ -13,7 +13,7 @@ const StoriesPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
-  const [limit, setLimit] = useState(1);
+  const [limit, setLimit] = useState(3);
 
   // Use API hook for stories data
   const { data: stories, loading, error, refetch } = useStories(currentPage, limit, searchTerm);
