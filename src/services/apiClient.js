@@ -65,9 +65,10 @@ apiClient.interceptors.response.use(
       // Handle specific status codes
       switch (status) {
         case 401:
-          // Unauthorized - redirect to login
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
+          // Unauthorized - redirect to login (temporarily disabled until auth API is ready)
+          // localStorage.removeItem('authToken');
+          // window.location.href = '/login';
+          console.error('Unauthorized access - auth API not ready yet');
           break;
         case 403:
           // Forbidden

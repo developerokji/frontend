@@ -27,15 +27,17 @@ export const localityValidationSchema = yup.object().shape({
   state: yup
     .string()
     .required('State is required')
-    .min(2, 'State must be at least 2 characters')
-    .max(50, 'State must be less than 50 characters')
-    .matches(patterns.alphanumeric, 'State can only contain letters, numbers, and spaces'),
+    .test('state-selection', 'Please select a valid state', (value) => {
+      // Check if value is not empty and not the placeholder
+      return value && value !== '' && value !== undefined;
+    }),
   city: yup
     .string()
     .required('City is required')
-    .min(2, 'City must be at least 2 characters')
-    .max(50, 'City must be less than 50 characters')
-    .matches(patterns.alphanumeric, 'City can only contain letters, numbers, and spaces')
+    .test('city-selection', 'Please select a valid city', (value) => {
+      // Check if value is not empty and not the placeholder
+      return value && value !== '' && value !== undefined;
+    })
 });
 
 // Banner validation schema

@@ -3,7 +3,8 @@ import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import LocalityModal from '../components/common/LocalityModal';
 import CustomButton from '../components/common/CustomButton';
-import { useLocalities } from '../hooks/useApi';
+import { useLocalities, useCities } from '../hooks/useApi';
+import { localitiesAPI } from '../services/api';
 
 const LocalityPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -29,12 +30,15 @@ const LocalityPage = () => {
 
   const handleSaveLocality = async (localityData) => {
     try {
+      let payload={
+        stateId:localityData?.state, cityId:localityData?.city, localityName:localityData?.name
+      }
       if (editMode && selectedLocality) {
         // Update existing locality
-        await localitiesAPI.update(selectedLocality.id, localityData);
+        await localitiesAPI.update(selectedLocality.id, payload);
       } else {
         // Create new locality
-        await localitiesAPI.create(localityData);
+        await localitiesAPI.create(payload);
       }
       setShowModal(false);
       setEditMode(false);
@@ -46,7 +50,8 @@ const LocalityPage = () => {
   };
 
   const handleEditLocality = (id) => {
-    const locality = localities.find(l => l.id === id);
+    const locality = localities?.items?.find(l => l.id === id);
+    console.log('Found locality for edit:', locality); // Debug log
     if (locality) {
       setSelectedLocality(locality);
       setEditMode(true);
@@ -67,19 +72,24 @@ const LocalityPage = () => {
 
   const columns = [
     {
-      title: 'Locality',
-      key: 'name',
+      title: 'Locality Name',
+      key: 'locality',
       render: (text) => <span>{text}</span>
     },
     {
-      title: 'State',
-      key: 'state',
-      render: (text) => <span>{text}</span>
-    },
-    {
-      title: 'City',
+      title: 'City Name',
       key: 'city',
       render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'State Name',
+      key: 'state_name',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Created Date',
+      key: 'created_at',
+      render: (text) => <span>{new Date(text).toLocaleDateString()}</span>
     },
     {
       title: 'Actions',
@@ -115,6 +125,24 @@ const LocalityPage = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
+  console.log('Localities data:', localities);
+  
+  // Extract meta information from response
+  const meta = localities?.meta || {};
+  
+  // Extract localities array and format according to columns
+  const localitiesData = localities?.items?.map(item => ({
+    id: item.id,
+    city: item.city,                  // Column 1: City
+    state_name: item.state_name,       // Column 2: State
+    created_at: item.created_at,       // Column 3: Created Date
+    state_id: item.state_id,           // For edit functionality
+    city_id: item.city_id,
+    locality:item.localityName              // For edit functionality
+  })) || [];
+  
+  const totalItems = meta.totalItems || localitiesData.length;
 
   return (
     <div className="container-fluid p-3 p-lg-4 w-100">
@@ -152,18 +180,18 @@ const LocalityPage = () => {
 
           <DataTable
             columns={columns}
-            data={localities}
+            data={localitiesData}
             loading={loading}
             className="flex-grow-1"
           />
 
           <ReactPaginate
             currentPage={currentPage}
-            totalPages={Math.ceil(localities.length / 10)}
+            totalPages={meta.totalPages}
             onPageChange={handlePageChange}
             showingFrom={(currentPage - 1) * 10 + 1}
-            showingTo={Math.min(currentPage * 10, localities.length)}
-            totalItems={localities.length}
+            showingTo={Math.min(currentPage * 10, meta.totalItems)}
+            totalItems={meta.totalItems}
           />
         </div>
       </div>

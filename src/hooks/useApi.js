@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI } from '../services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI } from '../services/api';
 
 // Custom hook for API data management
 export const useApi = (apiFunction, dependencies = []) => {
@@ -41,7 +41,8 @@ export const useUsers = (page = 1, limit = 10, search = '') => {
 };
 
 export const useLocalities = (page = 1, limit = 10, search = '') => {
-  return useApi(localitiesAPI.getAll, [page, limit, search]);
+  console.log('useLocalities called with:', { page, limit, search });
+  return useApi(() => localitiesAPI.getAll(page, limit, search), [page, limit, search]);
 };
 
 export const useBanners = (page = 1, limit = 10, search = '') => {
@@ -50,4 +51,13 @@ export const useBanners = (page = 1, limit = 10, search = '') => {
 
 export const useDashboardStats = () => {
   return useApi(dashboardAPI.getStats, []);
+};
+
+// States and Cities hooks
+export const useStates = () => {
+  return useApi(statesAPI.getAll, []);
+};
+
+export const useCities = (stateId) => {
+  return useApi(() => citiesAPI.getByState(stateId), [stateId]);
 };

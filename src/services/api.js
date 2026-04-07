@@ -1,5 +1,3 @@
-// API Service with Mock Data for testing
-
 import { api } from './apiClient';
 
 // Mock data for testing
@@ -162,29 +160,93 @@ export const usersAPI = {
   }
 };
 
+// States and Cities API
+export const statesAPI = {
+  getAll: async () => {
+    try {
+      const response = await api.get('/v1/states');
+      return response.data;
+    } catch (error) {
+      console.error('States API Error:', error);
+      return {
+        success: false,
+        message: error.message,
+        data: []
+      };
+    }
+  }
+};
+
+export const citiesAPI = {
+  getByState: async (stateId) => {
+    try {
+      const response = await api.get('/v1/cities', {
+        params: { stateId }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Cities API Error:', error);
+      return {
+        success: false,
+        message: error.message,
+        data: []
+      };
+    }
+  }
+};
+
 // Localities API
 export const localitiesAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let filteredData = mockLocalities;
-    if (search) {
-      filteredData = filteredData.filter(locality => 
-        locality.name.toLowerCase().includes(search.toLowerCase()) ||
-        locality.code.toLowerCase().includes(search.toLowerCase())
-      );
+    console.log('localitiesAPI.getAll called with:', { page, limit, search });
+    try {
+      const response = await api.get('/v1/localities', {
+        params: { page, limit, search }
+      });
+      console.log('localitiesAPI response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Localities API Error:', error);
+      throw error;
     }
-    
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-    
-    return {
-      data: paginatedData,
-      total: filteredData.length,
-      page,
-      limit
-    };
+  },
+
+  create: async (localityData) => {
+    try {
+      const response = await api.post('/v1/localities', localityData);
+      return response;
+    } catch (error) {
+      console.error('Create Locality Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  update: async (id, localityData) => {
+    try {
+      const response = await api.patch(`/v1/localities/${id}`, localityData);
+      return response;
+    } catch (error) {
+      console.error('Update Locality Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/v1/localities/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Locality Error:', error);
+      return {
+        message: error.message
+      };
+    }
   }
 };
 

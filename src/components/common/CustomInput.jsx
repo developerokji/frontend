@@ -21,6 +21,8 @@ const CustomInput = ({
   className = "",
   wrapperClass = "",
   labelClass = "",
+  onFocus,
+  onBlur,
   ...props
 }) => {
 
@@ -74,6 +76,12 @@ const CustomInput = ({
             className={inputClass}
             {...commonProps}
             {...formBinding}
+            onChange={(e) => {
+              if (onChange) onChange(e);
+              if (formBinding.onChange) formBinding.onChange(e);
+            }}
+            onFocus={onFocus}
+            onBlur={onBlur}
           >
             {options.map((opt, i) => (
               <option key={i} value={opt.value}>
