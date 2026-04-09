@@ -25,9 +25,32 @@ const mockLocalities = [
 ];
 
 const mockBanners = [
-  { id: 1, title: 'Summer Sale Banner', description: 'Get 50% off on all summer collection items. Limited time offer!', status: 'Active', createdAt: '2024-01-15' },
-  { id: 2, title: 'New Year Special', description: 'Celebrate New Year with amazing discounts and special offers on all products.', status: 'Active', createdAt: '2024-01-10' },
-  { id: 3, title: 'Welcome Banner', description: 'Welcome to our amazing platform. Explore our features and services.', status: 'Inactive', createdAt: '2024-01-05' }
+  { 
+    id: 1, 
+    banner_title: 'electricain', 
+    banner_desc: 'service',
+    banner_img: 'electricain.jpeg',
+    banner_img_path: 'assets/images/banner/',
+    category_id: 1,
+    sub_category_id: 22,
+    service_id: 48,
+    status: 'on',
+    is_visible: 'up',
+    created_at: '2025-11-05T16:48:42.000Z'
+  },
+  { 
+    id: 2, 
+    banner_title: 'ac', 
+    banner_desc: 'about ac',
+    banner_img: 'ac.jpeg',
+    banner_img_path: 'assets/images/banner/',
+    category_id: 6,
+    sub_category_id: 32,
+    service_id: 146,
+    status: 'on',
+    is_visible: 'up',
+    created_at: '2025-11-05T16:36:21.000Z'
+  }
 ];
 
 const mockDashboardStats = {
@@ -258,8 +281,8 @@ export const bannersAPI = {
     let filteredData = mockBanners;
     if (search) {
       filteredData = filteredData.filter(banner => 
-        banner.title.toLowerCase().includes(search.toLowerCase()) ||
-        banner.description.toLowerCase().includes(search.toLowerCase())
+        banner.banner_title.toLowerCase().includes(search.toLowerCase()) ||
+        banner.banner_desc.toLowerCase().includes(search.toLowerCase())
       );
     }
     
@@ -268,10 +291,17 @@ export const bannersAPI = {
     const paginatedData = filteredData.slice(startIndex, endIndex);
     
     return {
-      data: paginatedData,
-      total: filteredData.length,
-      page: page,
-      limit: limit
+      success: true,
+      message: 'Banners fetched successfully',
+      data: {
+        items: paginatedData,
+        meta: {
+          totalItems: filteredData.length,
+          currentPage: page,
+          totalPages: Math.ceil(filteredData.length / limit),
+          itemsPerPage: limit
+        }
+      }
     };
   },
 
@@ -337,5 +367,217 @@ export const dashboardAPI = {
     return {
       data: mockDashboardStats
     };
+  }
+};
+
+// Categories API
+export const categoriesAPI = {
+  getAll: async (page = 1, limit = 10, search = '') => {
+    try {
+      const response = await api.get('/v1/categories', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Categories API Error:', error);
+      // Temporary fallback for testing
+      console.log('Using mock categories data for testing');
+      const mockCategories = [
+        { id: 1, name: 'Electronics', image: 'https://via.placeholder.com/150', status: 'active', created_at: '2024-01-15' },
+        { id: 2, name: 'Furniture', image: 'https://via.placeholder.com/150', status: 'active', created_at: '2024-01-16' },
+        { id: 3, name: 'Clothing', image: 'https://via.placeholder.com/150', status: 'inactive', created_at: '2024-01-17' }
+      ];
+      
+      return {
+        success: true,
+        message: 'Categories fetched successfully (mock)',
+        data: {
+          items: mockCategories,
+          meta: {
+            totalItems: mockCategories.length,
+            currentPage: page,
+            totalPages: Math.ceil(mockCategories.length / limit),
+            itemsPerPage: limit
+          }
+        }
+      };
+    }
+  },
+
+  create: async (categoryData) => {
+    try {
+      const formData = new FormData();
+      
+      // Add fields to FormData
+      if (categoryData.categoryName) {
+        formData.append('name', categoryData.categoryName);
+      }
+      
+      if (categoryData.image) {
+        formData.append('image', categoryData.image);
+      }
+      
+      if (categoryData.status) {
+        formData.append('status', categoryData.status);
+      }
+      
+      const response = await api.post('/v1/categories', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Create Category Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  update: async (id, categoryData) => {
+    try {
+      const formData = new FormData();
+      
+      // Add fields to FormData
+      if (categoryData.categoryName) {
+        formData.append('name', categoryData.categoryName);
+      }
+      
+      // Only append image if it's a new file (not old image path)
+      if (categoryData.image && categoryData.image instanceof File) {
+        formData.append('image', categoryData.image);
+      }
+      
+      if (categoryData.status) {
+        formData.append('status', categoryData.status);
+      }
+      
+      const response = await api.patch(`/v1/categories/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Update Category Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/v1/categories/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Category Error:', error);
+      return {
+        message: error.message
+      };
+    }
+  }
+};
+
+// SubCategories API
+export const subCategoriesAPI = {
+  getAll: async (page = 1, limit = 10, search = '') => {
+    try {
+      const response = await api.get('/v1/sub-categories', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('SubCategories API Error:', error);
+      throw error;
+    }
+  },
+
+  create: async (subCategoryData) => {
+    try {
+      const formData = new FormData();
+      
+      // Add fields to FormData
+      if (subCategoryData.name) {
+        formData.append('name', subCategoryData.name);
+      }
+      
+      if (subCategoryData.categoryId) {
+        formData.append('categoryId', subCategoryData.categoryId);
+      }
+      
+      if (subCategoryData.image) {
+        formData.append('image', subCategoryData.image);
+      }
+      
+      if (subCategoryData.status) {
+        formData.append('status', subCategoryData.status);
+      }
+      
+      const response = await api.post('/v1/sub-categories', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Create SubCategory Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  update: async (id, subCategoryData) => {
+    try {
+      const formData = new FormData();
+      
+      // Add fields to FormData
+      if (subCategoryData.name) {
+        formData.append('name', subCategoryData.name);
+      }
+      
+      if (subCategoryData.categoryId) {
+        formData.append('categoryId', subCategoryData.categoryId);
+      }
+      
+      // Only append image if it's a new file (not old image path)
+      if (subCategoryData.image && subCategoryData.image instanceof File) {
+        formData.append('image', subCategoryData.image);
+      }
+      
+      if (subCategoryData.status) {
+        formData.append('status', subCategoryData.status);
+      }
+      
+      const response = await api.patch(`/v1/sub-categories/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Update SubCategory Error:', error);
+      return {
+        data: {},
+        message: error.message
+      };
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/v1/sub-categories/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete SubCategory Error:', error);
+      return {
+        message: error.message
+      };
+    }
   }
 };

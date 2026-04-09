@@ -42,20 +42,27 @@ export const localityValidationSchema = yup.object().shape({
 
 // Banner validation schema
 export const bannerValidationSchema = yup.object().shape({
-  title: yup
+  category_id: yup
+    .string()
+    .required('Category ID is required'),
+  banner_title: yup
     .string()
     .required('Banner title is required')
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be less than 100 characters'),
-  description: yup
+  banner_desc: yup
     .string()
     .required('Description is required')
     .min(10, 'Description must be at least 10 characters')
     .max(500, 'Description must be less than 500 characters'),
+  is_visible: yup
+    .string()
+    .required('Visibility is required')
+    .oneOf(['up', 'down'], 'Invalid visibility option'),
   status: yup
     .string()
     .required('Status is required')
-    .oneOf(['Active', 'Inactive'], 'Invalid status')
+    .oneOf(['on', 'off'], 'Invalid status')
 });
 
 // Login validation schema

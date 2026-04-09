@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI } from '../services/api';
+import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI, categoriesAPI, subCategoriesAPI } from '../services/api';
 
 // Custom hook for API data management
 export const useApi = (apiFunction, dependencies = []) => {
@@ -60,4 +60,13 @@ export const useStates = () => {
 
 export const useCities = (stateId) => {
   return useApi(() => citiesAPI.getByState(stateId), [stateId]);
+};
+
+// Categories and SubCategories hooks
+export const useCategories = (page = 1, limit = 10, search = '') => {
+  return useApi(() => categoriesAPI.getAll(page, limit, search), [page, limit, search]);
+};
+
+export const useSubCategories = (page = 1, limit = 10, search = '') => {
+  return useApi(() => subCategoriesAPI.getAll(page, limit, search), [page, limit, search]);
 };

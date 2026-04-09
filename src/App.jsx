@@ -14,6 +14,8 @@ import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import AddCategoryPage from './pages/AddCategoryPage';
+import AddSubCategoryPage from './pages/AddSubCategoryPage';
 
 // Placeholder components for new routes
 const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
@@ -48,6 +50,8 @@ function App() {
                       <Route path="/locality" element={<LocalityPage />} />
                       <Route path="/banner" element={<BannerPage />} />
                       <Route path="/categories" element={<CategoriesPage />} />
+                      <Route path="/categories/add" element={<AddCategoryPage />} />
+                      <Route path="/categories/subcategory" element={<AddSubCategoryPage />} />
                       <Route path="/client" element={<ClientPage />} />
                       <Route path="/partner" element={<PartnerPage />} />
                       <Route path="/partner/add" element={<PartnerAddPage />} />

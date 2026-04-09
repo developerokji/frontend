@@ -78,7 +78,7 @@ const StoriesPage = () => {
       render: (text, record) => {
         if (record.image_name && record.image_path) {
           // API response - construct full image path
-          const imagePath = `${record.image_path}${record.image_name}`;
+          const imagePath = `${record.image_path}`;
           return (
             <div className="d-flex align-items-center">
               <img src={imagePath} alt="Story" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />

@@ -4,13 +4,14 @@ import { Link, useLocation } from 'react-router-dom';
 const Sidebar = () => {
   const location = useLocation();
   const [partnerExpanded, setPartnerExpanded] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   
   const menuItems = [
     { icon: 'bi-speedometer2', text: 'Dashboard', path: '/dashboard' },
     { icon: 'bi-book', text: 'Stories', path: '/stories' },
     { icon: 'bi-geo-alt', text: 'Locality', path: '/locality' },
     { icon: 'bi-image', text: 'Banner', path: '/banner' },
-    { icon: 'bi-tags', text: 'Categories', path: '/categories' },
+    { icon: 'bi-tags', text: 'Categories', path: '/categories', hasSubmenu: true },
     { icon: 'bi-person-badge', text: 'Client', path: '/client' },
     { icon: 'bi-people', text: 'Partner', path: '/partner', hasSubmenu: true },
     { icon: 'bi-gear', text: 'Services', path: '/services' },
@@ -25,6 +26,11 @@ const Sidebar = () => {
     { icon: 'bi-list-check', text: 'Partner List', path: '/partner/list' },
     { icon: 'bi-graph-up', text: 'Partner Analytics', path: '/partner/analytics' },
     { icon: 'bi-award', text: 'Partner Performance', path: '/partner/performance' },
+  ];
+
+  const categoriesSubmenu = [
+    { icon: 'bi-plus-circle', text: 'Add Category', path: '/categories/add' },
+    { icon: 'bi-plus-square', text: 'Add Sub Category', path: '/categories/subcategory' },
   ];
 
   return (
@@ -45,19 +51,30 @@ const Sidebar = () => {
                   className={`nav-link d-flex align-items-center justify-content-between w-100 ${
                     location.pathname.startsWith(item.path) ? 'active' : 'text-dark'
                   }`}
-                  onClick={() => setPartnerExpanded(!partnerExpanded)}
+                  onClick={() => {
+                    if (item.text === 'Partner') {
+                      setPartnerExpanded(!partnerExpanded);
+                    } else if (item.text === 'Categories') {
+                      setCategoriesExpanded(!categoriesExpanded);
+                    }
+                  }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   <div className="d-flex align-items-center">
                     <i className={`bi ${item.icon} me-3`}></i>
                     <span>{item.text}</span>
                   </div>
-                  <i className={`bi ${partnerExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
+                  <i className={`bi ${
+                    (item.text === 'Partner' && partnerExpanded) || 
+                    (item.text === 'Categories' && categoriesExpanded) 
+                      ? 'bi-chevron-up' : 'bi-chevron-down'
+                  }`}></i>
                 </button>
                 
-                {partnerExpanded && (
+                {((item.text === 'Partner' && partnerExpanded) || 
+                  (item.text === 'Categories' && categoriesExpanded)) && (
                   <ul className="nav nav-pills flex-column ms-3 mt-1">
-                    {partnerSubmenu.map((subItem, subIndex) => (
+                    {(item.text === 'Partner' ? partnerSubmenu : categoriesSubmenu).map((subItem, subIndex) => (
                       <li className="nav-item" key={subIndex}>
                         <Link
                           to={subItem.path}

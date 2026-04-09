@@ -1,71 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { bannerValidationSchema } from '../../utils/validation';
+import * as yup from 'yup';
 import CustomButton from './CustomButton';
 import CustomInput from './CustomInput';
 
-const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerData = null, setSelectedFile, selectedFile }) => {
+const subCategoryValidationSchema = yup.object().shape({
+  name: yup.string().required('Sub category name is required'),
+  categoryId: yup.string().required('Category is required'),
+  status: yup.string().required('Status is required')
+});
+
+const SubCategoryModal = ({ show, handleClose, handleSave, editMode = false, subCategoryData = null, categories = [], setSelectedFile, selectedFile }) => {
   const [fileError, setFileError] = useState('');
+  
+  console.log('SubCategoryModal received categories:', categories);
+  
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting }
   } = useForm({
-    resolver: yupResolver(bannerValidationSchema),
+    resolver: yupResolver(subCategoryValidationSchema),
     defaultValues: {
-      category_id: '',
-      banner_title: '',
-      banner_desc: '',
-      status: 'on',
-      is_visible: 'up'
+      name: '',
+      categoryId: '',
+      status: 'active'
     }
   });
 
-  // Reset form when modal opens or bannerData changes
+  // Reset form when modal opens or subCategoryData changes
   useEffect(() => {
     if (show) {
-      if (editMode && bannerData) {
+      if (editMode && subCategoryData) {
         reset({
-          category_id: bannerData.category_id || '',
-          banner_title: bannerData.banner_title || '',
-          banner_desc: bannerData.banner_desc || '',
-          status: bannerData.status || 'on',
-          is_visible: bannerData.is_visible || 'up'
+          name: subCategoryData.name || '',
+          categoryId: subCategoryData.categoryId || '',
+          status: subCategoryData.status || 'active'
         });
       } else {
         reset({
-          category_id: '',
-          banner_title: '',
-          banner_desc: '',
-          status: 'on',
-          is_visible: 'up'
+          name: '',
+          categoryId: '',
+          status: 'active'
         });
       }
       setSelectedFile(null);
       setFileError('');
     }
-  }, [show, editMode, bannerData, reset, setSelectedFile]);
+  }, [show, editMode, subCategoryData, reset, setSelectedFile]);
 
   const onSubmit = async (data) => {
     try {
       // Manual file validation
-      if (!selectedFile) {
-        setFileError('Banner image is required');
+      if (!editMode && !selectedFile) {
+        // Create mode - image is required
+        setFileError('Sub category image is required');
         return;
       }
       
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(selectedFile.type)) {
-        setFileError('Please upload a valid image file (JPG, PNG, GIF)');
-        return;
+      // Check file type only if new file is selected
+      if (selectedFile) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(selectedFile.type)) {
+          setFileError('Please upload a valid image file (JPG, PNG, GIF)');
+          return;
+        }
       }
       
       const dataWithFile = {
         ...data,
-        image: selectedFile
+        image: selectedFile // Will be File object if new file, undefined if no new file
       };
       
       await handleSave(dataWithFile);
@@ -90,61 +96,54 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
         <div className="modal-content">
           <div className="modal-header border-bottom">
             <h5 className="modal-title fw-semibold">
-              {editMode ? 'Edit Banner' : 'Add Banner'}
+              {editMode ? 'Edit Sub Category' : 'Add Sub Category'}
             </h5>
             <button type="button" className="btn-close" onClick={handleClose}></button>
           </div>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="modal-body py-4">
               <CustomInput
-                label="Category ID"
+                label="Sub Category Name"
                 type="text"
-                id="category_id"
-                name="category_id"
-                placeholder="Enter Category ID"
+                id="name"
+                name="name"
+                placeholder="Enter sub category name"
                 register={register}
-                error={errors.category_id?.message}
+                error={errors.name?.message}
                 required
                 icon="bi-tags"
               />
 
               <CustomInput
-                label="Title"
-                type="text"
-                id="banner_title"
-                name="banner_title"
-                placeholder="Title"
+                label="Category"
+                type="select"
+                id="categoryId"
+                name="categoryId"
+                placeholder="Select Category"
                 register={register}
-                error={errors.banner_title?.message}
+                error={errors.categoryId?.message}
+                icon="bi-folder"
+                options={categories.length > 0 ? categories.map(category => ({
+                  value: category.id,
+                  label: category.categoryName || category.name
+                })) : [
+                  { value: '', label: 'No categories available' }
+                ]}
                 required
-                icon="bi-type"
-              />
-
-              <CustomInput
-                label="Desc"
-                type="textarea"
-                id="banner_desc"
-                name="banner_desc"
-                placeholder="Desc"
-                rows="3"
-                register={register}
-                error={errors.banner_desc?.message}
-                required
-                icon="bi-text-paragraph"
               />
 
               <div className="mb-4">
-                <label htmlFor="bannerImage" className="form-label fw-medium">
+                <label htmlFor="subCategoryImage" className="form-label fw-medium">
                   <i className="bi bi-image me-2"></i>
-                  Image <span className="text-danger">*</span>
+                  Image {!editMode && <span className="text-danger">*</span>}
                 </label>
                 <input 
                   type="file" 
                   className={`form-control ${fileError ? 'is-invalid' : ''}`}
-                  id="bannerImage" 
+                  id="subCategoryImage" 
                   accept="image/*" 
                   onChange={handleFileChange}
-                  required
+                  required={!editMode}
                 />
                 {fileError && (
                   <div className="invalid-feedback d-block">
@@ -153,24 +152,9 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                 )}
                 <small className="text-muted d-block mt-2">
                   Supported formats: JPG, PNG, GIF (Max size: 5MB)
+                  {editMode && " Leave empty to keep existing image"}
                 </small>
               </div>
-
-              <CustomInput
-                label="Is Visible"
-                type="select"
-                id="is_visible"
-                name="is_visible"
-                placeholder="Select Position"
-                register={register}
-                error={errors.is_visible?.message}
-                icon="bi-eye"
-                options={[
-                  { value: 'up', label: 'Up' },
-                  { value: 'down', label: 'Down' }
-                ]}
-                required
-              />
 
               <CustomInput
                 label="Status"
@@ -182,8 +166,8 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                 error={errors.status?.message}
                 icon="bi-list-check"
                 options={[
-                  { value: 'on', label: 'Active' },
-                  { value: 'off', label: 'Inactive' }
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' }
                 ]}
                 required
               />
@@ -195,7 +179,7 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
               </CustomButton>
               <CustomButton variant="primary" type="submit" loading={isSubmitting}>
                 <i className="bi bi-check-circle me-2"></i>
-                {editMode ? 'Update Banner' : 'Submit'}
+                {editMode ? 'Update Sub Category' : 'Submit'}
               </CustomButton>
             </div>
           </form>
@@ -205,4 +189,4 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
   );
 };
 
-export default BannerModal;
+export default SubCategoryModal;
