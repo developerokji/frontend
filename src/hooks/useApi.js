@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI, categoriesAPI, subCategoriesAPI } from '../services/api';
+import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI, categoriesAPI, subCategoriesAPI, authAPI } from '../services/api';
 
 // Custom hook for API data management
 export const useApi = (apiFunction, dependencies = []) => {

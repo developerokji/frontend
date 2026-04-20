@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import CustomButton from './CustomButton';
+import { CustomButton } from './CustomButton';
 import { api } from '../../services/apiClient';
 
 const LogoutButton = () => {

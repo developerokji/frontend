@@ -44,25 +44,33 @@ export const localityValidationSchema = yup.object().shape({
 export const bannerValidationSchema = yup.object().shape({
   category_id: yup
     .string()
-    .required('Category ID is required'),
+    .required('Category is required')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a category'),
+  sub_category_id: yup
+    .string()
+    .required('Sub Category is required')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a sub category'),
+  service_id: yup
+    .string()
+    .required('Service is required')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a service'),
   banner_title: yup
     .string()
-    .required('Banner title is required')
+    .required('Title is required')
     .min(3, 'Title must be at least 3 characters')
-    .max(100, 'Title must be less than 100 characters'),
+    .max(100, 'Title must be less than 100 characters')
+    .trim('Title cannot be empty spaces'),
   banner_desc: yup
     .string()
     .required('Description is required')
     .min(10, 'Description must be at least 10 characters')
-    .max(500, 'Description must be less than 500 characters'),
-  is_visible: yup
-    .string()
-    .required('Visibility is required')
-    .oneOf(['up', 'down'], 'Invalid visibility option'),
+    .max(500, 'Description must be less than 500 characters')
+    .trim('Description cannot be empty spaces'),
   status: yup
     .string()
     .required('Status is required')
-    .oneOf(['on', 'off'], 'Invalid status')
+    .oneOf(['on', 'off'], 'Please select a valid status')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a status')
 });
 
 // Login validation schema
@@ -95,11 +103,90 @@ export const userValidationSchema = yup.object().shape({
     .oneOf(['Admin', 'Editor', 'Viewer'], 'Invalid role')
 });
 
+// Service validation schema
+export const serviceValidationSchema = yup.object().shape({
+  service_name: yup
+    .string()
+    .required('Service name is required')
+    .min(2, 'Service name must be at least 2 characters')
+    .max(100, 'Service name must be less than 100 characters')
+    .trim('Service name cannot be empty spaces'),
+  price: yup
+    .number()
+    .required('Price is required')
+    .positive('Price must be a positive number')
+    .typeError('Price must be a valid number'),
+  sale_price: yup
+    .number()
+    .positive('Sale price must be a positive number')
+    .typeError('Sale price must be a valid number')
+    .nullable()
+    .transform((value, originalValue) => originalValue === '' ? null : value),
+  category_id: yup
+    .string()
+    .required('Category is required')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a category'),
+  sub_category_id: yup
+    .string()
+    .required('Sub Category is required')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a sub category'),
+  status: yup
+    .string()
+    .required('Status is required')
+    .oneOf(['on', 'off'], 'Please select a valid status')
+    .notOneOf(['', 'null', 'undefined'], 'Please select a status'),
+  service_details: yup
+    .string()
+    .required('Service details are required')
+    .min(10, 'Service details must be at least 10 characters')
+    .trim('Service details cannot be empty spaces'),
+  service_included: yup
+    .string()
+    .required('Service included details are required')
+    .min(5, 'Service included must be at least 5 characters')
+    .trim('Service included cannot be empty spaces'),
+  service_excluded: yup
+    .string()
+    .required('Service excluded details are required')
+    .min(5, 'Service excluded must be at least 5 characters')
+    .trim('Service excluded cannot be empty spaces')
+});
+
+// Client validation schema
+export const clientValidationSchema = yup.object().shape({
+  first_name: yup
+    .string()
+    .required('First name is required')
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must be less than 50 characters')
+    .matches(patterns.alphanumeric, 'First name can only contain letters, numbers, and spaces'),
+  last_name: yup
+    .string()
+    .required('Last name is required')
+    .min(2, 'Last name must be at least 2 characters')
+    .max(50, 'Last name must be less than 50 characters')
+    .matches(patterns.alphanumeric, 'Last name can only contain letters, numbers, and spaces'),
+  email: yup
+    .string()
+    .required('Email is required')
+    .matches(patterns.email, 'Please enter a valid email address'),
+  phone: yup
+    .string()
+    .required('Phone is required')
+    .matches(patterns.phone, 'Please enter a valid 10-digit phone number'),
+  status: yup
+    .string()
+    .required('Status is required')
+    .oneOf(['active', 'inactive'], 'Invalid status')
+});
+
 export default {
   patterns,
   storyValidationSchema,
   localityValidationSchema,
   bannerValidationSchema,
   loginValidationSchema,
-  userValidationSchema
+  userValidationSchema,
+  serviceValidationSchema,
+  clientValidationSchema
 };

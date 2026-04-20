@@ -1,144 +1,71 @@
 import { api } from './apiClient';
 
-// Mock data for testing
-const mockStories = [
-  { id: 1, date: '04 Jan 2026 07:33 PM', image: '2026' },
-  { id: 2, date: '03 Jan 2026 02:15 PM', image: '2025',},
-  { id: 3, date: '02 Jan 2026 11:45 AM', image: '2024',},
-  { id: 4, date: '01 Jan 2026 09:20 AM', image: '2023' },
-  { id: 5, date: '31 Dec 2025 04:15 PM', image: '2022',},
-  { id: 6, date: '30 Dec 2025 11:30 PM', image: '2021',},
-  { id: 7, date: '29 Dec 2025 08:45 PM', image: '2020' },
-  { id: 8, date: '28 Dec 2025 05:20 PM', image: '2019',}
-];
-
-const mockUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-15', stories: 12 },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Editor', status: 'Active', joinDate: '2024-02-20', stories: 8 },
-  { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'Viewer', status: 'Inactive', joinDate: '2024-03-10', stories: 2 }
-];
-
-const mockLocalities = [
-  { id: 1, name: 'Downtown Area', state: 'California', city: 'Los Angeles', stories: 8, users: 45 },
-  { id: 2, name: 'North District', state: 'New York', city: 'New York City', stories: 5, users: 32 },
-  { id: 3, name: 'East Zone', state: 'Texas', city: 'Houston', stories: 2, users: 18 }
-];
-
-const mockBanners = [
-  { 
-    id: 1, 
-    banner_title: 'electricain', 
-    banner_desc: 'service',
-    banner_img: 'electricain.jpeg',
-    banner_img_path: 'assets/images/banner/',
-    category_id: 1,
-    sub_category_id: 22,
-    service_id: 48,
-    status: 'on',
-    is_visible: 'up',
-    created_at: '2025-11-05T16:48:42.000Z'
-  },
-  { 
-    id: 2, 
-    banner_title: 'ac', 
-    banner_desc: 'about ac',
-    banner_img: 'ac.jpeg',
-    banner_img_path: 'assets/images/banner/',
-    category_id: 6,
-    sub_category_id: 32,
-    service_id: 146,
-    status: 'on',
-    is_visible: 'up',
-    created_at: '2025-11-05T16:36:21.000Z'
-  }
-];
-
-const mockDashboardStats = {
-  totalStories: 24,
-  activeUsers: 156,
-  localities: 8,
-  totalViews: 1200,
-  storiesChange: '+3 this week',
-  usersChange: '+12 this week',
-  localitiesChange: '+2 this month',
-  viewsChange: '+240 this week'
-};
-
 // Stories API
 export const storiesAPI = {
   getAll: async (page = 1, limit, search = '') => {
     console.log('Fetching stories with params:', { page, limit, search });
     try {
-      const response = await api.get('/v1/stories', {
+      const response = await api.get('/stories', {
         params: { page, limit, search }
       });
       return response.data;
     } catch (error) {
       console.error('Stories API Error:', error);
-      // Fallback to mock data
-      let filteredData = mockStories;
-      if (search) {
-        filteredData = filteredData.filter(story => 
-          story.date.toLowerCase().includes(search.toLowerCase()) ||
-          story.image.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedData = filteredData.slice(startIndex, endIndex);
-      
-      return {
-        data: paginatedData,
-        total: filteredData.length,
-        page: page,
-        limit: limit
-      };
+      throw error;
     }
   },
 
 
   create: async (storyData) => {
     try {
-      const response = await api.post('/v1/stories', storyData);
+      const response = await api.post('/stories', storyData);
       return response;
     } catch (error) {
       console.error('Create Story Error:', error);
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
   update: async (id, storyData) => {
     try {
-      const response = await api.patch(`/v1/stories/${id}`, storyData);
+      const response = await api.patch(`/stories/${id}`, storyData);
       return response;
     } catch (error) {
       console.error('Update Story Error:', error);
-      // Fallback to mock
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/v1/stories/${id}`);
+      const response = await api.delete(`/stories/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Story Error:', error);
-      // Fallback to mock
-      const index = mockStories.findIndex(s => s.id === parseInt(id));
-      if (index === -1) throw new Error('Story not found');
-      
-      mockStories.splice(index, 1);
-      return {
-        message: 'Story deleted successfully'
-      };
+      throw error;
+    }
+  }
+};
+
+// Auth API
+export const authAPI = {
+  login: async (credentials) => {
+    try {
+      const response = await api.post('/users/login', credentials);
+      return response;
+    } catch (error) {
+      console.error('Login API Error:', error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      const response = await api.post('/users/logout');
+      return response;
+    } catch (error) {
+      console.error('Logout API Error:', error);
+      throw error;
     }
   }
 };
@@ -146,40 +73,25 @@ export const storiesAPI = {
 // Users API
 export const usersAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let filteredData = mockUsers;
-    if (search) {
-      filteredData = filteredData.filter(user => 
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase())
-      );
+    try {
+      const response = await api.get('/users', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Users API Error:', error);
+      throw error;
     }
-    
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-    
-    return {
-      data: paginatedData,
-      total: filteredData.length,
-      page,
-      limit
-    };
   },
 
   create: async (userData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newUser = {
-      id: mockUsers.length + 1,
-      joinDate: new Date().toISOString().split('T')[0],
-      ...userData
-    };
-    mockUsers.push(newUser);
-    return {
-      data: newUser,
-      message: 'User created successfully'
-    };
+    try {
+      const response = await api.post('/users', userData);
+      return response;
+    } catch (error) {
+      console.error('Create User Error:', error);
+      throw error;
+    }
   }
 };
 
@@ -187,7 +99,7 @@ export const usersAPI = {
 export const statesAPI = {
   getAll: async () => {
     try {
-      const response = await api.get('/v1/states');
+      const response = await api.get('/states');
       return response.data;
     } catch (error) {
       console.error('States API Error:', error);
@@ -203,7 +115,7 @@ export const statesAPI = {
 export const citiesAPI = {
   getByState: async (stateId) => {
     try {
-      const response = await api.get('/v1/cities', {
+      const response = await api.get('/cities', {
         params: { stateId }
       });
       return response.data;
@@ -223,7 +135,7 @@ export const localitiesAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
     console.log('localitiesAPI.getAll called with:', { page, limit, search });
     try {
-      const response = await api.get('/v1/localities', {
+      const response = await api.get('/localities', {
         params: { page, limit, search }
       });
       console.log('localitiesAPI response:', response);
@@ -236,7 +148,7 @@ export const localitiesAPI = {
 
   create: async (localityData) => {
     try {
-      const response = await api.post('/v1/localities', localityData);
+      const response = await api.post('/localities', localityData);
       return response;
     } catch (error) {
       console.error('Create Locality Error:', error);
@@ -249,7 +161,7 @@ export const localitiesAPI = {
 
   update: async (id, localityData) => {
     try {
-      const response = await api.patch(`/v1/localities/${id}`, localityData);
+      const response = await api.patch(`/localities/${id}`, localityData);
       return response;
     } catch (error) {
       console.error('Update Locality Error:', error);
@@ -262,7 +174,7 @@ export const localitiesAPI = {
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/v1/localities/${id}`);
+      const response = await api.delete(`/localities/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Locality Error:', error);
@@ -276,97 +188,66 @@ export const localitiesAPI = {
 // Banners API
 export const bannersAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let filteredData = mockBanners;
-    if (search) {
-      filteredData = filteredData.filter(banner => 
-        banner.banner_title.toLowerCase().includes(search.toLowerCase()) ||
-        banner.banner_desc.toLowerCase().includes(search.toLowerCase())
-      );
+    try {
+      const response = await api.get('/banners', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Banners API Error:', error);
+      throw error;
     }
-    
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-    
-    return {
-      success: true,
-      message: 'Banners fetched successfully',
-      data: {
-        items: paginatedData,
-        meta: {
-          totalItems: filteredData.length,
-          currentPage: page,
-          totalPages: Math.ceil(filteredData.length / limit),
-          itemsPerPage: limit
-        }
-      }
-    };
   },
 
   getById: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const banner = mockBanners.find(b => b.id === parseInt(id));
-    if (!banner) {
-      throw new Error('Banner not found');
+    try {
+      const response = await api.get(`/banners/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Banner Error:', error);
+      throw error;
     }
-    return {
-      data: banner
-    };
   },
 
   create: async (bannerData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const newBanner = {
-      id: mockBanners.length + 1,
-      createdAt: new Date().toISOString().split('T')[0],
-      ...bannerData
-    };
-    mockBanners.push(newBanner);
-    return {
-      data: newBanner,
-      message: 'Banner created successfully'
-    };
+    try {
+      const response = await api.post('/banners', bannerData);
+      return response;
+    } catch (error) {
+      console.error('Create Banner Error:', error);
+      throw error;
+    }
   },
 
   update: async (id, bannerData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const index = mockBanners.findIndex(b => b.id === parseInt(id));
-    if (index === -1) {
-      throw new Error('Banner not found');
+    try {
+      const response = await api.patch(`/banners/${id}`, bannerData);
+      return response;
+    } catch (error) {
+      console.error('Update Banner Error:', error);
+      throw error;
     }
-    
-    mockBanners[index] = {
-      ...mockBanners[index],
-      ...bannerData
-    };
-    
-    return {
-      data: mockBanners[index],
-      message: 'Banner updated successfully'
-    };
   },
 
   delete: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const index = mockBanners.findIndex(b => b.id === parseInt(id));
-    if (index === -1) {
-      throw new Error('Banner not found');
+    try {
+      const response = await api.delete(`/banners/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Banner Error:', error);
+      throw error;
     }
-    
-    mockBanners.splice(index, 1);
-    return {
-      message: 'Banner deleted successfully'
-    };
   }
 };
 export const dashboardAPI = {
   getStats: async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return {
-      data: mockDashboardStats
-    };
+    try {
+      const response = await api.get('/dashboard/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Dashboard API Error:', error);
+      throw error;
+    }
   }
 };
 
@@ -374,7 +255,7 @@ export const dashboardAPI = {
 export const categoriesAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
     try {
-      const response = await api.get('/v1/categories', {
+      const response = await api.get('/categories', {
         params: { page, limit, search }
       });
       return response.data;
@@ -421,7 +302,7 @@ export const categoriesAPI = {
         formData.append('status', categoryData.status);
       }
       
-      const response = await api.post('/v1/categories', formData, {
+      const response = await api.post('/categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -429,10 +310,7 @@ export const categoriesAPI = {
       return response;
     } catch (error) {
       console.error('Create Category Error:', error);
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
@@ -454,7 +332,7 @@ export const categoriesAPI = {
         formData.append('status', categoryData.status);
       }
       
-      const response = await api.patch(`/v1/categories/${id}`, formData, {
+      const response = await api.patch(`/categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -462,22 +340,17 @@ export const categoriesAPI = {
       return response;
     } catch (error) {
       console.error('Update Category Error:', error);
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/v1/categories/${id}`);
+      const response = await api.delete(`/categories/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Category Error:', error);
-      return {
-        message: error.message
-      };
+      throw error;
     }
   }
 };
@@ -486,12 +359,22 @@ export const categoriesAPI = {
 export const subCategoriesAPI = {
   getAll: async (page = 1, limit = 10, search = '') => {
     try {
-      const response = await api.get('/v1/sub-categories', {
+      const response = await api.get('/sub-categories', {
         params: { page, limit, search }
       });
       return response.data;
     } catch (error) {
       console.error('SubCategories API Error:', error);
+      throw error;
+    }
+  },
+
+  getByCategory: async (categoryId) => {
+    try {
+      const response = await api.get(`/sub-categories?categoryId=${categoryId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get SubCategories by Category Error:', error);
       throw error;
     }
   },
@@ -517,7 +400,7 @@ export const subCategoriesAPI = {
         formData.append('status', subCategoryData.status);
       }
       
-      const response = await api.post('/v1/sub-categories', formData, {
+      const response = await api.post('/sub-categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -525,10 +408,7 @@ export const subCategoriesAPI = {
       return response;
     } catch (error) {
       console.error('Create SubCategory Error:', error);
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
@@ -554,7 +434,7 @@ export const subCategoriesAPI = {
         formData.append('status', subCategoryData.status);
       }
       
-      const response = await api.patch(`/v1/sub-categories/${id}`, formData, {
+      const response = await api.patch(`/sub-categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -562,22 +442,268 @@ export const subCategoriesAPI = {
       return response;
     } catch (error) {
       console.error('Update SubCategory Error:', error);
-      return {
-        data: {},
-        message: error.message
-      };
+      throw error;
     }
   },
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/v1/sub-categories/${id}`);
+      const response = await api.delete(`/sub-categories/${id}`);
       return response;
     } catch (error) {
       console.error('Delete SubCategory Error:', error);
-      return {
-        message: error.message
-      };
+      throw error;
+    }
+  }
+};
+
+// Clients API
+export const clientsAPI = {
+  getAll: async (page = 1, limit = 10, search = '') => {
+    try {
+      const response = await api.get('/users', {
+        params: { page, limit, search, role: 'customer' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Clients API Error:', error);
+      throw error;
+    }
+  },
+
+  create: async (clientData) => {
+    try {
+      const response = await api.post('/users', clientData);
+      return response;
+    } catch (error) {
+      console.error('Create Client Error:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, clientData) => {
+    try {
+      const response = await api.patch(`/users/${id}`, clientData);
+      return response;
+    } catch (error) {
+      console.error('Update Client Error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/users/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Client Error:', error);
+      throw error;
+    }
+  }
+};
+
+// Partners API
+export const partnersAPI = {
+  getAll: async (page = 1, limit = 10, search = '') => {
+    try {
+      const response = await api.get('/users', {
+        params: { page, limit, search, role: 'partner' }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Partners API Error:', error);
+      throw error;
+    }
+  },
+
+  create: async (partnerData) => {
+    try {
+      const response = await api.post('/users', partnerData);
+      return response;
+    } catch (error) {
+      console.error('Create Partner Error:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, partnerData) => {
+    try {
+      const response = await api.patch(`/users/${id}`, partnerData);
+      return response;
+    } catch (error) {
+      console.error('Update Partner Error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/users/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Partner Error:', error);
+      throw error;
+    }
+  }
+};
+
+// Services API
+export const servicesAPI = {
+  getAll: async (page = 1, limit = 10, search = '', subCategoryId = '') => {
+    try {
+      const response = await api.get('/services', {
+        params: { page, limit, search, subCategoryId }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Services API Error:', error);
+      throw error;
+    }
+  },
+
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/services/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Service Error:', error);
+      throw error;
+    }
+  },
+
+  getBySubCategory: async (subCategoryId) => {
+    try {
+      const response = await api.get(`/services/sub-category/${subCategoryId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Services by SubCategory Error:', error);
+      throw error;
+    }
+  },
+
+  create: async (serviceData) => {
+    try {
+      const formData = new FormData();
+      
+      // Match backend controller field names exactly
+      if (serviceData.service_name) {
+        formData.append('serviceName', serviceData.service_name);
+      }
+      
+      if (serviceData.price) {
+        formData.append('price', serviceData.price);
+      }
+      
+      if (serviceData.sale_price) {
+        formData.append('salePrice', serviceData.sale_price);
+      }
+      
+      if (serviceData.category_id) {
+        formData.append('categoryId', serviceData.category_id);
+      }
+      
+      if (serviceData.sub_category_id) {
+        formData.append('subCategoryId', serviceData.sub_category_id);
+      }
+      
+      if (serviceData.status) {
+        formData.append('status', serviceData.status === 'active' ? 'on' : 'off');
+      }
+      
+      if (serviceData.service_details) {
+        formData.append('serviceDescription', serviceData.service_details);
+      }
+      
+      if (serviceData.service_included) {
+        formData.append('serviceIncluded', serviceData.service_included);
+      }
+      
+      if (serviceData.service_excluded) {
+        formData.append('serviceExcluded', serviceData.service_excluded);
+      }
+      
+      // Add image if selected
+      if (serviceData.image) {
+        formData.append('serviceImage', serviceData.image);
+      }
+      
+      const response = await api.post('/services', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Create Service Error:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, serviceData) => {
+    try {
+      const formData = new FormData();
+      
+      // Match backend controller field names exactly
+      if (serviceData.service_name) {
+        formData.append('serviceName', serviceData.service_name);
+      }
+      
+      if (serviceData.price) {
+        formData.append('price', serviceData.price);
+      }
+      
+      if (serviceData.sale_price) {
+        formData.append('salePrice', serviceData.sale_price);
+      }
+      
+      if (serviceData.category_id) {
+        formData.append('categoryId', serviceData.category_id);
+      }
+      
+      if (serviceData.sub_category_id) {
+        formData.append('subCategoryId', serviceData.sub_category_id);
+      }
+      
+      if (serviceData.status) {
+        formData.append('status', serviceData.status === 'active' ? 'on' : 'off');
+      }
+      
+      if (serviceData.service_details) {
+        formData.append('serviceDescription', serviceData.service_details);
+      }
+      
+      if (serviceData.service_included) {
+        formData.append('serviceIncluded', serviceData.service_included);
+      }
+      
+      if (serviceData.service_excluded) {
+        formData.append('serviceExcluded', serviceData.service_excluded);
+      }
+      
+      // Only append image if it's a new file (not old image path)
+      if (serviceData.image && serviceData.image instanceof File) {
+        formData.append('serviceImage', serviceData.image);
+      }
+      
+      const response = await api.patch(`/services/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Update Service Error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/services/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Service Error:', error);
+      throw error;
     }
   }
 };

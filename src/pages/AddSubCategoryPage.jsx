@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import SubCategoryModal from '../components/common/SubCategoryModal';
-import CustomButton from '../components/common/CustomButton';
+import ImageModal from '../components/common/ImageModal';
+import { CustomButton } from '../components/common/CustomButton';
 import { useSubCategories, useCategories } from '../hooks/useApi';
 import { subCategoriesAPI } from '../services/api';
 
@@ -13,6 +14,8 @@ const AddSubCategoryPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for subcategories data
   const { data: subcategories, loading, error, refetch } = useSubCategories(currentPage, 10, searchTerm);
@@ -120,16 +123,21 @@ const AddSubCategoryPage = () => {
       title: 'Image',
       key: 'image',
       render: (text) => (
-        <img src={text} alt="Sub Category" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
-      )
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (text) => (
-        <span className={`badge ${text === 'active' ? 'bg-success' : 'bg-danger'}`}>
-          {text}
-        </span>
+        <img 
+          src={text} 
+          alt="Sub Category" 
+          className="cursor-pointer rounded"
+          style={{ 
+            width: '50px', 
+            height: '50px', 
+            objectFit: 'cover',
+            cursor: 'pointer',
+            transition: 'transform 0.2s'
+          }}
+          onClick={() => handleImageClick(text)}
+          onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+        />
       )
     },
     {
@@ -141,23 +149,34 @@ const AddSubCategoryPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="btn-group" role="group">
-          <CustomButton 
-            variant="primary" 
-            size="sm"
-            icon="bi-pencil"
-            onClick={() => handleEditSubCategory(record.id)}
-            tooltip="Edit Sub Category"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
-            size="sm"
-            icon="bi-trash"
-            onClick={() => handleDeleteSubCategory(record.id)}
-            tooltip="Delete Sub Category"
-          >
-          </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <div className="form-check form-switch">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={record.status === 'active'}
+              readOnly
+              style={{ cursor: 'default' }}
+            />
+          </div>
+          <div className="btn-group btn-group-sm" role="group">
+            <CustomButton 
+              variant="primary" 
+              size="sm"
+              icon="bi-pencil"
+              onClick={() => handleEditSubCategory(record.id)}
+              tooltip="Edit Sub Category"
+            >
+            </CustomButton>
+            <CustomButton 
+              variant="danger" 
+              size="sm"
+              icon="bi-trash"
+              onClick={() => handleDeleteSubCategory(record.id)}
+              tooltip="Delete Sub Category"
+            >
+            </CustomButton>
+          </div>
         </div>
       )
     }
@@ -170,6 +189,16 @@ const AddSubCategoryPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   console.log('SubCategories data:', subcategories);
@@ -251,6 +280,12 @@ const AddSubCategoryPage = () => {
         categories={categories?.items || []}
         setSelectedFile={setSelectedFile}
         selectedFile={selectedFile}
+      />
+
+      <ImageModal
+        show={showImageModal}
+        handleClose={handleCloseImageModal}
+        imageUrl={selectedImage}
       />
     </div>
   );

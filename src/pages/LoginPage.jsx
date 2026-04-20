@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { loginValidationSchema } from '../utils/validation';
-import CustomButton from '../components/common/CustomButton';
+import { CustomButton } from '../components/common/CustomButton';
 import CustomInput from '../components/common/CustomInput';
-import { api } from '../services/apiClient';
+import { authAPI } from '../services/api';
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
@@ -31,20 +31,34 @@ const LoginPage = () => {
     try {
       console.log('Login data:', data);
       
-      // Dummy login validation
-      if (data.email === 'test@gmail.com' && data.password === '123456') {
-        // Set dummy auth token
-        localStorage.setItem('authToken', 'dummy-token-for-testing');
+      // Call login API
+      const response = await authAPI.login({
+        email: data.email,
+        password: data.password,
+        role: 'admin'
+      });
+
+      if (response.success) {
+        // Set auth token
+        localStorage.setItem('authToken', response.data.token);
+        
+        // Save user data
+        localStorage.setItem('userData', JSON.stringify(response.data.user));
         
         // Save user preferences
         localStorage.setItem('userPreferences', JSON.stringify({
-          email: data.email,
-          name: 'Test User'
+          email: response.data.user.email,
+          name: response.data.user.name,
+          role: response.data.user.role || data.role
         }));
+        
         navigate('/dashboard');
       } else {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
+        setError(response.message || 'Login failed. Please try again.');
       }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

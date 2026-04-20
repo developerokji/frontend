@@ -57,7 +57,9 @@ const CustomButton = ({
   const renderIcon = () => {
     if (!icon || loading) return null;
     
-    const iconElement = <i className={`${icon} ${iconPosition === 'right' ? 'ms-2' : 'me-2'}`}></i>;
+    // Don't add margin if it's an icon-only button
+    const marginClass = children ? (iconPosition === 'right' ? 'ms-2' : 'me-2') : '';
+    const iconElement = <i className={`${icon} ${marginClass}`}></i>;
     
     if (iconPosition === 'right') {
       return (
@@ -109,10 +111,15 @@ const CustomButton = ({
     return children;
   };
 
+  // Add flex centering for icon-only buttons
+  const finalButtonClass = icon && !children ? 
+    `${buttonClass} d-flex align-items-center justify-content-center` : 
+    buttonClass;
+
   const buttonElement = (
     <button
       type={type}
-      className={buttonClass}
+      className={finalButtonClass}
       onClick={onClick}
       disabled={disabled || loading}
       {...props}
@@ -133,4 +140,4 @@ const CustomButton = ({
   return buttonElement;
 };
 
-export default CustomButton;
+export { CustomButton };

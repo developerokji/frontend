@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import CategoryModal from '../components/common/CategoryModal';
-import CustomButton from '../components/common/CustomButton';
+import ImageModal from '../components/common/ImageModal';
+import { CustomButton } from '../components/common/CustomButton';
 import { useCategories } from '../hooks/useApi';
 import { categoriesAPI } from '../services/api';
 
@@ -13,6 +14,8 @@ const AddCategoryPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for categories data
   const { data: categories, loading, error, refetch } = useCategories(currentPage, 10, searchTerm);
@@ -109,16 +112,21 @@ const AddCategoryPage = () => {
       title: 'Category Image',
       key: 'image',
       render: (text) => (
-        <img src={text} alt="Category" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
-      )
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (text) => (
-        <span className={`badge ${text === 'active' ? 'bg-success' : 'bg-danger'}`}>
-          {text}
-        </span>
+        <img 
+          src={text} 
+          alt="Category" 
+          className="cursor-pointer rounded"
+          style={{ 
+            width: '50px', 
+            height: '50px', 
+            objectFit: 'cover',
+            cursor: 'pointer',
+            transition: 'transform 0.2s'
+          }}
+          onClick={() => handleImageClick(text)}
+          onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+        />
       )
     },
     {
@@ -130,23 +138,34 @@ const AddCategoryPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="btn-group" role="group">
-          <CustomButton 
-            variant="primary" 
-            size="sm"
-            icon="bi-pencil"
-            onClick={() => handleEditCategory(record.id)}
-            tooltip="Edit Category"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
-            size="sm"
-            icon="bi-trash"
-            onClick={() => handleDeleteCategory(record.id)}
-            tooltip="Delete Category"
-          >
-          </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <div className="form-check form-switch">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={record.status === 'active'}
+              readOnly
+              style={{ cursor: 'default' }}
+            />
+          </div>
+          <div className="btn-group btn-group-sm" role="group">
+            <CustomButton 
+              variant="primary" 
+              size="sm"
+              icon="bi-pencil"
+              onClick={() => handleEditCategory(record.id)}
+              tooltip="Edit Category"
+            >
+            </CustomButton>
+            <CustomButton 
+              variant="danger" 
+              size="sm"
+              icon="bi-trash"
+              onClick={() => handleDeleteCategory(record.id)}
+              tooltip="Delete Category"
+            >
+            </CustomButton>
+          </div>
         </div>
       )
     }
@@ -159,6 +178,16 @@ const AddCategoryPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   console.log('Categories data:', categories);
@@ -237,6 +266,12 @@ const AddCategoryPage = () => {
         categoryData={selectedCategory}
         setSelectedFile={setSelectedFile}
         selectedFile={selectedFile}
+      />
+
+      <ImageModal
+        show={showImageModal}
+        handleClose={handleCloseImageModal}
+        imageUrl={selectedImage}
       />
     </div>
   );

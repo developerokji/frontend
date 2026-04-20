@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import LocalityModal from '../components/common/LocalityModal';
-import CustomButton from '../components/common/CustomButton';
+import { CustomButton } from '../components/common/CustomButton';
 import { useLocalities, useCities } from '../hooks/useApi';
 import { localitiesAPI } from '../services/api';
 
@@ -95,7 +95,7 @@ const LocalityPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="btn-group" role="group">
+        <div className="btn-group btn-group-sm" role="group">
           <CustomButton 
             variant="primary" 
             size="sm"

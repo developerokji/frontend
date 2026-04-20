@@ -22,10 +22,9 @@ const Sidebar = () => {
   ];
 
   const partnerSubmenu = [
-    { icon: 'bi-person-plus', text: 'Add Partner', path: '/partner/add' },
     { icon: 'bi-list-check', text: 'Partner List', path: '/partner/list' },
-    { icon: 'bi-graph-up', text: 'Partner Analytics', path: '/partner/analytics' },
-    { icon: 'bi-award', text: 'Partner Performance', path: '/partner/performance' },
+    { icon: 'bi-card-checklist', text: 'Subscription Partner', path: '/partner/subscription' },
+    { icon: 'bi-clock-history', text: 'Expire Partner', path: '/partner/expire' },
   ];
 
   const categoriesSubmenu = [
@@ -34,13 +33,22 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="d-flex flex-column p-3 bg-light border-end" style={{ width: '250px', height: '100vh', overflowY: 'auto' }}>
-      <h5 className="mb-4">
-        <a className="navbar-brand fw-bold text-primary text-decoration-none" href="#">
-          <i className="bi bi-book me-2"></i>
-          OKJI
-        </a>
-      </h5>
+    <div className="d-flex flex-column p-3 bg-dark text-white" style={{ width: '250px', height: '100vh', overflowY: 'auto' }}>
+      <div className="mb-4">
+        <div 
+          style={{ 
+            width: '200px', 
+            height: '120px', 
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            backgroundImage: 'url(/image.png)',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            margin: '0 auto'
+          }}
+        />
+      </div>
       
       <ul className="nav nav-pills flex-column mb-auto">
         {menuItems.map((item, index) => (
@@ -49,7 +57,7 @@ const Sidebar = () => {
               <div>
                 <button
                   className={`nav-link d-flex align-items-center justify-content-between w-100 ${
-                    location.pathname.startsWith(item.path) ? 'active' : 'text-dark'
+                    location.pathname.startsWith(item.path) ? 'active' : 'text-white'
                   }`}
                   onClick={() => {
                     if (item.text === 'Partner') {
@@ -58,33 +66,43 @@ const Sidebar = () => {
                       setCategoriesExpanded(!categoriesExpanded);
                     }
                   }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className="d-flex align-items-center">
-                    <i className={`bi ${item.icon} me-3`}></i>
-                    <span>{item.text}</span>
+                    <i className={`bi ${item.icon} me-2`}></i>
+                    {item.text}
                   </div>
-                  <i className={`bi ${
-                    (item.text === 'Partner' && partnerExpanded) || 
-                    (item.text === 'Categories' && categoriesExpanded) 
-                      ? 'bi-chevron-up' : 'bi-chevron-down'
-                  }`}></i>
+                  <i className={`bi ${item.text === 'Partner' ? (partnerExpanded ? 'bi-chevron-up' : 'bi-chevron-down') : (categoriesExpanded ? 'bi-chevron-up' : 'bi-chevron-down')}`}></i>
                 </button>
-                
-                {((item.text === 'Partner' && partnerExpanded) || 
-                  (item.text === 'Categories' && categoriesExpanded)) && (
+                {item.text === 'Partner' && partnerExpanded && (
                   <ul className="nav nav-pills flex-column ms-3 mt-1">
-                    {(item.text === 'Partner' ? partnerSubmenu : categoriesSubmenu).map((subItem, subIndex) => (
+                    {partnerSubmenu.map((subItem, subIndex) => (
                       <li className="nav-item" key={subIndex}>
                         <Link
                           to={subItem.path}
-                          className={`nav-link d-flex align-items-center ${
-                            location.pathname === subItem.path ? 'active' : 'text-dark'
+                          className={`nav-link ${
+                            location.pathname === subItem.path ? 'active' : 'text-white'
                           }`}
-                          style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
                         >
                           <i className={`bi ${subItem.icon} me-2`}></i>
-                          <span>{subItem.text}</span>
+                          {subItem.text}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {item.text === 'Categories' && categoriesExpanded && (
+                  <ul className="nav nav-pills flex-column ms-3 mt-1">
+                    {categoriesSubmenu.map((subItem, subIndex) => (
+                      <li className="nav-item" key={subIndex}>
+                        <Link
+                          to={subItem.path}
+                          className={`nav-link ${
+                            location.pathname === subItem.path ? 'active' : 'text-white'
+                          }`}
+                        >
+                          <i className={`bi ${subItem.icon} me-2`}></i>
+                          {subItem.text}
                         </Link>
                       </li>
                     ))}
@@ -94,12 +112,12 @@ const Sidebar = () => {
             ) : (
               <Link
                 to={item.path}
-                className={`nav-link d-flex align-items-center ${
-                  location.pathname === item.path ? 'active' : 'text-dark'
+                className={`nav-link ${
+                  location.pathname === item.path ? 'active' : 'text-white'
                 }`}
               >
-                <i className={`bi ${item.icon} me-3`}></i>
-                <span>{item.text}</span>
+                <i className={`bi ${item.icon} me-2`}></i>
+                {item.text}
               </Link>
             )}
           </li>

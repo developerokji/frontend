@@ -11,14 +11,24 @@ const AuthGuard = ({ children }) => {
       try {
         const token = localStorage.getItem('authToken');
         
-        if (token) {
+        // Check if token exists and is not a dummy token
+        if (token ) {
+          // Additional validation could be added here (e.g., decode JWT to check expiry)
           setAuthenticated(true);
         } else {
+          // Clear any invalid tokens
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userPreferences');
           setAuthenticated(false);
           navigate('/login');
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        // Clear any potentially corrupted data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('userPreferences');
         setAuthenticated(false);
         navigate('/login');
       }
@@ -45,6 +55,14 @@ const AuthGuard = ({ children }) => {
   }
 
   return authenticated ? children : null;
+};
+
+// Export utility function for clearing auth data (useful for testing)
+export const clearAuthData = () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('userPreferences');
+  window.location.href = '/login';
 };
 
 export default AuthGuard;

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import BannerModal from '../components/common/BannerModal';
-import CustomButton from '../components/common/CustomButton';
+import ImageModal from '../components/common/ImageModal';
+import { CustomButton } from '../components/common/CustomButton';
 import { useBanners } from '../hooks/useApi';
 import { bannersAPI } from '../services/api';
 
@@ -14,6 +15,8 @@ const BannerPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [limit, setLimit] = useState(3);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for banners data
   const { data: banners, loading, error, refetch } = useBanners(currentPage, limit, searchTerm);
@@ -128,7 +131,22 @@ const BannerPage = () => {
           const imagePath = `${record.banner_img_path}${record.banner_img}`;
           return (
             <div className="d-flex align-items-center">
-              <img src={imagePath} alt="Banner" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+              <img 
+                src={imagePath} 
+                alt="Banner" 
+                className="cursor-pointer rounded"
+                style={{ 
+                  width: '50px', 
+                  height: '50px', 
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s'
+                }}
+                onClick={() => handleImageClick(imagePath)}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              />
             </div>
           );
         } 
@@ -136,36 +154,38 @@ const BannerPage = () => {
       }
     },
     {
-      title: 'Status',
-      key: 'status',
-      render: (text) => (
-        <span className={`badge ${text === 'on' ? 'bg-success' : 'bg-secondary'}`}>
-          {text === 'on' ? 'Active' : 'Inactive'}
-        </span>
-      )
-    },
-    {
       title: 'Action',
       key: 'actions',
       className: 'd-none d-lg-table-cell',
       render: (_, record) => (
-        <div className="btn-group btn-group-sm" role="group">
-          <CustomButton 
-            variant="primary" 
-            size="sm"
-            icon="bi-pencil"
-            onClick={() => handleEditBanner(record.id)}
-            tooltip="Edit Banner"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
-            size="sm"
-            icon="bi-trash"
-            onClick={() => handleDeleteBanner(record.id)}
-            tooltip="Delete Banner"
-          >
-          </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <div className="form-check form-switch">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={record.status === 'on'}
+              readOnly
+              style={{ cursor: 'default' }}
+            />
+          </div>
+          <div className="btn-group btn-group-sm" role="group">
+            <CustomButton 
+              variant="primary" 
+              size="sm"
+              icon="bi-pencil"
+              onClick={() => handleEditBanner(record.id)}
+              tooltip="Edit Banner"
+            >
+            </CustomButton>
+            <CustomButton 
+              variant="danger" 
+              size="sm"
+              icon="bi-trash"
+              onClick={() => handleDeleteBanner(record.id)}
+              tooltip="Delete Banner"
+            >
+            </CustomButton>
+          </div>
         </div>
       )
     }
@@ -178,6 +198,16 @@ const BannerPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   console.log('Banners data:', banners);
@@ -259,6 +289,12 @@ const BannerPage = () => {
         selectedFile={selectedFile}
         editMode={editMode}
         bannerData={selectedBanner}
+      />
+
+      <ImageModal
+        show={showImageModal}
+        handleClose={handleCloseImageModal}
+        imageUrl={selectedImage}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import CustomButton from './CustomButton';
+import { CustomButton } from './CustomButton';
 import CustomInput from './CustomInput';
 
 const categoryValidationSchema = yup.object().shape({
@@ -113,6 +113,59 @@ const CategoryModal = ({ show, handleClose, handleSave, editMode = false, catego
                   <i className="bi bi-image me-2"></i>
                   Category Image {!editMode && <span className="text-danger">*</span>}
                 </label>
+                
+                {/* Show existing image in edit mode */}
+                {editMode && categoryData?.image_path && !selectedFile && (
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                      <img
+                        src={categoryData.image_path}
+                        alt="Current category image"
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid #dee2e6'
+                        }}
+                      />
+                      <div>
+                        <small className="text-muted d-block">Current image</small>
+                        <small className="text-success d-block">
+                          <i className="bi bi-check-circle me-1"></i>
+                          Existing image will be kept if no new image is selected
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show new image preview if selected */}
+                {selectedFile && (
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                      <img
+                        src={URL.createObjectURL(selectedFile)}
+                        alt="New category image"
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid #0d6efd'
+                        }}
+                      />
+                      <div>
+                        <small className="text-muted d-block">New image selected</small>
+                        <small className="text-primary d-block">
+                          <i className="bi bi-arrow-repeat me-1"></i>
+                          This will replace the existing image
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <input 
                   type="file" 
                   className={`form-control ${fileError ? 'is-invalid' : ''}`}
@@ -128,7 +181,7 @@ const CategoryModal = ({ show, handleClose, handleSave, editMode = false, catego
                 )}
                 <small className="text-muted d-block mt-2">
                   Supported formats: JPG, PNG, GIF (Max size: 5MB)
-                  {editMode && " Leave empty to keep existing image"}
+                  {editMode && " - Upload new image to replace existing one"}
                 </small>
               </div>
 

@@ -16,16 +16,15 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import AddCategoryPage from './pages/AddCategoryPage';
 import AddSubCategoryPage from './pages/AddSubCategoryPage';
+import Services from './components/Services';
+import Clients from './components/Clients';
+import PartnerList from './components/PartnerList';
 
 // Placeholder components for new routes
 const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
-const ClientPage = () => <div className="p-4"><h2>Client Management</h2><p>Client content will go here...</p></div>;
 const PartnerPage = () => <div className="p-4"><h2>Partner Management</h2><p>Partner content will go here...</p></div>;
-const PartnerAddPage = () => <div className="p-4"><h2>Add Partner</h2><p>Add partner form will go here...</p></div>;
-const PartnerListPage = () => <div className="p-4"><h2>Partner List</h2><p>Partner list will go here...</p></div>;
-const PartnerAnalyticsPage = () => <div className="p-4"><h2>Partner Analytics</h2><p>Partner analytics will go here...</p></div>;
-const PartnerPerformancePage = () => <div className="p-4"><h2>Partner Performance</h2><p>Partner performance will go here...</p></div>;
-const ServicesPage = () => <div className="p-4"><h2>Services Management</h2><p>Services content will go here...</p></div>;
+const SubscriptionPartnerPage = () => <div className="p-4"><h2>Subscription Partner</h2><p>Subscription partner content will go here...</p></div>;
+const ExpirePartnerPage = () => <div className="p-4"><h2>Expire Partner</h2><p>Expire partner content will go here...</p></div>;
 const PackagePage = () => <div className="p-4"><h2>Package Management</h2><p>Package content will go here...</p></div>;
 const LeadPage = () => <div className="p-4"><h2>Lead Management</h2><p>Lead content will go here...</p></div>;
 
@@ -52,13 +51,12 @@ function App() {
                       <Route path="/categories" element={<CategoriesPage />} />
                       <Route path="/categories/add" element={<AddCategoryPage />} />
                       <Route path="/categories/subcategory" element={<AddSubCategoryPage />} />
-                      <Route path="/client" element={<ClientPage />} />
+                      <Route path="/client" element={<Clients />} />
                       <Route path="/partner" element={<PartnerPage />} />
-                      <Route path="/partner/add" element={<PartnerAddPage />} />
-                      <Route path="/partner/list" element={<PartnerListPage />} />
-                      <Route path="/partner/analytics" element={<PartnerAnalyticsPage />} />
-                      <Route path="/partner/performance" element={<PartnerPerformancePage />} />
-                      <Route path="/services" element={<ServicesPage />} />
+                      <Route path="/partner/list" element={<PartnerList />} />
+                      <Route path="/partner/subscription" element={<SubscriptionPartnerPage />} />
+                      <Route path="/partner/expire" element={<ExpirePartnerPage />} />
+                      <Route path="/services" element={<Services />} />
                       <Route path="/package" element={<PackagePage />} />
                       <Route path="/lead" element={<LeadPage />} />
                       <Route path="/users" element={<UsersPage />} />

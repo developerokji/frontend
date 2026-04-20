@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CustomButton from '../components/common/CustomButton';
+import { CustomButton } from '../components/common/CustomButton';
 import CustomInput from '../components/common/CustomInput';
 
 const SettingsPage = () => {

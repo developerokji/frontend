@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { localityValidationSchema } from '../../utils/validation';
-import CustomButton from './CustomButton';
+import { CustomButton } from './CustomButton';
 import CustomInput from './CustomInput';
 import { useStates, useCities } from '../../hooks/useApi';
 

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import StoryModal from '../components/common/StoryModal';
 import DataTable from '../components/common/DataTable';
-import CustomButton from '../components/common/CustomButton';
+import ImageModal from '../components/common/ImageModal';
+import { CustomButton } from '../components/common/CustomButton';
 import { useStories } from '../hooks/useApi';
 import { storiesAPI } from '../services/api';
 
@@ -14,6 +15,8 @@ const StoriesPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
   const [limit, setLimit] = useState(3);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for stories data
   const { data: stories, loading, error, refetch } = useStories(currentPage, limit, searchTerm);
@@ -81,43 +84,61 @@ const StoriesPage = () => {
           const imagePath = `${record.image_path}`;
           return (
             <div className="d-flex align-items-center">
-              <img src={imagePath} alt="Story" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+              <img 
+                src={imagePath} 
+                alt="Story" 
+                className="cursor-pointer rounded"
+                style={{ 
+                  width: '50px', 
+                  height: '50px', 
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s'
+                }}
+                onClick={() => handleImageClick(imagePath)}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              />
             </div>
           );
         } 
+        return <span>No Image</span>;
       }
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (text) => (
-        <span className={`badge ${text === 'on' ? 'bg-success' : 'bg-secondary'}`}>
-          {text === 'on' ? 'Active' : 'Inactive'}
-        </span>
-      )
     },
     {
       title: 'Actions',
       key: 'actions',
       className: 'd-none d-lg-table-cell',
       render: (_, record) => (
-        <div className="btn-group btn-group-sm" role="group">
-          <CustomButton 
-            variant="primary" 
-            size="sm"
-            icon="bi-pencil"
-            onClick={() => handleEditStory(record.id)}
-            tooltip="Edit Story"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
-            size="sm"
-            icon="bi-trash"
-            onClick={() => handleDeleteStory(record.id)}
-            tooltip="Delete Story"
-          >
-          </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <div className="form-check form-switch">
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={record.status === 'on'}
+              readOnly
+              style={{ cursor: 'default' }}
+            />
+          </div>
+          <div className="btn-group btn-group-sm" role="group">
+            <CustomButton 
+              variant="primary" 
+              size="sm"
+              icon="bi-pencil"
+              onClick={() => handleEditStory(record.id)}
+              tooltip="Edit Story"
+            >
+            </CustomButton>
+            <CustomButton 
+              variant="danger" 
+              size="sm"
+              icon="bi-trash"
+              onClick={() => handleDeleteStory(record.id)}
+              tooltip="Delete Story"
+            >
+            </CustomButton>
+          </div>
         </div>
       )
     }
@@ -142,6 +163,16 @@ const StoriesPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
   };
 
   console.log('Stories data:', stories);
@@ -209,17 +240,23 @@ const StoriesPage = () => {
         </div>
       </div>
 
-      <StoryModal 
-        show={showModal}
-        handleClose={handleCloseModal}
-        handleSave={handleSaveStory}
-        setSelectedFile={setSelectedFile}
-        selectedFile={selectedFile}
-        editMode={editMode}
-        storyData={editData}
-      />
-    </div>
-  );
+<StoryModal 
+show={showModal}
+handleClose={handleCloseModal}
+handleSave={handleSaveStory}
+editMode={editMode}
+editData={editData}
+setSelectedFile={setSelectedFile}
+selectedFile={selectedFile}
+/>
+
+<ImageModal
+show={showImageModal}
+handleClose={handleCloseImageModal}
+imageUrl={selectedImage}
+/>
+</div>
+);
 };
 
 export default StoriesPage;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DataTable from '../components/common/DataTable';
-import CustomButton from '../components/common/CustomButton';
+import { CustomButton } from '../components/common/CustomButton';
 
 const UsersPage = () => {
   const [users] = useState([

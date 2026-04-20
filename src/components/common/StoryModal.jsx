@@ -2,11 +2,14 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { storyValidationSchema } from '../../utils/validation';
-import CustomButton from './CustomButton';
+import { CustomButton } from './CustomButton';
 import CustomInput from './CustomInput';
 import { useState } from 'react';
-const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData = null,setSelectedFile, selectedFile }) => {
+const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData = null,setSelectedFile, selectedFile,editData }) => {
   const [fileError, setFileError] = useState('');
+  
+  console.log('StoryModal received storyData:', storyData);
+  console.log('StoryModal editMode:', editMode);
   
   const {
     register,
@@ -23,9 +26,9 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
   // Reset form when modal opens or storyData changes
   React.useEffect(() => {
     if (show) {
-      if (editMode && storyData) {
+      if (editMode && editData) {
         reset({
-          status: storyData.status || 'on'
+          status: editData.status || 'on'
         });
       } else {
         reset({
@@ -35,7 +38,7 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
       setSelectedFile(null);
       setFileError('');
     }
-  }, [show, editMode, storyData, reset]);
+  }, [show, editMode, editData, reset]);
 
   const onSubmit = async (data) => {
     try {
@@ -90,13 +93,68 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
                   <i className="bi bi-image me-2"></i>
                   Upload Story <span className="text-danger">*</span>
                 </label>
+                
+                {/* Show existing image in edit mode */}
+                {editMode && editData?.image_path && !selectedFile && (
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                      <img
+                        src={editData.image_path}
+                        alt="Current story image"
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid #dee2e6'
+                        }}
+                        onLoad={() => console.log('Story image loaded successfully:', editData.image_path)}
+                        onError={() => console.log('Story image failed to load:', editData.image_path)}
+                      />
+                      <div>
+                        <small className="text-muted d-block">Current image</small>
+                        <small className="text-success d-block">
+                          <i className="bi bi-check-circle me-1"></i>
+                          Existing image will be kept if no new image is selected
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show new image preview if selected */}
+                {selectedFile && (
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
+                      <img
+                        src={URL.createObjectURL(selectedFile)}
+                        alt="New story image"
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '2px solid #0d6efd'
+                        }}
+                      />
+                      <div>
+                        <small className="text-muted d-block">New image selected</small>
+                        <small className="text-primary d-block">
+                          <i className="bi bi-arrow-repeat me-1"></i>
+                          This will replace the existing image
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <input 
                   type="file" 
                   className={`form-control ${fileError ? 'is-invalid' : ''}`}
                   id="storyImage" 
                   accept="image/*" 
                   onChange={handleFileChange}
-                  required
+                  required={!editMode}
                 />
                 {fileError && (
                   <div className="invalid-feedback d-block">
@@ -105,6 +163,7 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
                 )}
                 <small className="text-muted d-block mt-2">
                   Supported formats: JPG, PNG, GIF (Max size: 5MB)
+                  {editMode && " - Upload new image to replace existing one"}
                 </small>
               </div>
               
