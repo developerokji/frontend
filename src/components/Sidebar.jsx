@@ -33,14 +33,12 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="d-flex flex-column p-3 bg-dark text-white" style={{ width: '250px', height: '100vh', overflowY: 'auto' }}>
+    <div className="d-flex flex-column p-3 bg-light border-end" style={{ width: '250px', height: '100vh', overflowY: 'auto' }}>
       <div className="mb-4">
         <div 
           style={{ 
             width: '200px', 
             height: '120px', 
-            backgroundColor: 'white',
-            borderRadius: '16px',
             backgroundImage: 'url(/image.png)',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
@@ -57,7 +55,7 @@ const Sidebar = () => {
               <div>
                 <button
                   className={`nav-link d-flex align-items-center justify-content-between w-100 ${
-                    location.pathname.startsWith(item.path) ? 'active' : 'text-white'
+                    location.pathname.startsWith(item.path) ? 'active' : 'text-dark'
                   }`}
                   onClick={() => {
                     if (item.text === 'Partner') {
@@ -81,7 +79,7 @@ const Sidebar = () => {
                         <Link
                           to={subItem.path}
                           className={`nav-link ${
-                            location.pathname === subItem.path ? 'active' : 'text-white'
+                            location.pathname === subItem.path ? 'active' : 'text-dark'
                           }`}
                         >
                           <i className={`bi ${subItem.icon} me-2`}></i>
@@ -98,7 +96,7 @@ const Sidebar = () => {
                         <Link
                           to={subItem.path}
                           className={`nav-link ${
-                            location.pathname === subItem.path ? 'active' : 'text-white'
+                            location.pathname === subItem.path ? 'active' : 'text-dark'
                           }`}
                         >
                           <i className={`bi ${subItem.icon} me-2`}></i>
@@ -113,7 +111,7 @@ const Sidebar = () => {
               <Link
                 to={item.path}
                 className={`nav-link ${
-                  location.pathname === item.path ? 'active' : 'text-white'
+                  location.pathname === item.path ? 'active' : 'text-dark'
                 }`}
               >
                 <i className={`bi ${item.icon} me-2`}></i>
