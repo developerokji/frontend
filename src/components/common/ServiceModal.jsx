@@ -9,6 +9,7 @@ import { categoriesAPI, subCategoriesAPI } from '../../services/api';
 import './ServiceStyles.css';
 
 const ServiceModal = ({ show, handleClose, handleSave, editMode = false, serviceData = null, setSelectedFile, selectedFile }) => {
+  console.log(serviceData)
   const [fileError, setFileError] = useState('');
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);

@@ -59,7 +59,17 @@ export const useStates = () => {
 };
 
 export const useCities = (stateId) => {
-  return useApi(() => citiesAPI.getByState(stateId), [stateId]);
+  return useApi(
+    () => {
+      // Only make API call if stateId is provided and not empty
+      if (stateId && stateId !== '') {
+        return citiesAPI.getByState(stateId);
+      }
+      // Return empty data when no stateId
+      return Promise.resolve({ data: [] });
+    },
+    [stateId] // Always include stateId in dependencies
+  );
 };
 
 // Categories and SubCategories hooks

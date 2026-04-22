@@ -159,7 +159,7 @@ const AddSubCategoryPage = () => {
               style={{ cursor: 'default' }}
             />
           </div>
-          <div className="btn-group btn-group-sm" role="group">
+          <div className="btn-group btn-group-sm d-flex gap-2" role="group">
             <CustomButton 
               variant="primary" 
               size="sm"

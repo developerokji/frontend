@@ -14,7 +14,7 @@ const StoriesPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
-  const [limit, setLimit] = useState(3);
+  const [limit, setLimit] = useState(10);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -58,13 +58,17 @@ const StoriesPage = () => {
     }
   };
 
-  const handleDeleteStory = async (id) => {
+  const handleToggleStatus = async (id, currentStatus) => {
     try {
-      await storiesAPI.delete(id);
+      const newStatus = currentStatus === 'on' ? 'off' : 'on';
+      const formData = new FormData();
+      formData.append('status', newStatus);
+      
+      await storiesAPI.update(id, formData);
       refetch(); // Refresh stories list
     } catch (error) {
-      console.error('Error deleting story:', error);
-      // Handle error
+      console.error('Error toggling story status:', error);
+      // Handle error (show toast, etc.)
     }
   };
 
@@ -117,8 +121,8 @@ const StoriesPage = () => {
               className="form-check-input" 
               type="checkbox" 
               checked={record.status === 'on'}
-              readOnly
-              style={{ cursor: 'default' }}
+              onChange={() => handleToggleStatus(record.id, record.status)}
+              style={{ cursor: 'pointer' }}
             />
           </div>
           <div className="btn-group btn-group-sm" role="group">
@@ -128,6 +132,7 @@ const StoriesPage = () => {
               icon="bi-pencil"
               onClick={() => handleEditStory(record.id)}
               tooltip="Edit Story"
+              className="me-2"
             >
             </CustomButton>
             <CustomButton 
@@ -144,6 +149,15 @@ const StoriesPage = () => {
     }
   ];
 
+  const handleDeleteStory = async (id) => {
+    try {
+      await storiesAPI.delete(id);
+      refetch(); // Refresh stories list
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      // Handle error
+    }
+  };
   const handleEditStory = (id) => {
     // Find story data and populate modal for editing
     const story = stories?.items.find(s => s.id === id);

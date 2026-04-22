@@ -42,17 +42,19 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
 
   const onSubmit = async (data) => {
     try {
-      // Manual file validation
-      if (!selectedFile) {
+      // Manual file validation - only require image for new stories
+      if (!editMode && !selectedFile) {
         setFileError('Story image is required');
         return;
       }
       
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(selectedFile.type)) {
-        setFileError('Please upload a valid image file (JPG, PNG, GIF)');
-        return;
+      // Check file type only if a new file is selected
+      if (selectedFile) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(selectedFile.type)) {
+          setFileError('Please upload a valid image file (JPG, PNG, GIF)');
+          return;
+        }
       }
       
       const dataWithFile = {
@@ -163,24 +165,29 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
                 )}
                 <small className="text-muted d-block mt-2">
                   Supported formats: JPG, PNG, GIF (Max size: 5MB)
-                  {editMode && " - Upload new image to replace existing one"}
+                  {editMode ? " - Optional: Upload new image to replace existing one" : " - Required for new stories"}
                 </small>
               </div>
               
-
-              <CustomInput
-                label="Status"
-                type="select"
-                id="status"
-                name="status"
-                register={register}
-                error={errors.status?.message}
-                options={[
-                  { value: 'on', label: 'Active' },
-                  { value: 'off', label: 'Inactive' }
-                ]}
-                required
-              />
+              {!editMode && (
+                <input type="hidden" {...register('status')} value="on" />
+              )}
+              
+              {editMode && (
+                <CustomInput
+                  label="Status"
+                  type="select"
+                  id="status"
+                  name="status"
+                  register={register}
+                  error={errors.status?.message}
+                  options={[
+                    { value: 'on', label: 'Active' },
+                    { value: 'off', label: 'Inactive' }
+                  ]}
+                  required
+                />
+              )}
             </div>
             <div className="modal-footer border-top">
               <CustomButton variant="secondary" onClick={handleClose}>
