@@ -1,54 +1,61 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Create axios instance with base configuration
+// let localhost = "http://localhost:5000/api/v1";
 const apiClient = axios.create({
-  baseURL: "http://localhost:5000/api/v1",
+  baseURL: "http://13.234.214.196:5000/api/v1",
   timeout: 60000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 apiClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Remove Content-Type header for FormData (let browser set it automatically)
     if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
+      delete config.headers["Content-Type"];
     }
-    
+
     // Log request in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-        params: config.params,
-        data: config.data,
-      });
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+        {
+          params: config.params,
+          data: config.data,
+        },
+      );
     }
-    
+
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    console.error("❌ Request Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
     // Log response in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-        status: response.status,
-        data: response.data,
-      });
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+        {
+          status: response.status,
+          data: response.data,
+        },
+      );
     }
-    
+
     return response.data;
   },
   (error) => {
@@ -56,9 +63,9 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const { status, data } = error.response;
-      
+
       console.error(`❌ API Error: ${status} ${error.config.url}`, {
-        message: data?.message || 'Unknown error',
+        message: data?.message || "Unknown error",
         data: data,
       });
 
@@ -68,33 +75,33 @@ apiClient.interceptors.response.use(
           // Unauthorized - redirect to login (temporarily disabled until auth API is ready)
           // localStorage.removeItem('authToken');
           // window.location.href = '/login';
-          console.error('Unauthorized access - auth API not ready yet');
+          console.error("Unauthorized access - auth API not ready yet");
           break;
         case 403:
           // Forbidden
-          console.error('Access denied');
+          console.error("Access denied");
           break;
         case 404:
           // Not found
-          console.error('Resource not found');
+          console.error("Resource not found");
           break;
         case 500:
           // Server error
-          console.error('Server error');
+          console.error("Server error");
           break;
         default:
           console.error(`HTTP Error: ${status}`);
       }
     } else if (error.request) {
       // Request was made but no response received
-      console.error('❌ Network Error: No response received', error.request);
+      console.error("❌ Network Error: No response received", error.request);
     } else {
       // Something else happened
-      console.error('❌ Error:', error.message);
+      console.error("❌ Error:", error.message);
     }
-    
+
     return Promise.reject(error);
-  }
+  },
 );
 
 // API methods wrapper
@@ -132,22 +139,22 @@ export const api = {
   // Set auth token
   setAuthToken: (token) => {
     if (token) {
-      localStorage.setItem('authToken', token);
+      localStorage.setItem("authToken", token);
       apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
     } else {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("authToken");
       delete apiClient.defaults.headers.common.Authorization;
     }
   },
 
   // Get current auth token
   getAuthToken: () => {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem("authToken");
   },
 
   // Remove auth token
   removeAuthToken: () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("authToken");
     delete apiClient.defaults.headers.common.Authorization;
   },
 };
