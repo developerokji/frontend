@@ -2,7 +2,7 @@ import { api } from './apiClient';
 
 // Stories API
 export const storiesAPI = {
-  getAll: async (page = 1, limit, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     console.log('Fetching stories with params:', { page, limit, search });
     try {
       const response = await api.get('/stories', {
@@ -72,7 +72,7 @@ export const authAPI = {
 
 // Users API
 export const usersAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/users', {
         params: { page, limit, search }
@@ -132,7 +132,7 @@ export const citiesAPI = {
 
 // Localities API
 export const localitiesAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     console.log('localitiesAPI.getAll called with:', { page, limit, search });
     try {
       const response = await api.get('/localities', {
@@ -187,7 +187,7 @@ export const localitiesAPI = {
 
 // Banners API
 export const bannersAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/banners', {
         params: { page, limit, search }
@@ -253,7 +253,7 @@ export const dashboardAPI = {
 
 // Categories API
 export const categoriesAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/categories', {
         params: { page, limit, search }
@@ -357,7 +357,7 @@ export const categoriesAPI = {
 
 // SubCategories API
 export const subCategoriesAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/sub-categories', {
         params: { page, limit, search }
@@ -459,7 +459,7 @@ export const subCategoriesAPI = {
 
 // Clients API
 export const clientsAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/users', {
         params: { page, limit, search, role: 'customer' }
@@ -504,7 +504,7 @@ export const clientsAPI = {
 
 // Partners API
 export const partnersAPI = {
-  getAll: async (page = 1, limit = 10, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '') => {
     try {
       const response = await api.get('/users', {
         params: { page, limit, search, role: 'partner' }
@@ -549,7 +549,7 @@ export const partnersAPI = {
 
 // Services API
 export const servicesAPI = {
-  getAll: async (page = 1, limit = 10, search = '', subCategoryId = '') => {
+  getAll: async (page = 1, limit , search = '', subCategoryId = '') => {
     try {
       const response = await api.get('/services', {
         params: { page, limit, search, subCategoryId }
@@ -607,7 +607,7 @@ export const servicesAPI = {
       }
       
       if (serviceData.status) {
-        formData.append('status', serviceData.status === 'active' ? 'on' : 'off');
+        formData.append('status', serviceData.status);
       }
       
       if (serviceData.service_details) {
@@ -665,7 +665,7 @@ export const servicesAPI = {
       }
       
       if (serviceData.status) {
-        formData.append('status', serviceData.status === 'active' ? 'on' : 'off');
+        formData.append('status', serviceData.status);
       }
       
       if (serviceData.service_details) {

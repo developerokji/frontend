@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ClientModal from './common/ClientModal';
 import DataTable from './common/DataTable';
+import PaginationDropdown from './common/PaginationDropdown';
 import { clientsAPI } from '../services/api';
 import { CustomButton } from './common/CustomButton';
 
@@ -17,7 +18,7 @@ const Clients = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const limit = 10;
+  const [limit, setLimit] = useState(25);
 
   // Load clients
   const loadClients = async () => {
@@ -106,6 +107,11 @@ const Clients = () => {
     setCurrentPage(page);
   };
 
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
   return (
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
@@ -134,12 +140,11 @@ const Clients = () => {
               </div>
             </div>
             <div className="col-12 col-md-6 col-lg-4">
-              <select className="form-select">
-                <option>10 entries per page</option>
-                <option>25 entries per page</option>
-                <option>50 entries per page</option>
-                <option>100 entries per page</option>
-              </select>
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
             </div>
           </div>
 
@@ -205,7 +210,7 @@ const Clients = () => {
                           style={{ cursor: 'default' }}
                         />
                       </div>
-                      <div className="btn-group btn-group-sm" role="group">
+                      <div className="btn-group btn-group-sm d-flex gap-2" role="group">
                         <CustomButton 
                           variant="primary" 
                           size="sm"

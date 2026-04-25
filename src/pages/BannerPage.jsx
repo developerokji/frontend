@@ -3,6 +3,7 @@ import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import BannerModal from '../components/common/BannerModal';
 import ImageModal from '../components/common/ImageModal';
+import PaginationDropdown from '../components/common/PaginationDropdown';
 import { CustomButton } from '../components/common/CustomButton';
 import { useBanners } from '../hooks/useApi';
 import { bannersAPI } from '../services/api';
@@ -14,7 +15,7 @@ const BannerPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [limit, setLimit] = useState(3);
+  const [limit, setLimit] = useState(25);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -40,22 +41,22 @@ const BannerPage = () => {
       
       // Add file
       if (bannerData.image) {
-        formData.append('banner_img', bannerData.image);
+        formData.append('bannerImage', bannerData.image);
       }
       
       // Add other fields
-      formData.append('category_id', bannerData.category_id);
-      formData.append('banner_title', bannerData.banner_title);
-      formData.append('banner_desc', bannerData.banner_desc);
+      formData.append('bannerTitle', bannerData.banner_title);
+      formData.append('bannerDesc', bannerData.banner_desc);
+      formData.append('categoryId', bannerData.category_id);
       formData.append('status', bannerData.status);
-      formData.append('is_visible', bannerData.is_visible);
+      formData.append('show', bannerData.is_visible);
       
       // Add optional fields if they exist
-      if (selectedBanner?.sub_category_id) {
-        formData.append('sub_category_id', selectedBanner.sub_category_id);
+      if (bannerData.sub_category_id) {
+        formData.append('subCategoryId', bannerData.sub_category_id);
       }
-      if (selectedBanner?.service_id) {
-        formData.append('service_id', selectedBanner.service_id);
+      if (bannerData.service_id) {
+        formData.append('serviceId', bannerData.service_id);
       }
       
       if (bannerData.image) {
@@ -120,15 +121,79 @@ const BannerPage = () => {
     {
       title: 'Desc',
       key: 'banner_desc',
-      render: (text) => <span>{text ? text.substring(0, 50) + '...' : '-'}</span>
+      render: (text) => {
+        if (!text) return <span>-</span>;
+        
+        const truncatedText = text.length > 10 ? text.substring(0, 10) + '...' : text;
+        
+        return (
+          <span
+            style={{ cursor: 'pointer' }}
+            title={text} // Show full text on hover
+            onClick={() => {
+              // Create a modal/popup to show full description
+              const modal = document.createElement('div');
+              modal.className = 'modal fade show';
+              modal.style.display = 'block';
+              modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+              modal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Banner Description</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p style="white-space: pre-wrap; word-break: break-word;">${text}</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+              
+              document.body.appendChild(modal);
+              
+              // Handle close button clicks
+              const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+              const closeModal = () => {
+                document.body.removeChild(modal);
+              };
+              
+              closeButtons.forEach(btn => {
+                btn.addEventListener('click', closeModal);
+              });
+              
+              // Close on background click
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                  closeModal();
+                }
+              });
+              
+              // Close on Escape key
+              const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                  closeModal();
+                  document.removeEventListener('keydown', handleEscape);
+                }
+              };
+              document.addEventListener('keydown', handleEscape);
+            }}
+          >
+            {truncatedText}
+          </span>
+        );
+      }
     },
     {
       title: 'Image',
       key: 'banner_img',
       render: (text, record) => {
-        if (record.banner_img && record.banner_img_path) {
+        if (record.banner_img_path) {
           // Construct full image path
-          const imagePath = `${record.banner_img_path}${record.banner_img}`;
+          const imagePath = `${record.banner_img_path}`;
           return (
             <div className="d-flex align-items-center">
               <img 
@@ -200,6 +265,11 @@ const BannerPage = () => {
     setCurrentPage(page);
   };
 
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
     setShowImageModal(true);
@@ -222,8 +292,7 @@ const BannerPage = () => {
     status: item.status,                    // Column 5: Status
     is_visible: item.is_visible,             // For position visibility
     sub_category_id: item.sub_category_id,   // Additional fields
-    service_id: item.service_id,             // Additional fields
-    created_at: item.created_at              // Created date
+    service_id: item.service_id              // Additional fields
   })) || [];
   
   const meta = banners?.meta || {};
@@ -260,6 +329,13 @@ const BannerPage = () => {
                   onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
+            </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
             </div>
           </div>
 

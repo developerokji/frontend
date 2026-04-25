@@ -43,13 +43,15 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
   useEffect(() => {
     if (show) {
       if (editMode && bannerData) {
+        console.log('BannerModal resetting with bannerData:', bannerData);
+        // Reset form first
         reset({
-          category_id: bannerData.category_id || '',
-          sub_category_id: bannerData.sub_category_id || '',
-          service_id: bannerData.service_id || '',
-          banner_title: bannerData.banner_title || '',
-          banner_desc: bannerData.banner_desc || '',
-          status: bannerData.status || 'on'
+          category_id: '',
+          sub_category_id: '',
+          service_id: '',
+          banner_title: '',
+          banner_desc: '',
+          status: 'on'
         });
       } else {
         reset({
@@ -65,6 +67,84 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
       setFileError('');
     }
   }, [show, editMode, bannerData, reset, setSelectedFile]);
+
+  // Set form values after categories are loaded (for edit mode)
+  useEffect(() => {
+    if (show && editMode && bannerData && categories.length > 0) {
+      console.log('Setting form values after categories loaded:', bannerData);
+      
+      // Set other form values immediately
+      setValue('banner_title', bannerData.bannerTitle || bannerData.banner_title || '');
+      setValue('banner_desc', bannerData.bannerDesc || bannerData.banner_desc || '');
+      setValue('status', bannerData.status || 'on');
+      
+      // Set category value
+      const categoryId = bannerData.categoryId || bannerData.category_id || '';
+      console.log('Setting category value:', categoryId);
+      setValue('category_id', categoryId);
+      
+      // If category exists, load and set subcategory
+      if (categoryId) {
+        const loadSubCategoriesAndSetValue = async () => {
+          try {
+            console.log('Loading subcategories for categoryId:', categoryId);
+            const response = await subCategoriesAPI.getByCategory(categoryId);
+            console.log('Subcategories response:', response);
+            
+            if (response && response.items) {
+              setSubCategories(response.items);
+              
+              // Wait a tick for the dropdown to update before setting value
+              setTimeout(() => {
+                // Set subcategory value
+                const subCategoryId = bannerData.subCategoryId || bannerData.sub_category_id || '';
+                console.log('Setting subcategory value:', subCategoryId);
+                setValue('sub_category_id', subCategoryId);
+                
+                // If subcategory exists, load and set service
+                if (subCategoryId) {
+                  const loadServices = async () => {
+                    try {
+                      console.log('Loading services for subCategoryId:', subCategoryId);
+                      const serviceResponse = await servicesAPI.getBySubCategory(subCategoryId);
+                      console.log('Services response:', serviceResponse);
+                      
+                      if (serviceResponse) {
+                        setServices(serviceResponse);
+                        
+                        // Wait another tick for services dropdown to update
+                        setTimeout(() => {
+                          const serviceId = bannerData.serviceId || bannerData.service_id || '';
+                          console.log('Setting service value:', serviceId);
+                          setValue('service_id', serviceId);
+                        }, 100);
+                      } else {
+                        console.log('No services response received');
+                      }
+                    } catch (error) {
+                      console.error('Error loading services:', error);
+                    }
+                  };
+                  
+                  loadServices();
+                } else {
+                  console.log('No subCategoryId found in bannerData');
+                }
+              }, 100);
+            } else {
+              console.log('No subcategories found in response');
+            }
+          } catch (error) {
+            console.error('Error loading dependent data:', error);
+          }
+        };
+        
+        loadSubCategoriesAndSetValue();
+      } else {
+        console.log('No categoryId found in bannerData');
+      }
+    }
+  }, [show, editMode, bannerData, categories.length, setValue]);
 
   // Load categories when modal opens
   useEffect(() => {
@@ -127,8 +207,9 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
         setServicesLoading(true);
         try {
           const response = await servicesAPI.getBySubCategory(selectedSubCategory);
-          if (response && response.items) {
-            setServices(response.items);
+          console.log(response)
+          if (response) {
+            setServices(response);
           } else {
             setServices([]);
           }
@@ -303,11 +384,11 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                   </label>
                   
                   {/* Show existing image in edit mode */}
-                  {editMode && bannerData?.banner_img && bannerData?.banner_img_path && !selectedFile && (
+                  {editMode && bannerData?.banner_img_path && !selectedFile && (
                     <div className="mb-3">
                       <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
                         <img
-                          src={`${bannerData.banner_img_path}${bannerData.banner_img}`}
+                          src={`${bannerData.banner_img_path}`}
                           alt="Current banner image"
                           style={{ 
                             width: '80px', 
@@ -316,8 +397,8 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                             borderRadius: '8px',
                             border: '2px solid #dee2e6'
                           }}
-                          onLoad={() => console.log('Banner image loaded successfully:', `${bannerData.banner_img_path}${bannerData.banner_img}`)}
-                          onError={() => console.log('Banner image failed to load:', `${bannerData.banner_img_path}${bannerData.banner_img}`)}
+                          onLoad={() => console.log('Banner image loaded successfully:', `${bannerData.banner_img_path}`)}
+                          onError={() => console.log('Banner image failed to load:', `${bannerData.banner_img_path}`)}
                         />
                         <div>
                           <small className="text-muted d-block">Current image</small>

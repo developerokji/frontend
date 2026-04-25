@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import LocalityModal from '../components/common/LocalityModal';
+import PaginationDropdown from '../components/common/PaginationDropdown';
 import { CustomButton } from '../components/common/CustomButton';
 import { useLocalities, useCities } from '../hooks/useApi';
 import { localitiesAPI } from '../services/api';
@@ -12,9 +13,10 @@ const LocalityPage = () => {
   const [selectedLocality, setSelectedLocality] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [limit, setLimit] = useState(25);
 
   // Use API hook for localities data
-  const { data: localities, loading, error, refetch } = useLocalities(currentPage, 10, searchTerm);
+  const { data: localities, loading, error, refetch } = useLocalities(currentPage, limit, searchTerm);
 
   const handleShowModal = () => {
     setEditMode(false);
@@ -87,15 +89,10 @@ const LocalityPage = () => {
       render: (text) => <span>{text}</span>
     },
     {
-      title: 'Created Date',
-      key: 'created_at',
-      render: (text) => <span>{new Date(text).toLocaleDateString()}</span>
-    },
-    {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="btn-group btn-group-sm" role="group">
+        <div className="btn-group btn-group-sm d-flex gap-2" role="group">
           <CustomButton 
             variant="primary" 
             size="sm"
@@ -124,6 +121,12 @@ const LocalityPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+    refetch(); // Refetch data with new limit
   };
 
   console.log('Localities data:', localities);
@@ -176,6 +179,13 @@ const LocalityPage = () => {
                 />
               </div>
             </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <DataTable
@@ -189,8 +199,8 @@ const LocalityPage = () => {
             currentPage={currentPage}
             totalPages={meta.totalPages}
             onPageChange={handlePageChange}
-            showingFrom={(currentPage - 1) * 10 + 1}
-            showingTo={Math.min(currentPage * 10, meta.totalItems)}
+            showingFrom={(currentPage - 1) * limit + 1}
+            showingTo={Math.min(currentPage * limit, meta.totalItems)}
             totalItems={meta.totalItems}
           />
         </div>

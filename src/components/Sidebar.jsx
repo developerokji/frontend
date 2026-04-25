@@ -17,8 +17,8 @@ const Sidebar = () => {
     { icon: 'bi-gear', text: 'Services', path: '/services' },
     { icon: 'bi-box', text: 'Package', path: '/package' },
     { icon: 'bi-telephone', text: 'Lead', path: '/lead' },
-    { icon: 'bi-people', text: 'Users', path: '/users' },
-    { icon: 'bi-gear', text: 'Settings', path: '/settings' },
+    // { icon: 'bi-people', text: 'Users', path: '/users' },
+    // { icon: 'bi-gear', text: 'Settings', path: '/settings' },
   ];
 
   const partnerSubmenu = [

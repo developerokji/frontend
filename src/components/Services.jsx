@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ServiceModal from './common/ServiceModal';
 import DataTable from './common/DataTable';
 import ImageModal from './common/ImageModal';
+import PaginationDropdown from './common/PaginationDropdown';
 import { servicesAPI } from '../services/api';
 import { CustomButton } from './common/CustomButton';
 import './common/ServiceStyles.css';
@@ -21,7 +22,7 @@ const Services = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const limit = 10;
+  const [limit, setLimit] = useState(25);
 
   // Load services
   const loadServices = async () => {
@@ -51,7 +52,7 @@ const Services = () => {
 
   useEffect(() => {
     loadServices();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, limit]);
 
   const handleShowModal = () => {
     setEditMode(false);
@@ -74,6 +75,7 @@ const Services = () => {
 
   const handleSaveService = async (serviceData) => {
     try {
+      console.log(serviceData)
       if (editMode && selectedService) {
         await servicesAPI.update(selectedService.id, serviceData);
       } else {
@@ -104,6 +106,11 @@ const Services = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
   };
 
   const handleImageClick = (imageUrl) => {
@@ -142,6 +149,13 @@ const Services = () => {
                   onChange={handleSearch}
                 />
               </div>
+            </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
             </div>
           </div>
 

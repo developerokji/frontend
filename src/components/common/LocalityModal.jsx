@@ -119,18 +119,6 @@ const LocalityModal = ({ show, handleClose, handleSave, editMode = false, locali
           </div>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="modal-body py-4">
-              <CustomInput
-                label="Locality"
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Enter locality..."
-                register={register}
-                error={errors.name?.message}
-                required
-                icon="bi-geo-alt"
-              />
-
               <div className="row">
                 <div className="col-md-6">
                   <CustomInput
@@ -192,6 +180,19 @@ const LocalityModal = ({ show, handleClose, handleSave, editMode = false, locali
                   )}
                 </div>
               </div>
+              <CustomInput
+                label="Locality"
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Enter locality..."
+                register={register}
+                error={errors.name?.message}
+                required
+                icon="bi-geo-alt"
+              />
+
+              
             </div>
             <div className="modal-footer border-top">
               <button type="button" className="btn btn-secondary" onClick={handleClose}>

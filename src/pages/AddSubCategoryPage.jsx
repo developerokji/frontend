@@ -3,6 +3,7 @@ import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import SubCategoryModal from '../components/common/SubCategoryModal';
 import ImageModal from '../components/common/ImageModal';
+import PaginationDropdown from '../components/common/PaginationDropdown';
 import { CustomButton } from '../components/common/CustomButton';
 import { useSubCategories, useCategories } from '../hooks/useApi';
 import { subCategoriesAPI } from '../services/api';
@@ -14,11 +15,12 @@ const AddSubCategoryPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [limit, setLimit] = useState(25);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for subcategories data
-  const { data: subcategories, loading, error, refetch } = useSubCategories(currentPage, 10, searchTerm);
+  const { data: subcategories, loading, error, refetch } = useSubCategories(currentPage, limit, searchTerm);
   
   // Get categories for dropdown
   const { data: categories } = useCategories();
@@ -141,11 +143,6 @@ const AddSubCategoryPage = () => {
       )
     },
     {
-      title: 'Created Date',
-      key: 'created_at',
-      render: (text) => <span>{new Date(text).toLocaleDateString()}</span>
-    },
-    {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
@@ -191,6 +188,11 @@ const AddSubCategoryPage = () => {
     setCurrentPage(page);
   };
 
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
     setShowImageModal(true);
@@ -213,7 +215,6 @@ const AddSubCategoryPage = () => {
     categoryName: item.categoryName,
     image: item.image_path,
     status: item.status,
-    created_at: item.created_at,
     categoryId: item.categoryId
   })) || [];
   
@@ -251,6 +252,13 @@ const AddSubCategoryPage = () => {
                 />
               </div>
             </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <DataTable
@@ -264,8 +272,8 @@ const AddSubCategoryPage = () => {
             currentPage={currentPage}
             totalPages={meta.totalPages}
             onPageChange={handlePageChange}
-            showingFrom={(currentPage - 1) * 10 + 1}
-            showingTo={Math.min(currentPage * 10, meta.totalItems)}
+            showingFrom={(currentPage - 1) * limit + 1}
+            showingTo={Math.min(currentPage * limit, meta.totalItems)}
             totalItems={meta.totalItems}
           />
         </div>

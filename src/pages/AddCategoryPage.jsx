@@ -3,6 +3,7 @@ import ReactPaginate from '../components/common/ReactPaginate';
 import DataTable from '../components/common/DataTable';
 import CategoryModal from '../components/common/CategoryModal';
 import ImageModal from '../components/common/ImageModal';
+import PaginationDropdown from '../components/common/PaginationDropdown';
 import { CustomButton } from '../components/common/CustomButton';
 import { useCategories } from '../hooks/useApi';
 import { categoriesAPI } from '../services/api';
@@ -14,11 +15,12 @@ const AddCategoryPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [limit, setLimit] = useState(25);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
   // Use API hook for categories data
-  const { data: categories, loading, error, refetch } = useCategories(currentPage, 10, searchTerm);
+  const { data: categories, loading, error, refetch } = useCategories(currentPage, limit, searchTerm);
 
   const handleShowModal = () => {
     setEditMode(false);
@@ -130,11 +132,6 @@ const AddCategoryPage = () => {
       )
     },
     {
-      title: 'Created Date',
-      key: 'created_at',
-      render: (text) => <span>{new Date(text).toLocaleDateString()}</span>
-    },
-    {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
@@ -180,6 +177,11 @@ const AddCategoryPage = () => {
     setCurrentPage(page);
   };
 
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
     setShowImageModal(true);
@@ -200,8 +202,7 @@ const AddCategoryPage = () => {
     id: item.id,
     name: item.name,
     image: item.image_path,
-    status: item.status,
-    created_at: item.created_at
+    status: item.status
   })) || [];
   
   const totalItems = meta.totalItems || categoriesData.length;
@@ -238,6 +239,13 @@ const AddCategoryPage = () => {
                 />
               </div>
             </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <DataTable
@@ -251,8 +259,8 @@ const AddCategoryPage = () => {
             currentPage={currentPage}
             totalPages={meta.totalPages}
             onPageChange={handlePageChange}
-            showingFrom={(currentPage - 1) * 10 + 1}
-            showingTo={Math.min(currentPage * 10, meta.totalItems)}
+            showingFrom={(currentPage - 1) * limit + 1}
+            showingTo={Math.min(currentPage * limit, meta.totalItems)}
             totalItems={meta.totalItems}
           />
         </div>

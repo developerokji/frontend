@@ -3,6 +3,7 @@ import ReactPaginate from '../components/common/ReactPaginate';
 import StoryModal from '../components/common/StoryModal';
 import DataTable from '../components/common/DataTable';
 import ImageModal from '../components/common/ImageModal';
+import PaginationDropdown from '../components/common/PaginationDropdown';
 import { CustomButton } from '../components/common/CustomButton';
 import { useStories } from '../hooks/useApi';
 import { storiesAPI } from '../services/api';
@@ -14,7 +15,7 @@ const StoriesPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(25);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -72,12 +73,26 @@ const StoriesPage = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    
+    return `${day} ${month} ${year} ${displayHours}:${minutes} ${ampm}`;
+  };
+
   const columns = [
     {
-      title: 'Created Date',
+      title: 'Date',
       key: 'created_at',
       className: 'd-none d-md-table-cell',
-      render: (text) => <small className="text-muted">{new Date(text).toLocaleDateString()}</small>
+      render: (text) => <small className="text-muted">{formatDate(text)}</small>
     },
     {
       title: 'Image',
@@ -179,6 +194,11 @@ const StoriesPage = () => {
     setCurrentPage(page);
   };
 
+  const handleLimitChange = (newLimit) => {
+    setLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
     setShowImageModal(true);
@@ -234,6 +254,13 @@ const StoriesPage = () => {
                 />
               </div>
             </div>
+            <div className="col-12 col-md-6 col-lg-4">
+              <PaginationDropdown 
+                limit={limit} 
+                onLimitChange={handleLimitChange}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <DataTable
@@ -247,8 +274,8 @@ const StoriesPage = () => {
             currentPage={currentPage}
             totalPages={meta.totalPages}
             onPageChange={handlePageChange}
-            showingFrom={(currentPage - 1) * limit + 1}
-            showingTo={Math.min(currentPage * limit, meta.totalItems)}
+            showingFrom={(currentPage - 1) * 25 + 1}
+            showingTo={Math.min(currentPage * 25, meta.totalItems)}
             totalItems={meta.totalItems}
           />
         </div>
