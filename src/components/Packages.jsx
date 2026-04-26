@@ -1,52 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import ServiceModal from './common/ServiceModal';
+import PackageModal from './common/PackageModal';
 import DataTable from './common/DataTable';
-import ImageModal from './common/ImageModal';
 import PaginationDropdown from './common/PaginationDropdown';
-import { servicesAPI } from '../services/api';
+import { packagesAPI } from '../services/api';
 import { CustomButton } from './common/CustomButton';
-import './common/ServiceStyles.css';
 
-const Services = () => {
+const Packages = () => {
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
-  const [services, setServices] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
 
   const [limit, setLimit] = useState(25);
 
-  // Load services
-  const loadServices = async () => {
+  // Load packages
+  const loadPackages = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await servicesAPI.getAll(currentPage, limit, searchTerm);
+      const response = await packagesAPI.getAll(currentPage, limit, searchTerm);
       if (response.data && response.data.items) {
-        setServices(response.data.items);
+        setPackages(response.data.items);
         setTotalItems(response.data.meta?.totalItems || response.data.items.length);
         setTotalPages(response.data.meta?.totalPages || 1);
       } else if (response.items) {
-        setServices(response.items);
+        setPackages(response.items);
         setTotalItems(response.meta?.totalItems || response.items.length);
         setTotalPages(response.meta?.totalPages || 1);
       } else if (response.data) {
-        setServices(Array.isArray(response.data) ? response.data : []);
+        setPackages(Array.isArray(response.data) ? response.data : []);
         setTotalItems(Array.isArray(response.data) ? response.data.length : 0);
         setTotalPages(1);
       }
     } catch (error) {
-      console.error('Failed to load services:', error);
-      setError(error.message || 'Failed to load services. Please try again.');
-      setServices([]);
+      console.error('Failed to load packages:', error);
+      setError(error.message || 'Failed to load packages. Please try again.');
+      setPackages([]);
       setTotalItems(0);
       setTotalPages(0);
     } finally {
@@ -55,61 +50,47 @@ const Services = () => {
   };
 
   useEffect(() => {
-    loadServices();
+    loadPackages();
   }, [currentPage, searchTerm, limit]);
 
   const handleShowModal = () => {
     setEditMode(false);
-    setSelectedService(null);
-    setSelectedFile(null);
+    setSelectedPackage(null);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setSelectedFile(null);
   };
 
-  const handleEditService = (service) => {
+  const handleEditPackage = (pkg) => {
     setEditMode(true);
-    setSelectedService(service);
-    setSelectedFile(null);
+    setSelectedPackage(pkg);
     setShowModal(true);
   };
 
-  const handleSaveService = async (serviceData) => {
+  const handleSavePackage = async (packageData) => {
     try {
-      console.log(serviceData)
-      if (editMode && selectedService) {
-        await servicesAPI.update(selectedService.id, serviceData);
+      if (editMode && selectedPackage) {
+        await packagesAPI.update(selectedPackage.id, packageData);
       } else {
-        await servicesAPI.create(serviceData);
+        await packagesAPI.create(packageData);
       }
-      loadServices();
+      loadPackages();
       handleCloseModal();
     } catch (error) {
-      console.error('Save service error:', error);
+      console.error('Save package error:', error);
     }
   };
 
-  const handleDeleteService = async (serviceId) => {
-    if (window.confirm('Are you sure you want to delete this service?')) {
+  const handleDeletePackage = async (packageId) => {
+    if (window.confirm('Are you sure you want to delete this package?')) {
       try {
-        await servicesAPI.delete(serviceId);
-        loadServices();
+        await packagesAPI.delete(packageId);
+        loadPackages();
       } catch (error) {
-        console.error('Delete service error:', error);
+        console.error('Delete package error:', error);
       }
-    }
-  };
-
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 'on' ? 'off' : 'on';
-      await servicesAPI.update(id, { status: newStatus });
-      loadServices();
-    } catch (error) {
-      console.error('Error toggling service status:', error);
     }
   };
 
@@ -124,26 +105,26 @@ const Services = () => {
 
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit);
-    setCurrentPage(1); // Reset to first page when changing limit
+    setCurrentPage(1);
   };
 
-  const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl);
-    setShowImageModal(true);
-  };
-
-  const handleCloseImageModal = () => {
-    setShowImageModal(false);
-    setSelectedImage(null);
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'on' ? 'off' : 'on';
+      await packagesAPI.update(id, { status: newStatus });
+      loadPackages();
+    } catch (error) {
+      console.error('Error toggling package status:', error);
+    }
   };
 
   return (
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <h4 className="mb-0">Services</h4>
+        <h4 className="mb-0">Packages</h4>
         <CustomButton variant="primary" onClick={handleShowModal}>
           <i className="bi bi-plus-circle me-2"></i>
-          Add Service
+          Add Package
         </CustomButton>
       </div>
 
@@ -158,7 +139,7 @@ const Services = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search services..."
+                  placeholder="Search packages..."
                   value={searchTerm}
                   onChange={handleSearch}
                 />
@@ -180,7 +161,7 @@ const Services = () => {
               <button 
                 type="button" 
                 className="btn btn-sm btn-outline-danger ms-2"
-                onClick={loadServices}
+                onClick={loadPackages}
               >
                 <i className="bi bi-arrow-clockwise me-1"></i>
                 Retry
@@ -192,49 +173,50 @@ const Services = () => {
             <DataTable
               columns={[
                 {
-                  title: 'Name',
-                  key: 'name',
+                  title: 'Sr No',
+                  key: 'sr_no',
+                  render: (text, record) => {
+                    const index = packages.findIndex(pkg => pkg.id === record.id);
+                    return <div className="fw-semibold">{(currentPage - 1) * limit + index + 1}</div>;
+                  }
+                },
+                {
+                  title: 'Package Name',
+                  key: 'packageName',
                   render: (text, record) => (
                     <div className="fw-semibold">{text}</div>
                   )
                 },
                 {
-                  title: 'Image',
-                  key: 'imagePath',
-                  render: (image, record) => (
-                    <div className="d-flex align-items-center">
-                      {image && (
-                        <img
-                          src={image}
-                          alt={record.name}
-                          className="rounded me-2 cursor-pointer"
-                          style={{ 
-                            width: '40px', 
-                            height: '40px', 
-                            minWidth: '40px', 
-                            objectFit: 'cover',
-                            border: '1px solid #dee2e6',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s'
-                          }}
-                          onClick={() => handleImageClick(image)}
-                          onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-                          onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                        />
-                      ) }
-                     
-                    </div>
+                  title: 'Category Name',
+                  key: 'categoryName',
+                  render: (text, record) => (
+                    <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
-                  title: 'Sale Price',
-                  key: 'salePrice',
-                  render: (salePrice, record) => (
-                    <div className="fw-bold text-success">₹{salePrice || record.price}</div>
+                  title: 'Package Price',
+                  key: 'packagePrice',
+                  render: (price, record) => (
+                    <div className="fw-bold text-success">₹{price}</div>
                   )
                 },
                 {
-                  title: 'Actions',
+                  title: 'No. of Leads',
+                  key: 'noOfLead',
+                  render: (noOfLead, record) => (
+                    <div className="text-muted">{noOfLead}</div>
+                  )
+                },
+                {
+                  title: 'Validity',
+                  key: 'duration',
+                  render: (_, record) => (
+                    <div className="text-muted">{record.leadCountIn} {record.leadIn}</div>
+                  )
+                },
+                {
+                  title: 'Action',
                   key: 'actions',
                   render: (_, record) => (
                     <div className="d-flex align-items-center gap-2">
@@ -247,29 +229,29 @@ const Services = () => {
                           style={{ cursor: 'pointer' }}
                         />
                       </div>
-                      <div className="btn-group btn-group-sm" role="group">
+                      <div className="btn-group btn-group-sm d-flex gap-2" role="group">
                         <CustomButton 
                           variant="primary" 
                           size="sm"
                           icon="bi-pencil"
-                          onClick={() => handleEditService(record)}
-                          tooltip="Edit Service"
+                          onClick={() => handleEditPackage(record)}
+                          tooltip="Edit Package"
                         >
                         </CustomButton>
                         <CustomButton 
                           variant="danger" 
                           size="sm"
                           icon="bi-trash"
-                          onClick={() => handleDeleteService(record.id)}
-                          tooltip="Delete Service"
+                          onClick={() => handleDeletePackage(record.id)}
+                          tooltip="Delete Package"
                         >
                         </CustomButton>
                       </div>
                     </div>
                   )
                 },
-                              ]}
-              data={services}
+              ]}
+              data={packages}
               loading={loading}
               className="flex-grow-1"
             />
@@ -277,7 +259,7 @@ const Services = () => {
 
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 flex-shrink-0">
             <span className="text-muted small">
-              Showing {services.length} of {totalItems} entries
+              Showing {packages.length} of {totalItems} entries
             </span>
             <nav>
               <ul className="pagination pagination-sm mb-0">
@@ -315,23 +297,15 @@ const Services = () => {
         </div>
       </div>
 
-      <ServiceModal
+      <PackageModal
         show={showModal}
         handleClose={handleCloseModal}
-        handleSave={handleSaveService}
+        handleSave={handleSavePackage}
         editMode={editMode}
-        serviceData={selectedService}
-        setSelectedFile={setSelectedFile}
-        selectedFile={selectedFile}
-      />
-
-      <ImageModal
-        show={showImageModal}
-        handleClose={handleCloseImageModal}
-        imageUrl={selectedImage}
+        packageData={selectedPackage}
       />
     </div>
   );
 };
 
-export default Services;
+export default Packages;

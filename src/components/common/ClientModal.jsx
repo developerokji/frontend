@@ -29,16 +29,16 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
         const lastName = nameParts.slice(1).join(' ') || '';
         
         reset({
-          first_name: firstName,
-          last_name: lastName,
+          firstName: firstName,
+          lastName: lastName,
           email: clientData.email || '',
           phone: clientData.phone || '',
-          status: clientData.account_status || 'active'
+          status: clientData.accountStatus || 'active'
         });
       } else {
         reset({
-          first_name: '',
-          last_name: '',
+          firstName: '',
+          lastName: '',
           email: '',
           phone: '',
           status: 'active'
@@ -51,12 +51,6 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
 
   const onSubmit = async (data) => {
     try {
-      // Manual file validation
-      if (!selectedFile && !editMode) {
-        setFileError('Profile image is required');
-        return;
-      }
-      
       // Check file type if file is selected
       if (selectedFile) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -66,20 +60,17 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
         }
       }
       
-      // Combine first_name and last_name into name field
-      const fullName = `${data.first_name} ${data.last_name}`.trim();
-      
       const clientDataWithRole = {
-        name: fullName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        account_status: data.status,
-        role: 'customer'
+        accountStatus: data.status
       };
       
-      // Add image if selected
+      // Add avatar if selected
       if (selectedFile) {
-        clientDataWithRole.profile_image = selectedFile;
+        clientDataWithRole.avatar = selectedFile;
       }
       
       await handleSave(clientDataWithRole);
@@ -126,9 +117,15 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                         alt="Profile preview"
                         className="w-100 h-100 object-cover"
                       />
-                    ) : clientData?.profile_image ? (
+                    ) : clientData?.avatar ? (
                       <img
-                        src={clientData.profile_image}
+                        src={clientData.avatar}
+                        alt="Profile"
+                        className="w-100 h-100 object-cover"
+                      />
+                    ) : clientData?.profileImage ? (
+                      <img
+                        src={clientData.profileImage}
                         alt="Profile"
                         className="w-100 h-100 object-cover"
                       />
@@ -166,10 +163,10 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                   <CustomInput
                     label="First Name"
                     type="text"
-                    id="first_name"
-                    name="first_name"
+                    id="firstName"
+                    name="firstName"
                     register={register}
-                    error={errors.first_name?.message}
+                    error={errors.firstName?.message}
                     placeholder="Enter first name"
                     required
                   />
@@ -178,10 +175,10 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                   <CustomInput
                     label="Last Name"
                     type="text"
-                    id="last_name"
-                    name="last_name"
+                    id="lastName"
+                    name="lastName"
                     register={register}
-                    error={errors.last_name?.message}
+                    error={errors.lastName?.message}
                     placeholder="Enter last name"
                     required
                   />

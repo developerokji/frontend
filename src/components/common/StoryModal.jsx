@@ -97,11 +97,11 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
                 </label>
                 
                 {/* Show existing image in edit mode */}
-                {editMode && editData?.image_path && !selectedFile && (
+                {editMode && editData?.imagePath && !selectedFile && (
                   <div className="mb-3">
                     <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
                       <img
-                        src={editData.image_path}
+                        src={editData.imagePath}
                         alt="Current story image"
                         style={{ 
                           width: '80px', 
@@ -110,8 +110,8 @@ const StoryModal = ({ show, handleClose, handleSave, editMode = false, storyData
                           borderRadius: '8px',
                           border: '2px solid #dee2e6'
                         }}
-                        onLoad={() => console.log('Story image loaded successfully:', editData.image_path)}
-                        onError={() => console.log('Story image failed to load:', editData.image_path)}
+                        onLoad={() => console.log('Story image loaded successfully:', editData.imagePath)}
+                        onError={() => console.log('Story image failed to load:', editData.imagePath)}
                       />
                       <div>
                         <small className="text-muted d-block">Current image</small>

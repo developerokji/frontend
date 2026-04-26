@@ -154,13 +154,13 @@ export const serviceValidationSchema = yup.object().shape({
 
 // Client validation schema
 export const clientValidationSchema = yup.object().shape({
-  first_name: yup
+  firstName: yup
     .string()
     .required('First name is required')
     .min(2, 'First name must be at least 2 characters')
     .max(50, 'First name must be less than 50 characters')
     .matches(patterns.alphanumeric, 'First name can only contain letters, numbers, and spaces'),
-  last_name: yup
+  lastName: yup
     .string()
     .required('Last name is required')
     .min(2, 'Last name must be at least 2 characters')
@@ -180,6 +180,40 @@ export const clientValidationSchema = yup.object().shape({
     .oneOf(['active', 'inactive'], 'Invalid status')
 });
 
+// Package validation schema
+export const packageValidationSchema = yup.object().shape({
+  categoryId: yup
+    .string()
+    .required('Category is required'),
+  packageName: yup
+    .string()
+    .required('Package name is required')
+    .min(2, 'Package name must be at least 2 characters')
+    .max(100, 'Package name must be less than 100 characters'),
+  packagePrice: yup
+    .number()
+    .required('Package price is required')
+    .min(0, 'Package price must be greater than or equal to 0'),
+  noOfLead: yup
+    .number()
+    .required('Number of leads is required')
+    .min(1, 'Number of leads must be at least 1')
+    .integer('Number of leads must be a whole number'),
+  leadCountIn: yup
+    .number()
+    .required('Lead count duration is required')
+    .min(1, 'Lead count duration must be at least 1')
+    .integer('Lead count duration must be a whole number'),
+  leadIn: yup
+    .string()
+    .required('Duration type is required')
+    .oneOf(['days', 'weeks', 'months'], 'Invalid duration type'),
+  status: yup
+    .string()
+    .required('Status is required')
+    .oneOf(['on', 'off'], 'Invalid status')
+});
+
 export default {
   patterns,
   storyValidationSchema,
@@ -188,5 +222,6 @@ export default {
   loginValidationSchema,
   userValidationSchema,
   serviceValidationSchema,
-  clientValidationSchema
+  clientValidationSchema,
+  packageValidationSchema
 };

@@ -44,12 +44,12 @@ const LocalityModal = ({ show, handleClose, handleSave, editMode = false, locali
         console.log('Editing locality data:', localityData); // Debug log
         reset({
           name: localityData.localityName || localityData.name || '',
-          state: localityData.state_id || '',
-          city: localityData.city_id || ''
+          state: localityData.stateId || '',
+          city: localityData.cityId || ''
         });
         // Set selected state ID for edit mode - this will trigger cities API call
-        if (localityData.state_id) {
-          setSelectedStateId(localityData.state_id.toString());
+        if (localityData.stateId) {
+          setSelectedStateId(localityData.stateId.toString());
         }
       } else {
         reset({
@@ -64,8 +64,8 @@ const LocalityModal = ({ show, handleClose, handleSave, editMode = false, locali
 
   // Set city value when cities are loaded in edit mode
   useEffect(() => {
-    if (editMode && localityData && cities && cities.length > 0 && localityData.city_id) {
-      setValue('city', localityData.city_id.toString());
+    if (editMode && localityData && cities && cities.length > 0 && localityData.cityId) {
+      setValue('city', localityData.cityId.toString());
     }
   }, [editMode, localityData, cities, setValue]);
 

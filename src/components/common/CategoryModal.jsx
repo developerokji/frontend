@@ -115,11 +115,11 @@ const CategoryModal = ({ show, handleClose, handleSave, editMode = false, catego
                 </label>
                 
                 {/* Show existing image in edit mode */}
-                {editMode && categoryData?.image_path && !selectedFile && (
+                {editMode && categoryData?.imagePath && !selectedFile && (
                   <div className="mb-3">
                     <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
                       <img
-                        src={categoryData.image_path}
+                        src={categoryData.imagePath}
                         alt="Current category image"
                         style={{ 
                           width: '80px', 

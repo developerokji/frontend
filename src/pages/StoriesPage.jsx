@@ -98,9 +98,9 @@ const StoriesPage = () => {
       title: 'Image',
       key: 'image_name',
       render: (text, record) => {
-        if (record.image_name && record.image_path) {
+        if (record.image_name && record.imagePath) {
           // API response - construct full image path
-          const imagePath = `${record.image_path}`;
+          const imagePath = `${record.imagePath}`;
           return (
             <div className="d-flex align-items-center">
               <img 
@@ -213,9 +213,9 @@ const StoriesPage = () => {
   // Extract stories array and format according to columns
   const storiesData = stories?.items?.map(item => ({
     id: item.id,
-    created_at: item.created_at,      // Column 1: Created Date
-    image_name: item.image_name,        // Column 2: Image  
-    image_path: item.image_path,        // For image rendering
+    created_at: item.createdAt,      // Column 1: Created Date
+    image_name: item.imageName,        // Column 2: Image  
+    imagePath: item.imagePath,        // For image rendering
     status: item.status                 // Column 3: Status
   })) || [];
   

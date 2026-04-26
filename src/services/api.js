@@ -461,7 +461,7 @@ export const subCategoriesAPI = {
 export const clientsAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
     try {
-      const response = await api.get('/users', {
+      const response = await api.get('/users/', {
         params: { page, limit, search, role: 'customer' }
       });
       return response.data;
@@ -473,8 +473,73 @@ export const clientsAPI = {
 
   create: async (clientData) => {
     try {
-      const response = await api.post('/users', clientData);
-      return response;
+      // Check if there's a file to upload
+      const hasFile = clientData.avatar && clientData.avatar instanceof File;
+      
+      if (hasFile) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        
+        // Add fields to FormData with correct field names
+        if (clientData.firstName) {
+          formData.append('firstName', clientData.firstName);
+        }
+        
+        if (clientData.lastName) {
+          formData.append('lastName', clientData.lastName);
+        }
+        
+        if (clientData.email) {
+          formData.append('email', clientData.email);
+        }
+        
+        if (clientData.phone) {
+          formData.append('phone', clientData.phone);
+        }
+        
+        formData.append('avatar', clientData.avatar);
+        
+        if (clientData.accountStatus) {
+          formData.append('accountStatus', clientData.accountStatus);
+        }
+        
+        const response = await api.post('/users/clients', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response;
+      } else {
+        // Use JSON for regular creation without files
+        const jsonData = {};
+        
+        if (clientData.firstName) {
+          jsonData.firstName = clientData.firstName;
+        }
+        
+        if (clientData.lastName) {
+          jsonData.lastName = clientData.lastName;
+        }
+        
+        if (clientData.email) {
+          jsonData.email = clientData.email;
+        }
+        
+        if (clientData.phone) {
+          jsonData.phone = clientData.phone;
+        }
+        
+        if (clientData.accountStatus) {
+          jsonData.accountStatus = clientData.accountStatus;
+        }
+        
+        const response = await api.post('/users/clients', jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return response;
+      }
     } catch (error) {
       console.error('Create Client Error:', error);
       throw error;
@@ -483,8 +548,73 @@ export const clientsAPI = {
 
   update: async (id, clientData) => {
     try {
-      const response = await api.patch(`/users/${id}`, clientData);
-      return response;
+      // Check if there's a file to upload
+      const hasFile = clientData.avatar && clientData.avatar instanceof File;
+      
+      if (hasFile) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        
+        // Add fields to FormData with correct field names
+        if (clientData.firstName) {
+          formData.append('firstName', clientData.firstName);
+        }
+        
+        if (clientData.lastName) {
+          formData.append('lastName', clientData.lastName);
+        }
+        
+        if (clientData.email) {
+          formData.append('email', clientData.email);
+        }
+        
+        if (clientData.phone) {
+          formData.append('phone', clientData.phone);
+        }
+        
+        formData.append('avatar', clientData.avatar);
+        
+        if (clientData.accountStatus) {
+          formData.append('accountStatus', clientData.accountStatus);
+        }
+        
+        const response = await api.patch(`/users/clients/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response;
+      } else {
+        // Use JSON for regular updates without files
+        const jsonData = {};
+        
+        if (clientData.firstName) {
+          jsonData.firstName = clientData.firstName;
+        }
+        
+        if (clientData.lastName) {
+          jsonData.lastName = clientData.lastName;
+        }
+        
+        if (clientData.email) {
+          jsonData.email = clientData.email;
+        }
+        
+        if (clientData.phone) {
+          jsonData.phone = clientData.phone;
+        }
+        
+        if (clientData.accountStatus) {
+          jsonData.accountStatus = clientData.accountStatus;
+        }
+        
+        const response = await api.patch(`/users/clients/${id}`, jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return response;
+      }
     } catch (error) {
       console.error('Update Client Error:', error);
       throw error;
@@ -493,7 +623,7 @@ export const clientsAPI = {
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/users/${id}`);
+      const response = await api.delete(`/users/clients/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Client Error:', error);
@@ -703,6 +833,84 @@ export const servicesAPI = {
       return response;
     } catch (error) {
       console.error('Delete Service Error:', error);
+      throw error;
+    }
+  }
+};
+
+// Packages API
+export const packagesAPI = {
+  getAll: async (page = 1, limit = 25, search = '') => {
+    try {
+      const response = await api.get('/packages', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Packages API Error:', error);
+      throw error;
+    }
+  },
+
+  create: async (packageData) => {
+    try {
+      const response = await api.post('/packages', packageData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Create Package Error:', error);
+      throw error;
+    }
+  },
+
+  update: async (id, packageData) => {
+    try {
+      const response = await api.patch(`/packages/${id}`, packageData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error('Update Package Error:', error);
+      throw error;
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/packages/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Delete Package Error:', error);
+      throw error;
+    }
+  }
+};
+
+// Bookings API (Leads)
+export const bookingsAPI = {
+  getAll: async (page = 1, limit = 25, search = '') => {
+    try {
+      const response = await api.get('/bookings', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Bookings API Error:', error);
+      throw error;
+    }
+  },
+
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/bookings/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Booking Error:', error);
       throw error;
     }
   }

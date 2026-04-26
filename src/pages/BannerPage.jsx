@@ -103,6 +103,22 @@ const BannerPage = () => {
     }
   };
 
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'on' ? 'off' : 'on';
+      
+      // Create FormData for status update
+      const formData = new FormData();
+      formData.append('status', newStatus);
+      
+      await bannersAPI.update(id, formData);
+      refetch(); // Refresh banners list
+    } catch (error) {
+      console.error('Error updating banner status:', error);
+      // Handle error (show toast, etc.)
+    }
+  };
+
   const columns = [
     {
       title: 'Category',
@@ -229,8 +245,8 @@ const BannerPage = () => {
               className="form-check-input" 
               type="checkbox" 
               checked={record.status === 'on'}
-              readOnly
-              style={{ cursor: 'default' }}
+              onChange={() => handleToggleStatus(record.id, record.status)}
+              style={{ cursor: 'pointer' }}
             />
           </div>
           <div className="btn-group btn-group-sm" role="group">
@@ -284,15 +300,15 @@ const BannerPage = () => {
   // Extract banners array and format according to columns
   const bannersData = banners?.items?.map(item => ({
     id: item.id,
-    category_id: item.category_id,           // Column 1: Category
-    banner_title: item.banner_title,         // Column 2: Title
-    banner_desc: item.banner_desc,           // Column 3: Description
-    banner_img: item.banner_img,             // Column 4: Image name
-    banner_img_path: item.banner_img_path,    // For image rendering
+    category_id: item.categoryId,           // Column 1: Category
+    banner_title: item.bannerTitle,         // Column 2: Title
+    banner_desc: item.bannerDesc,           // Column 3: Description
+    banner_img: item.bannerImg,             // Column 4: Image name
+    banner_img_path: item.bannerImgPath,    // For image rendering
     status: item.status,                    // Column 5: Status
-    is_visible: item.is_visible,             // For position visibility
-    sub_category_id: item.sub_category_id,   // Additional fields
-    service_id: item.service_id              // Additional fields
+    is_visible: item.isVisible,             // For position visibility
+    sub_category_id: item.subCategoryId,   // Additional fields
+    service_id: item.serviceId              // Additional fields
   })) || [];
   
   const meta = banners?.meta || {};

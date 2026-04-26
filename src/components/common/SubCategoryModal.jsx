@@ -141,11 +141,11 @@ const SubCategoryModal = ({ show, handleClose, handleSave, editMode = false, sub
                 </label>
                 
                 {/* Show existing image in edit mode */}
-                {editMode && subCategoryData?.image_path && !selectedFile && (
+                {editMode && subCategoryData?.imagePath && !selectedFile && (
                   <div className="mb-3">
                     <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
                       <img
-                        src={subCategoryData.image_path}
+                        src={subCategoryData.imagePath}
                         alt="Current sub category image"
                         style={{ 
                           width: '80px', 
@@ -154,8 +154,8 @@ const SubCategoryModal = ({ show, handleClose, handleSave, editMode = false, sub
                           borderRadius: '8px',
                           border: '2px solid #dee2e6'
                         }}
-                        onLoad={() => console.log('SubCategory image loaded successfully:', subCategoryData.image_path)}
-                        onError={() => console.log('SubCategory image failed to load:', subCategoryData.image_path)}
+                        onLoad={() => console.log('SubCategory image loaded successfully:', subCategoryData.imagePath)}
+                        onError={() => console.log('SubCategory image failed to load:', subCategoryData.imagePath)}
                       />
                       <div>
                         <small className="text-muted d-block">Current image</small>

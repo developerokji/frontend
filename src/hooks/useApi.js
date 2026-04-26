@@ -46,7 +46,7 @@ export const useLocalities = (page = 1, limit = 10, search = '') => {
 };
 
 export const useBanners = (page = 1, limit = 10, search = '') => {
-  return useApi(bannersAPI.getAll, [page, limit, search]);
+  return useApi(() => bannersAPI.getAll(page, limit, search), [page, limit, search]);
 };
 
 export const useDashboardStats = () => {

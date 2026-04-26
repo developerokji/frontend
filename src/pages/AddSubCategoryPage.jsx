@@ -110,6 +110,16 @@ const AddSubCategoryPage = () => {
     }
   };
 
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      await subCategoriesAPI.update(id, { status: newStatus });
+      refetch(); // Refresh subcategories list
+    } catch (error) {
+      console.error('Error toggling subcategory status:', error);
+    }
+  };
+
   const columns = [
     {
       title: 'Sub Category Name',
@@ -152,8 +162,8 @@ const AddSubCategoryPage = () => {
               className="form-check-input" 
               type="checkbox" 
               checked={record.status === 'active'}
-              readOnly
-              style={{ cursor: 'default' }}
+              onChange={() => handleToggleStatus(record.id, record.status)}
+              style={{ cursor: 'pointer' }}
             />
           </div>
           <div className="btn-group btn-group-sm d-flex gap-2" role="group">
@@ -213,7 +223,7 @@ const AddSubCategoryPage = () => {
     id: item.id,
     name: item.name,
     categoryName: item.categoryName,
-    image: item.image_path,
+    image: item.imagePath,
     status: item.status,
     categoryId: item.categoryId
   })) || [];

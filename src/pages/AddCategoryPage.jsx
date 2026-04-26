@@ -62,7 +62,7 @@ const AddCategoryPage = () => {
         }
         // Keep existing image path if no new image selected
         if (!categoryData?.image || !(categoryData.image instanceof File)) {
-          apiData.existingImage = selectedCategory?.image_path;
+          apiData.existingImage = selectedCategory?.imagePath;
         }
       }
       
@@ -104,6 +104,16 @@ const AddCategoryPage = () => {
     }
   };
 
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      await categoriesAPI.update(id, { status: newStatus });
+      refetch(); // Refresh categories list
+    } catch (error) {
+      console.error('Error toggling category status:', error);
+    }
+  };
+
   const columns = [
     {
       title: 'Category Name',
@@ -141,8 +151,8 @@ const AddCategoryPage = () => {
               className="form-check-input" 
               type="checkbox" 
               checked={record.status === 'active'}
-              readOnly
-              style={{ cursor: 'default' }}
+              onChange={() => handleToggleStatus(record.id, record.status)}
+              style={{ cursor: 'pointer' }}
             />
           </div>
           <div className="btn-group btn-group-sm d-flex gap-2" role="group">
@@ -201,7 +211,7 @@ const AddCategoryPage = () => {
   const categoriesData = categories?.items?.map(item => ({
     id: item.id,
     name: item.name,
-    image: item.image_path,
+    image: item.imagePath,
     status: item.status
   })) || [];
   

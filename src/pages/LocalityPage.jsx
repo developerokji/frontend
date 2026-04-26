@@ -138,10 +138,10 @@ const LocalityPage = () => {
   const localitiesData = localities?.items?.map(item => ({
     id: item.id,
     city: item.city,                  // Column 1: City
-    state_name: item.state_name,       // Column 2: State
-    created_at: item.created_at,       // Column 3: Created Date
-    state_id: item.state_id,           // For edit functionality
-    city_id: item.city_id,
+    state_name: item.stateName,       // Column 2: State
+    created_at: item.createdAt,       // Column 3: Created Date
+    state_id: item.stateId,           // For edit functionality
+    city_id: item.cityId,
     locality:item.localityName              // For edit functionality
   })) || [];
   

@@ -1,48 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import ClientModal from './common/ClientModal';
+import BookingModal from './common/BookingModal';
 import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
-import { clientsAPI } from '../services/api';
+import { bookingsAPI } from '../services/api';
 import { CustomButton } from './common/CustomButton';
 
-const Clients = () => {
+const Leads = () => {
   const [showModal, setShowModal] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [clients, setClients] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [selectedFile, setSelectedFile] = useState(null);
 
   const [limit, setLimit] = useState(25);
 
-  // Load clients
-  const loadClients = async () => {
+  // Load bookings
+  const loadBookings = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await clientsAPI.getAll(currentPage, limit, searchTerm);
+      const response = await bookingsAPI.getAll(currentPage, limit, searchTerm);
       if (response.data && response.data.items) {
-        setClients(response.data.items);
+        setBookings(response.data.items);
         setTotalItems(response.data.meta?.totalItems || response.data.items.length);
         setTotalPages(response.data.meta?.totalPages || 1);
-      } else if (response.data) {
-        setClients(Array.isArray(response.data) ? response.data : []);
-        setTotalItems(Array.isArray(response.data) ? response.data.length : 0);
-        setTotalPages(1);
       } else if (response.items) {
-        setClients(response.items);
+        setBookings(response.items);
         setTotalItems(response.meta?.totalItems || response.items.length);
         setTotalPages(response.meta?.totalPages || 1);
+      } else if (response.data) {
+        setBookings(Array.isArray(response.data) ? response.data : []);
+        setTotalItems(Array.isArray(response.data) ? response.data.length : 0);
+        setTotalPages(1);
       }
     } catch (error) {
-      console.error('Failed to load clients:', error);
-      setError(error.message || 'Failed to load clients. Please try again.');
-      setClients([]);
+      console.error('Failed to load bookings:', error);
+      setError(error.message || 'Failed to load bookings. Please try again.');
+      setBookings([]);
       setTotalItems(0);
       setTotalPages(0);
     } finally {
@@ -51,61 +49,17 @@ const Clients = () => {
   };
 
   useEffect(() => {
-    loadClients();
-  }, [currentPage, searchTerm]);
+    loadBookings();
+  }, [currentPage, searchTerm, limit]);
 
-  const handleShowModal = () => {
-    setEditMode(false);
-    setSelectedClient(null);
-    setSelectedFile(null);
+  const handleViewBooking = (booking) => {
+    setSelectedBooking(booking);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setSelectedFile(null);
-  };
-
-  const handleEditClient = (client) => {
-    setEditMode(true);
-    setSelectedClient(client);
-    setSelectedFile(null);
-    setShowModal(true);
-  };
-
-  const handleSaveClient = async (clientData) => {
-    try {
-      if (editMode && selectedClient) {
-        await clientsAPI.update(selectedClient.id, clientData);
-      } else {
-        await clientsAPI.create(clientData);
-      }
-      loadClients();
-      handleCloseModal();
-    } catch (error) {
-      console.error('Save client error:', error);
-    }
-  };
-
-  const handleDeleteClient = async (clientId) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      try {
-        await clientsAPI.delete(clientId);
-        loadClients();
-      } catch (error) {
-        console.error('Delete client error:', error);
-      }
-    }
-  };
-
-  const handleToggleStatus = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      await clientsAPI.update(id, { accountStatus: newStatus });
-      loadClients();
-    } catch (error) {
-      console.error('Error toggling client status:', error);
-    }
+    setSelectedBooking(null);
   };
 
   const handleSearch = (e) => {
@@ -119,17 +73,59 @@ const Clients = () => {
 
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit);
-    setCurrentPage(1); // Reset to first page when changing limit
+    setCurrentPage(1);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const formatCurrency = (amount) => {
+    return `₹${parseFloat(amount).toFixed(2)}`;
+  };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      'active': { class: 'bg-success', label: 'Active' },
+      'review': { class: 'bg-warning', label: 'Review' },
+      'cancel': { class: 'bg-danger', label: 'Cancelled' },
+      'payment_pending': { class: 'bg-info', label: 'Payment Pending' },
+      'completed': { class: 'bg-primary', label: 'Completed' }
+    };
+    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
+    return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
+  };
+
+  const getPaymentBadge = (status) => {
+    const statusMap = {
+      'not_received': { class: 'bg-danger', label: 'Not Received' },
+      'received': { class: 'bg-success', label: 'Received' },
+      'not_transfer': { class: 'bg-danger', label: 'Not Transferred' },
+      'transferred': { class: 'bg-success', label: 'Transferred' }
+    };
+    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
+    return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
   };
 
   return (
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <h4 className="mb-0">Client List</h4>
-        <CustomButton variant="primary" onClick={handleShowModal}>
-          <i className="bi bi-plus-circle me-2"></i>
-          Add client +
-        </CustomButton>
+        <h4 className="mb-0">Leads</h4>
       </div>
 
       <div className="card flex-grow-1 d-flex flex-column w-100">
@@ -143,7 +139,7 @@ const Clients = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search..."
+                  placeholder="Search leads..."
                   value={searchTerm}
                   onChange={handleSearch}
                 />
@@ -165,7 +161,7 @@ const Clients = () => {
               <button 
                 type="button" 
                 className="btn btn-sm btn-outline-danger ms-2"
-                onClick={loadClients}
+                onClick={loadBookings}
               >
                 <i className="bi bi-arrow-clockwise me-1"></i>
                 Retry
@@ -177,33 +173,59 @@ const Clients = () => {
             <DataTable
               columns={[
                 {
-                  title: 'Name',
-                  key: 'name',
+                  title: 'Id',
+                  key: 'id',
                   render: (text, record) => (
-                    <div className="fw-semibold">{text || 'N/A'}</div>
+                    <div className="fw-semibold">{text}</div>
                   )
                 },
                 {
-                  title: 'Email',
-                  key: 'email',
-                  render: (email, record) => (
-                    <div className="text-muted">{email || 'N/A'}</div>
+                  title: 'Booking Id',
+                  key: 'bookingOrderId',
+                  render: (text, record) => (
+                    <div className="fw-semibold text-primary">{text}</div>
                   )
                 },
                 {
-                  title: 'Phone',
-                  key: 'phone',
-                  render: (phone, record) => (
-                    <div className="text-muted">{phone || 'N/A'}</div>
+                  title: 'Service',
+                  key: 'service',
+                  render: (text, record) => (
+                    <div className="text-muted">N/A</div>
                   )
                 },
                 {
-                  title: 'Status',
-                  key: 'accountStatus',
-                  render: (status, record) => (
-                    <span className={`badge ${status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                      {status || 'inactive'}
-                    </span>
+                  title: 'Client Name',
+                  key: 'clientName',
+                  render: (text, record) => (
+                    <div className="text-muted">{text || 'N/A'}</div>
+                  )
+                },
+                {
+                  title: 'Client Number',
+                  key: 'clientPhone',
+                  render: (text, record) => (
+                    <div className="text-muted">{text || 'N/A'}</div>
+                  )
+                },
+                {
+                  title: 'Date',
+                  key: 'workDate',
+                  render: (text, record) => (
+                    <div className="text-muted">{formatDate(text)}</div>
+                  )
+                },
+                {
+                  title: 'Time',
+                  key: 'workTime',
+                  render: (text, record) => (
+                    <div className="text-muted">{formatTime(text)}</div>
+                  )
+                },
+                {
+                  title: 'Partner',
+                  key: 'partner',
+                  render: (text, record) => (
+                    <div className="text-muted">N/A</div>
                   )
                 },
                 {
@@ -211,38 +233,19 @@ const Clients = () => {
                   key: 'actions',
                   render: (_, record) => (
                     <div className="d-flex align-items-center gap-2">
-                      <div className="form-check form-switch">
-                        <input 
-                          className="form-check-input" 
-                          type="checkbox" 
-                          checked={record.accountStatus === 'active'}
-                          onChange={() => handleToggleStatus(record.id, record.accountStatus)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                      </div>
-                      <div className="btn-group btn-group-sm d-flex gap-2" role="group">
-                        <CustomButton 
-                          variant="primary" 
-                          size="sm"
-                          icon="bi-pencil"
-                          onClick={() => handleEditClient(record)}
-                          tooltip="Edit Client"
-                        >
-                        </CustomButton>
-                        <CustomButton 
-                          variant="danger" 
-                          size="sm"
-                          icon="bi-trash"
-                          onClick={() => handleDeleteClient(record.id)}
-                          tooltip="Delete Client"
-                        >
-                        </CustomButton>
-                      </div>
+                      <CustomButton 
+                        variant="primary" 
+                        size="sm"
+                        icon="bi-eye"
+                        onClick={() => handleViewBooking(record)}
+                        tooltip="View Details"
+                      >
+                      </CustomButton>
                     </div>
                   )
                 },
               ]}
-              data={clients}
+              data={bookings}
               loading={loading}
               className="flex-grow-1"
             />
@@ -250,7 +253,7 @@ const Clients = () => {
 
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 flex-shrink-0">
             <span className="text-muted small">
-              Showing {clients.length} of {totalItems} entries
+              Showing {bookings.length} of {totalItems} entries
             </span>
             <nav>
               <ul className="pagination pagination-sm mb-0">
@@ -288,17 +291,13 @@ const Clients = () => {
         </div>
       </div>
 
-      <ClientModal
+      <BookingModal
         show={showModal}
         handleClose={handleCloseModal}
-        handleSave={handleSaveClient}
-        editMode={editMode}
-        clientData={selectedClient}
-        setSelectedFile={setSelectedFile}
-        selectedFile={selectedFile}
+        bookingData={selectedBooking}
       />
     </div>
   );
 };
 
-export default Clients;
+export default Leads;

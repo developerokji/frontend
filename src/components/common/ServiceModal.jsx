@@ -42,18 +42,21 @@ const ServiceModal = ({ show, handleClose, handleSave, editMode = false, service
 
   // Reset form when modal opens or serviceData changes
   useEffect(() => {
+    console.log('ServiceModal useEffect - editMode:', editMode, 'serviceData:', serviceData);
     if (editMode && serviceData) {
-      reset({
-        service_name: serviceData.service_name || '',
+      const formData = {
+        service_name: serviceData.name || '',
         price: serviceData.price || '',
-        sale_price: serviceData.sale_price || '',
-        category_id: serviceData.category_id || '',
-        sub_category_id: serviceData.sub_category_id || '',
+        sale_price: serviceData.salePrice || '',
+        category_id: serviceData.categoryId?.toString() || '',
+        sub_category_id: serviceData.subCategoryId?.toString() || '',
         status: serviceData.status,
-        service_details: serviceData.service_description || '',
-        service_included: serviceData.service_included || '',
-        service_excluded: serviceData.service_excluded || ''
-      });
+        service_details: serviceData.serviceDescription || '',
+        service_included: serviceData.serviceIncluded || '',
+        service_excluded: serviceData.serviceExcluded || ''
+      };
+      console.log('Resetting form with data:', formData);
+      reset(formData);
     } else {
       reset({
         service_name: '',
@@ -78,7 +81,9 @@ const ServiceModal = ({ show, handleClose, handleSave, editMode = false, service
         setCategoriesLoading(true);
         try {
           const response = await categoriesAPI.getAll(1, 30, '');
-          if (response.items) {
+          if (response.data && response.data.items) {
+            setCategories(response.data.items);
+          } else if (response.items) {
             setCategories(response.items);
           } else if (response.data) {
             setCategories(Array.isArray(response.data) ? response.data : []);
@@ -94,6 +99,44 @@ const ServiceModal = ({ show, handleClose, handleSave, editMode = false, service
 
     loadCategories();
   }, [show]);
+
+  // Reset form after categories are loaded in edit mode
+  useEffect(() => {
+    if (editMode && serviceData && categories.length > 0 && !categoriesLoading) {
+      const formData = {
+        service_name: serviceData.name || '',
+        price: serviceData.price || '',
+        sale_price: serviceData.salePrice || '',
+        category_id: serviceData.categoryId?.toString() || '',
+        sub_category_id: serviceData.subCategoryId?.toString() || '',
+        status: serviceData.status,
+        service_details: serviceData.serviceDescription || '',
+        service_included: serviceData.serviceIncluded || '',
+        service_excluded: serviceData.serviceExcluded || ''
+      };
+      console.log('Resetting form after categories loaded with data:', formData);
+      reset(formData);
+    }
+  }, [editMode, serviceData, categories, categoriesLoading, reset]);
+
+  // Reset form after subcategories are loaded in edit mode
+  useEffect(() => {
+    if (editMode && serviceData && subCategories.length > 0 && !subCategoriesLoading) {
+      const formData = {
+        service_name: serviceData.name || '',
+        price: serviceData.price || '',
+        sale_price: serviceData.salePrice || '',
+        category_id: serviceData.categoryId?.toString() || '',
+        sub_category_id: serviceData.subCategoryId?.toString() || '',
+        status: serviceData.status,
+        service_details: serviceData.serviceDescription || '',
+        service_included: serviceData.serviceIncluded || '',
+        service_excluded: serviceData.serviceExcluded || ''
+      };
+      console.log('Resetting form after subcategories loaded with data:', formData);
+      reset(formData);
+    }
+  }, [editMode, serviceData, subCategories, subCategoriesLoading, reset]);
 
   // Load subcategories when category changes
   useEffect(() => {
@@ -289,7 +332,7 @@ const ServiceModal = ({ show, handleClose, handleSave, editMode = false, service
                     <i className="bi bi-image me-2 text-primary"></i>
                     Service Image {!editMode && <span className="text-danger">*</span>}
                   </label>
-                  <div className={`service-image-upload ${selectedFile || (editMode && serviceData?.service_image_path) ? 'has-image' : ''} ${fileError ? 'border-danger' : ''}`}>
+                  <div className={`service-image-upload ${selectedFile || (editMode && serviceData?.imagePath) ? 'has-image' : ''} ${fileError ? 'border-danger' : ''}`}>
                     <input 
                       type="file" 
                       id="serviceImage" 
@@ -319,10 +362,10 @@ const ServiceModal = ({ show, handleClose, handleSave, editMode = false, service
                           </div>
                         </div>
                       </div>
-                    ) : editMode && serviceData?.service_image_path ? (
+                    ) : editMode && serviceData?.imagePath ? (
                       <div className="image-preview">
                         <img
-                          src={serviceData.service_image_path}
+                          src={serviceData.imagePath}
                           alt="Current service image"
                           className="img-fluid rounded"
                           style={{ maxHeight: '150px', objectFit: 'cover' }}
