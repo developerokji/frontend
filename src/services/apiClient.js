@@ -4,7 +4,7 @@ import axios from "axios";
 // let localhost = "http://localhost:5000/api/v1";
 let prod ="http://13.234.214.196:5000/api/v1"
 const apiClient = axios.create({
-  baseURL: prod,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
