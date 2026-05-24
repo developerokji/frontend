@@ -22,6 +22,40 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      ##################################################
+      # CREATE DEV ENV
+      ##################################################
+
+      - name: Create DEV Env File
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "VITE_API_URL=${{ secrets.DEV_API_URL }}" > .env.development
+
+      ##################################################
+      # CREATE PROD ENV
+      ##################################################
+
+      - name: Create PROD Env File
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "VITE_API_URL=${{ secrets.PROD_API_URL }}" > .env.production
+
+      ##################################################
+      # DEBUG ENV
+      ##################################################
+
+      - name: Debug DEV ENV
+        if: github.ref == 'refs/heads/dev'
+        run: cat .env.development
+
+      - name: Debug PROD ENV
+        if: github.ref == 'refs/heads/main'
+        run: cat .env.production
+
+      ##################################################
+      # BUILD
+      ##################################################
+
       - name: Build DEV
         if: github.ref == 'refs/heads/dev'
         run: npm run build -- --mode development
@@ -29,6 +63,10 @@ jobs:
       - name: Build PROD
         if: github.ref == 'refs/heads/main'
         run: npm run build -- --mode production
+
+      ##################################################
+      # AWS CONFIG
+      ##################################################
 
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
