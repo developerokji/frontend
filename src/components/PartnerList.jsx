@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PartnerModal from './common/PartnerModal';
+import PartnerStepperModal from './common/PartnerStepperModal';
 import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
 import { partnersAPI } from '../services/api';
@@ -7,6 +8,7 @@ import { CustomButton } from './common/CustomButton';
 
 const PartnerList = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showStepperModal, setShowStepperModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [partners, setPartners] = useState([]);
@@ -58,19 +60,22 @@ const PartnerList = () => {
     setEditMode(false);
     setSelectedPartner(null);
     setSelectedFile(null);
-    setShowModal(true);
+    setShowStepperModal(true); // Use stepper modal for adding new partner
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setShowStepperModal(false);
     setSelectedFile(null);
+    setEditMode(false);
+    setSelectedPartner(null);
   };
 
   const handleEditPartner = (partner) => {
     setEditMode(true);
     setSelectedPartner(partner);
     setSelectedFile(null);
-    setShowModal(true);
+    setShowStepperModal(true); // Use stepper modal for editing as well
   };
 
   const handleSavePartner = async (partnerData) => {
@@ -95,6 +100,16 @@ const PartnerList = () => {
       } catch (error) {
         console.error('Delete partner error:', error);
       }
+    }
+  };
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      await partnersAPI.update(id, { accountStatus: newStatus });
+      loadPartners();
+    } catch (error) {
+      console.error('Error toggling partner status:', error);
     }
   };
 
@@ -206,8 +221,8 @@ const PartnerList = () => {
                           className="form-check-input" 
                           type="checkbox" 
                           checked={record.account_status === 'active'}
-                          readOnly
-                          style={{ cursor: 'default' }}
+                          onChange={() => handleToggleStatus(record.id, record.account_status)}
+                          style={{ cursor: 'pointer' }}
                         />
                       </div>
                       <div className="btn-group btn-group-sm d-flex gap-2" role="group">
@@ -286,6 +301,14 @@ const PartnerList = () => {
         partnerData={selectedPartner}
         setSelectedFile={setSelectedFile}
         selectedFile={selectedFile}
+      />
+
+      <PartnerStepperModal
+        show={showStepperModal}
+        handleClose={handleCloseModal}
+        handleSave={loadPartners}
+        editMode={editMode}
+        partnerData={selectedPartner}
       />
     </div>
   );

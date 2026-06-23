@@ -176,8 +176,7 @@ export const clientValidationSchema = yup.object().shape({
     .matches(patterns.phone, 'Please enter a valid 10-digit phone number'),
   status: yup
     .string()
-    .required('Status is required')
-    .oneOf(['active', 'inactive'], 'Invalid status')
+    .oneOf(['active', 'inactive', 'suspended', 'deleted'], 'Invalid status')
 });
 
 // Package validation schema

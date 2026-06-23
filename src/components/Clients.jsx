@@ -87,16 +87,6 @@ const Clients = () => {
     }
   };
 
-  const handleDeleteClient = async (clientId) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      try {
-        await clientsAPI.delete(clientId);
-        loadClients();
-      } catch (error) {
-        console.error('Delete client error:', error);
-      }
-    }
-  };
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
@@ -227,14 +217,6 @@ const Clients = () => {
                           icon="bi-pencil"
                           onClick={() => handleEditClient(record)}
                           tooltip="Edit Client"
-                        >
-                        </CustomButton>
-                        <CustomButton 
-                          variant="danger" 
-                          size="sm"
-                          icon="bi-trash"
-                          onClick={() => handleDeleteClient(record.id)}
-                          tooltip="Delete Client"
                         >
                         </CustomButton>
                       </div>
