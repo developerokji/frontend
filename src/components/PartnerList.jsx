@@ -202,15 +202,15 @@ const PartnerList = () => {
                     <div className="text-muted">{phone || 'N/A'}</div>
                   )
                 },
-                {
-                  title: 'Status',
-                  key: 'account_status',
-                  render: (status, record) => (
-                    <span className={`badge ${status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                      {status || 'inactive'}
-                    </span>
-                  )
-                },
+                // {
+                //   title: 'Status',
+                //   key: 'account_status',
+                //   render: (status, record) => (
+                //     <span className={`badge ${status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
+                //       {status || 'inactive'}
+                //     </span>
+                //   )
+                // },
                 {
                   title: 'Action',
                   key: 'actions',
@@ -220,8 +220,8 @@ const PartnerList = () => {
                         <input 
                           className="form-check-input" 
                           type="checkbox" 
-                          checked={record.account_status === 'active'}
-                          onChange={() => handleToggleStatus(record.id, record.account_status)}
+                          checked={record.accountStatus === 'active'}
+                          onChange={() => handleToggleStatus(record.id, record.accountStatus)}
                           style={{ cursor: 'pointer' }}
                         />
                       </div>

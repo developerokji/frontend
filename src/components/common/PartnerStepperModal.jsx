@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { CustomButton } from './CustomButton';
 import CustomInput from './CustomInput';
-import { partnerStepperAPI, api } from '../../services/api';
+import { partnerStepperAPI, api, categoriesAPI, localitiesAPI } from '../../services/api';
 
 const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, partnerData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,55 +18,48 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
   const [selectedPincodes, setSelectedPincodes] = useState([]);
   const [pincodeSearch, setPincodeSearch] = useState('');
 
-  // Hardcoded pincodes for multi-select
-  const availablePincodes = [
-    '400001', '400002', '400003', '400004', '400005',
-    '400006', '400007', '400008', '400009', '400010',
-    '400011', '400012', '400013', '400014', '400015',
-    '400016', '400017', '400018', '400019', '400020',
-    '400021', '400022', '400023', '400024', '400025',
-    '400026', '400027', '400028', '400029', '400030',
-    '400031', '400032', '400033', '400034', '400035',
-    '400036', '400037', '400038', '400039', '400040',
-    '400041', '400042', '400043', '400044', '400045',
-    '400046', '400047', '400048', '400049', '400050',
-    '400051', '400052', '400053', '400054', '400055',
-    '400056', '400057', '400058', '400059', '400060',
-    '400061', '400062', '400063', '400064', '400065',
-    '400066', '400067', '400068', '400069', '400070',
-    '400071', '400072', '400073', '400074', '400075',
-    '400076', '400077', '400078', '400079', '400080',
-    '400081', '400082', '400083', '400084', '400085',
-    '400086', '400087', '400088', '400089', '400090',
-    '400091', '400092', '400093', '400094', '400095',
-    '400096', '400097', '400098', '400099', '400100',
-    '400101', '400102', '400103', '400104', '400105',
-    '400106', '400107', '400108', '400109', '400110'
-  ];
+  // Custom states
+  const [categories, setCategories] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hoveredPincode, setHoveredPincode] = useState(null);
+  const [availablePincodes, setAvailablePincodes] = useState([]);
+  
+  // Document states
+  const [aadharFrontFile, setAadharFrontFile] = useState(null);
+  const [aadharBackFile, setAadharBackFile] = useState(null);
+  const [panImageFile, setPanImageFile] = useState(null);
+  
+  const [aadharFrontError, setAadharFrontError] = useState('');
+  const [aadharBackError, setAadharBackError] = useState('');
+  const [panImageError, setPanImageError] = useState('');
 
   // Form for Personal Info
   const personalInfoForm = useForm({
     resolver: yupResolver(yup.object().shape({
       name: yup.string().required('Name is required'),
       email: yup.string().email('Invalid email').required('Email is required'),
-      phone: yup.string().matches(/^[0-9]{10}$/, 'Phone must be 10 digits').required('Phone is required')
+      phone: yup.string().matches(/^[0-9]{10}$/, 'Phone must be 10 digits').required('Phone is required'),
+      categoryId: yup.string().required('Category is required')
     })),
     defaultValues: {
       name: '',
       email: '',
-      phone: ''
+      phone: '',
+      categoryId: ''
     }
   });
 
   // Form for Address
   const addressForm = useForm({
     resolver: yupResolver(yup.object().shape({
+      houseFlat: yup.string().required('Flat / House name is required'),
       state: yup.string().required('State is required'),
       city: yup.string().required('City is required'),
       address: yup.string().required('Address is required'),
       pincode: yup.string().matches(/^[0-9]{6}$/, 'Pincode must be 6 digits').required('Pincode is required')
     })),
     defaultValues: {
+      houseFlat: '',
       state: '',
       city: '',
       address: '',
@@ -92,28 +85,44 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     }
   });
 
+  // Form for Documents
+  const documentForm = useForm({
+    resolver: yupResolver(yup.object().shape({
+      aadharNumber: yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
+      panNumber: yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
+    })),
+    defaultValues: {
+      aadharNumber: '',
+      panNumber: ''
+    }
+  });
+
   // Edit forms
   const editPersonalForm = useForm({
     resolver: yupResolver(yup.object().shape({
       name: yup.string().required('Name is required'),
       email: yup.string().email('Invalid email').required('Email is required'),
-      phone: yup.string().matches(/^[0-9]{10}$/, 'Phone must be 10 digits').required('Phone is required')
+      phone: yup.string().matches(/^[0-9]{10}$/, 'Phone must be 10 digits').required('Phone is required'),
+      categoryId: yup.string().required('Category is required')
     })),
     defaultValues: {
       name: '',
       email: '',
-      phone: ''
+      phone: '',
+      categoryId: ''
     }
   });
 
   const editAddressForm = useForm({
     resolver: yupResolver(yup.object().shape({
+      houseFlat: yup.string().required('Flat / House name is required'),
       state: yup.string().required('State is required'),
       city: yup.string().required('City is required'),
       address: yup.string().required('Address is required'),
       pincode: yup.string().matches(/^[0-9]{6}$/, 'Pincode must be 6 digits').required('Pincode is required')
     })),
     defaultValues: {
+      houseFlat: '',
       state: '',
       city: '',
       address: '',
@@ -138,12 +147,24 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     }
   });
 
+  const editDocumentForm = useForm({
+    resolver: yupResolver(yup.object().shape({
+      aadharNumber: yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
+      panNumber: yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
+    })),
+    defaultValues: {
+      aadharNumber: '',
+      panNumber: ''
+    }
+  });
+
   const steps = [
     { id: 1, title: 'Personal Information' },
     { id: 2, title: 'Address' },
     { id: 3, title: 'Pincode Mapping' },
     { id: 4, title: 'Bank Details' },
-    { id: 5, title: 'Review' }
+    { id: 5, title: 'Documents' },
+    { id: 6, title: 'Review' }
   ];
 
   const handleNext = async () => {
@@ -193,6 +214,26 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
         await handleCreateBankDetail();
       }
     } else if (currentStep === 5) {
+      const isValid = await documentForm.trigger();
+      if (!isValid) return;
+
+      if (!editMode) {
+        if (!aadharFrontFile) {
+          setAadharFrontError('Aadhar Front image is required');
+          return;
+        }
+        if (!aadharBackFile) {
+          setAadharBackError('Aadhar Back image is required');
+          return;
+        }
+        if (!panImageFile) {
+          setPanImageError('PAN image is required');
+          return;
+        }
+      }
+
+      await handleUploadDocuments();
+    } else if (currentStep === 6) {
       handleClose();
       handleSave();
     }
@@ -213,6 +254,7 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       formData.append('email', data.email);
       formData.append('phone', data.phone);
       formData.append('role', 'partner');
+      formData.append('categoryId', data.categoryId);
       formData.append('avatar', selectedFile);
 
       const response = await api.post('/admin/users/', formData, {
@@ -246,6 +288,7 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       formData.append('email', data.email);
       formData.append('phone', data.phone);
       formData.append('role', 'partner');
+      formData.append('categoryId', data.categoryId);
       if (selectedFile) {
         formData.append('avatar', selectedFile);
       }
@@ -264,6 +307,7 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     try {
       const data = addressForm.getValues();
       await partnerStepperAPI.createAddress(userId, {
+        houseFlat: data.houseFlat,
         state: data.state,
         city: data.city,
         address: data.address,
@@ -281,7 +325,13 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     setLoading(true);
     try {
       const data = addressForm.getValues();
-      await partnerStepperAPI.updateAddress(userId, reviewData.address[0].id, data);
+      await partnerStepperAPI.updateAddress(userId, reviewData.address[0].id, {
+        houseFlat: data.houseFlat,
+        state: data.state,
+        city: data.city,
+        address: data.address,
+        pincode: data.pincode
+      });
       setCurrentStep(3);
     } catch (error) {
       setError(error.message || 'Failed to update address');
@@ -344,8 +394,6 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       }
 
       await partnerStepperAPI.createBankDetail(userId, formData);
-      
-      await fetchReviewData();
       setCurrentStep(5);
     } catch (error) {
       setError(error.message || 'Failed to create bank detail');
@@ -369,11 +417,37 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       }
 
       await partnerStepperAPI.updateBankDetail(userId, reviewData.bankDetail.id, formData);
-      
-      await fetchReviewData();
       setCurrentStep(5);
     } catch (error) {
       setError(error.message || 'Failed to update bank detail');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadDocuments = async () => {
+    setLoading(true);
+    try {
+      const data = documentForm.getValues();
+      const formData = new FormData();
+      formData.append('aadharNumber', data.aadharNumber);
+      formData.append('panNumber', data.panNumber);
+      
+      if (aadharFrontFile) {
+        formData.append('aadharFront', aadharFrontFile);
+      }
+      if (aadharBackFile) {
+        formData.append('aadharBack', aadharBackFile);
+      }
+      if (panImageFile) {
+        formData.append('panImage', panImageFile);
+      }
+
+      await partnerStepperAPI.uploadDocuments(userId, formData);
+      await fetchReviewData();
+      setCurrentStep(6);
+    } catch (error) {
+      setError(error.message || 'Failed to upload documents');
     } finally {
       setLoading(false);
     }
@@ -386,12 +460,20 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
         partnerStepperAPI.getServiceLocations(userId),
         partnerStepperAPI.getBankDetail(userId)
       ]);
-console.log(addressRes,serviceLocRes,bankDetailRes)
+      
+      let documentsRes = null;
+      try {
+        documentsRes = await partnerStepperAPI.getDocuments(userId);
+      } catch (err) {
+        console.warn('Failed to fetch documents for review:', err);
+      }
+
       setReviewData({
         personal: personalInfoForm.getValues(),
         address: addressRes || [],
         serviceLocations: serviceLocRes || [],
-        bankDetail: bankDetailRes || null
+        bankDetail: bankDetailRes || null,
+        documents: documentsRes || null
       });
     } catch (error) {
       console.error('Failed to fetch review data:', error);
@@ -411,6 +493,45 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
     }
   };
 
+  const handleAadharFrontChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setAadharFrontError('Please upload a valid image file (JPG, PNG, GIF)');
+        return;
+      }
+      setAadharFrontFile(file);
+      setAadharFrontError('');
+    }
+  };
+
+  const handleAadharBackChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setAadharBackError('Please upload a valid image file (JPG, PNG, GIF)');
+        return;
+      }
+      setAadharBackFile(file);
+      setAadharBackError('');
+    }
+  };
+
+  const handlePanImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setPanImageError('Please upload a valid image file (JPG, PNG, GIF)');
+        return;
+      }
+      setPanImageFile(file);
+      setPanImageError('');
+    }
+  };
+
   const handlePincodeToggle = (pincode) => {
     setSelectedPincodes(prev => 
       prev.includes(pincode) 
@@ -427,6 +548,11 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
       editAddressForm.reset(reviewData.address[0]);
     } else if (section === 'bank' && reviewData?.bankDetail) {
       editBankForm.reset(reviewData.bankDetail);
+    } else if (section === 'documents' && reviewData?.documents) {
+      editDocumentForm.reset({
+        aadharNumber: reviewData.documents.aadharNumber || '',
+        panNumber: reviewData.documents.panNumber || ''
+      });
     }
   };
 
@@ -440,6 +566,7 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
         formData.append('email', data.email);
         formData.append('phone', data.phone);
         formData.append('role', 'partner');
+        formData.append('categoryId', data.categoryId);
         if (selectedFile) {
           formData.append('avatar', selectedFile);
         }
@@ -447,7 +574,13 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
         await partnerStepperAPI.updateUser(userId, formData);
       } else if (section === 'address' && reviewData?.address?.[0]) {
         const data = editAddressForm.getValues();
-        await partnerStepperAPI.updateAddress(userId, reviewData.address[0].id, data);
+        await partnerStepperAPI.updateAddress(userId, reviewData.address[0].id, {
+          houseFlat: data.houseFlat,
+          state: data.state,
+          city: data.city,
+          address: data.address,
+          pincode: data.pincode
+        });
       } else if (section === 'bank' && reviewData?.bankDetail) {
         const data = editBankForm.getValues();
         const formData = new FormData();
@@ -461,11 +594,30 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
         }
 
         await partnerStepperAPI.updateBankDetail(userId, reviewData.bankDetail.id, formData);
+      } else if (section === 'documents') {
+        const data = editDocumentForm.getValues();
+        const formData = new FormData();
+        formData.append('aadharNumber', data.aadharNumber);
+        formData.append('panNumber', data.panNumber);
+        if (aadharFrontFile) {
+          formData.append('aadharFront', aadharFrontFile);
+        }
+        if (aadharBackFile) {
+          formData.append('aadharBack', aadharBackFile);
+        }
+        if (panImageFile) {
+          formData.append('panImage', panImageFile);
+        }
+
+        await partnerStepperAPI.uploadDocuments(userId, formData);
       }
 
       await fetchReviewData();
       setEditSection(null);
       setSelectedFile(null);
+      setAadharFrontFile(null);
+      setAadharBackFile(null);
+      setPanImageFile(null);
     } catch (error) {
       setError(error.message || 'Failed to update');
     } finally {
@@ -476,15 +628,23 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
   const handleCancelEdit = () => {
     setEditSection(null);
     setSelectedFile(null);
+    setAadharFrontFile(null);
+    setAadharBackFile(null);
+    setPanImageFile(null);
+    setAadharFrontError('');
+    setAadharBackError('');
+    setPanImageError('');
   };
 
   const handleModalClose = () => {
     personalInfoForm.reset();
     addressForm.reset();
     bankForm.reset();
+    documentForm.reset();
     editPersonalForm.reset();
     editAddressForm.reset();
     editBankForm.reset();
+    editDocumentForm.reset();
     setCurrentStep(1);
     setUserId(null);
     setSelectedFile(null);
@@ -493,12 +653,61 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
     setReviewData(null);
     setEditSection(null);
     setSelectedPincodes([]);
+    setAadharFrontFile(null);
+    setAadharBackFile(null);
+    setPanImageFile(null);
+    setAadharFrontError('');
+    setAadharBackError('');
+    setPanImageError('');
+    setDropdownOpen(false);
     handleClose();
   };
 
   const handleIfscChange = (e) => {
     e.target.value = e.target.value.toUpperCase();
   };
+
+  // Load categories and pincodes, handle dropdown close on click outside
+  useEffect(() => {
+    if (show) {
+      const fetchCategories = async () => {
+        try {
+          const res = await categoriesAPI.getAll(1, 100);
+          setCategories(res?.data?.items || res?.items || []);
+        } catch (error) {
+          console.error('Failed to fetch categories:', error);
+        }
+      };
+      
+      const fetchPincodes = async () => {
+        try {
+          const res = await localitiesAPI.getAll(1, 1000, '');
+          const pincodes = res?.data?.items || res?.items || [];
+          // Extract unique pincodes from locality data
+          const uniquePincodes = [...new Set(pincodes.map(loc => loc.localityName).filter(Boolean))];
+          setAvailablePincodes(uniquePincodes);
+        } catch (error) {
+          console.error('Failed to fetch pincodes:', error);
+        }
+      };
+      
+      fetchCategories();
+      fetchPincodes();
+    }
+  }, [show]);
+
+  // Click outside to close pincode dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownOpen && !event.target.closest('.position-relative')) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   // Load existing data when in edit mode
   useEffect(() => {
@@ -516,12 +725,21 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
       setReviewData(null);
       setEditSection(null);
       setSelectedPincodes([]);
+      setAadharFrontFile(null);
+      setAadharBackFile(null);
+      setPanImageFile(null);
+      setAadharFrontError('');
+      setAadharBackError('');
+      setPanImageError('');
+      setDropdownOpen(false);
       personalInfoForm.reset();
       addressForm.reset();
       bankForm.reset();
+      documentForm.reset();
       editPersonalForm.reset();
       editAddressForm.reset();
       editBankForm.reset();
+      editDocumentForm.reset();
     }
   }, [show, editMode, partnerData]);
 
@@ -533,17 +751,26 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
         partnerStepperAPI.getServiceLocations(partnerData.id),
         partnerStepperAPI.getBankDetail(partnerData.id)
       ]);
-console.log(addressRes,serviceLocRes,bankDetailRes)
+      
+      let documentsRes = null;
+      try {
+        documentsRes = await partnerStepperAPI.getDocuments(partnerData.id);
+      } catch (err) {
+        console.warn('Failed to load documents:', err);
+      }
+
       // Set personal info
       personalInfoForm.reset({
         name: partnerData.name || '',
         email: partnerData.email || '',
-        phone: partnerData.phone || ''
+        phone: partnerData.phone || '',
+        categoryId: partnerData.categoryId || ''
       });
 
       // Set address
       if (addressRes && addressRes.length > 0) {
         addressForm.reset({
+          houseFlat: addressRes[0].houseFlat || '',
           state: addressRes[0].state || '',
           city: addressRes[0].city || '',
           address: addressRes[0].address || '',
@@ -568,15 +795,25 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
         });
       }
 
+      // Set documents
+      if (documentsRes) {
+        documentForm.reset({
+          aadharNumber: documentsRes.aadharNumber || '',
+          panNumber: documentsRes.panNumber || ''
+        });
+      }
+
       setReviewData({
         personal: {
           name: partnerData.name || '',
           email: partnerData.email || '',
-          phone: partnerData.phone || ''
+          phone: partnerData.phone || '',
+          categoryId: partnerData.categoryId || ''
         },
-        address: addressRes.data || [],
-        serviceLocations: serviceLocRes.data || [],
-        bankDetail: bankDetailRes.data || null
+        address: addressRes.data || addressRes || [],
+        serviceLocations: serviceLocRes.data || serviceLocRes || [],
+        bankDetail: bankDetailRes.data || bankDetailRes || null,
+        documents: documentsRes || null
       });
 
       setCurrentStep(1); // Start from personal info step in edit mode
@@ -709,12 +946,42 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                   placeholder="Enter phone number"
                   required
                 />
+
+                <CustomInput
+                  label="Category"
+                  type="select"
+                  id="categoryId"
+                  name="categoryId"
+                  placeholder="Select Category"
+                  register={personalInfoForm.register}
+                  error={personalInfoForm.formState.errors.categoryId?.message}
+                  icon="bi-folder"
+                  options={[
+                    { value: '', label: 'Select Category...' },
+                    ...(categories.length > 0 ? categories.map(category => ({
+                      value: category.id,
+                      label: category.categoryName || category.name
+                    })) : [])
+                  ]}
+                  required
+                />
               </form>
             )}
 
             {/* Step 2: Address */}
             {currentStep === 2 && (
               <form>
+                <CustomInput
+                  label="Flat Name / House Name"
+                  type="text"
+                  id="houseFlat"
+                  name="houseFlat"
+                  register={addressForm.register}
+                  error={addressForm.formState.errors.houseFlat?.message}
+                  placeholder="Enter flat name / house name / building name"
+                  required
+                />
+
                 <CustomInput
                   label="State"
                   type="text"
@@ -765,44 +1032,124 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
             {/* Step 3: Pincode Mapping */}
             {currentStep === 3 && (
               <div>
-                <label className="form-label fw-medium">Select Service Pincodes *</label>
-                <div className="mb-3">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search pincodes..."
-                    value={pincodeSearch}
-                    onChange={(e) => setPincodeSearch(e.target.value)}
-                  />
-                </div>
-                <div className="card p-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                  <div className="row g-2">
-                    {availablePincodes
-                      .filter(pincode => pincode.includes(pincodeSearch))
-                      .map(pincode => (
-                        <div key={pincode} className="col-6 col-md-4">
-                          <div
-                            className={`form-check p-2 rounded cursor-pointer ${
-                              selectedPincodes.includes(pincode) ? 'bg-primary text-white' : 'bg-light'
-                            }`}
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handlePincodeToggle(pincode)}
-                          >
-                            <input
-                              type="checkbox"
-                              className="form-check-input me-2"
-                              checked={selectedPincodes.includes(pincode)}
-                              onChange={() => handlePincodeToggle(pincode)}
-                            />
-                            <span className="small">{pincode}</span>
-                          </div>
-                        </div>
-                      ))}
+                <label className="form-label fw-semibold text-dark mb-2">Select Service Pincodes *</label>
+                <div className="position-relative">
+                  {/* Select Input Display Box */}
+                  <div
+                    className="form-control d-flex flex-wrap align-items-center gap-2 border-secondary-subtle rounded-3 p-2 cursor-pointer bg-white"
+                    style={{ minHeight: '48px', cursor: 'pointer', display: 'flex', flexWrap: 'wrap', gap: '6px' }}
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
+                    {selectedPincodes.length === 0 ? (
+                      <span className="text-muted ps-1">Select pincodes...</span>
+                    ) : (
+                      selectedPincodes.map(pincode => (
+                        <span 
+                          key={pincode} 
+                          className="badge bg-primary-subtle text-primary border border-primary-subtle d-flex align-items-center gap-1 py-1.5 px-2 rounded-2"
+                          style={{ backgroundColor: 'rgba(13, 110, 253, 0.1)', color: '#0d6efd', border: '1px solid rgba(13, 110, 253, 0.2)' }}
+                        >
+                          {pincode}
+                          <button
+                            type="button"
+                            className="btn-close p-0"
+                            style={{ fontSize: '10px', filter: 'none', marginLeft: '4px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePincodeToggle(pincode);
+                            }}
+                          ></button>
+                        </span>
+                      ))
+                    )}
+                    <i className="bi bi-chevron-down ms-auto text-muted px-2"></i>
                   </div>
+
+                  {/* Dropdown Container */}
+                  {dropdownOpen && (
+                    <div
+                      className="position-absolute w-100 mt-1 bg-white border border-secondary-subtle rounded-3 shadow-lg p-2"
+                      style={{ zIndex: 1050 }}
+                    >
+                      <div className="input-group mb-2">
+                        <span className="input-group-text bg-light border-end-0">
+                          <i className="bi bi-search text-muted"></i>
+                        </span>
+                        <input
+                          type="text"
+                          className="form-control border-start-0 ps-0"
+                          placeholder="Search pincodes..."
+                          value={pincodeSearch}
+                          onChange={(e) => setPincodeSearch(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {pincodeSearch && (
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary border-start-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPincodeSearch('');
+                            }}
+                          >
+                            <i className="bi bi-x-lg"></i>
+                          </button>
+                        )}
+                      </div>
+
+                      <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {availablePincodes
+                          .filter(pincode => pincode.includes(pincodeSearch))
+                          .map(pincode => {
+                            const isSelected = selectedPincodes.includes(pincode);
+                            return (
+                              <div
+                                key={pincode}
+                                className={`d-flex align-items-center justify-content-between px-3 py-2 rounded-2`}
+                                style={{ 
+                                  cursor: 'pointer', 
+                                  transition: 'background-color 0.15s ease',
+                                  backgroundColor: hoveredPincode === pincode ? '#f8f9fa' : (isSelected ? 'rgba(13, 110, 253, 0.1)' : 'transparent'),
+                                  color: isSelected ? '#0d6efd' : '#212529',
+                                  fontWeight: isSelected ? '500' : 'normal'
+                                }}
+                                onMouseEnter={() => setHoveredPincode(pincode)}
+                                onMouseLeave={() => setHoveredPincode(null)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePincodeToggle(pincode);
+                                }}
+                              >
+                                <span>{pincode}</span>
+                                {isSelected ? (
+                                  <i className="bi bi-check-lg text-primary"></i>
+                                ) : (
+                                  <span style={{ width: '16px' }}></span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        {availablePincodes.filter(pincode => pincode.includes(pincodeSearch)).length === 0 && (
+                          <div className="text-center text-muted py-3">No pincodes found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <small className="text-muted">
-                  Selected: {selectedPincodes.length} pincodes
-                </small>
+                <div className="d-flex justify-content-between align-items-center mt-2 px-1">
+                  <small className="text-muted">
+                    Selected: <strong>{selectedPincodes.length}</strong> pincodes
+                  </small>
+                  {selectedPincodes.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-link btn-sm text-decoration-none p-0"
+                      onClick={() => setSelectedPincodes([])}
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -894,8 +1241,107 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
               </form>
             )}
 
-            {/* Step 5: Review */}
-            {currentStep === 5 && reviewData && (
+            {/* Step 5: Documents */}
+            {currentStep === 5 && (
+              <form>
+                <CustomInput
+                  label="Aadhar Number"
+                  type="text"
+                  id="aadharNumber"
+                  name="aadharNumber"
+                  register={documentForm.register}
+                  error={documentForm.formState.errors.aadharNumber?.message}
+                  placeholder="Enter 12-digit Aadhar number"
+                  required
+                />
+
+                <div className="mb-3">
+                  <label className="form-label fw-medium">
+                    Aadhar Front Image {!editMode && <span className="text-danger">*</span>}
+                  </label>
+                  {editMode && reviewData?.documents?.aadharFrontPath && !aadharFrontFile && (
+                    <div className="mb-2">
+                      <img 
+                        src={reviewData.documents.aadharFrontPath} 
+                        alt="Aadhar Front" 
+                        className="img-thumbnail" 
+                        style={{ maxHeight: '150px' }}
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/*"
+                    onChange={handleAadharFrontChange}
+                    required={!editMode}
+                  />
+                  {aadharFrontError && <div className="text-danger small mt-1">{aadharFrontError}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label fw-medium">
+                    Aadhar Back Image {!editMode && <span className="text-danger">*</span>}
+                  </label>
+                  {editMode && reviewData?.documents?.aadharBackPath && !aadharBackFile && (
+                    <div className="mb-2">
+                      <img 
+                        src={reviewData.documents.aadharBackPath} 
+                        alt="Aadhar Back" 
+                        className="img-thumbnail" 
+                        style={{ maxHeight: '150px' }}
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/*"
+                    onChange={handleAadharBackChange}
+                    required={!editMode}
+                  />
+                  {aadharBackError && <div className="text-danger small mt-1">{aadharBackError}</div>}
+                </div>
+
+                <CustomInput
+                  label="PAN Number"
+                  type="text"
+                  id="panNumber"
+                  name="panNumber"
+                  register={documentForm.register}
+                  error={documentForm.formState.errors.panNumber?.message}
+                  placeholder="Enter 10-digit PAN number (e.g., ABCDE1234F)"
+                  required
+                />
+
+                <div className="mb-3">
+                  <label className="form-label fw-medium">
+                    PAN Image {!editMode && <span className="text-danger">*</span>}
+                  </label>
+                  {editMode && reviewData?.documents?.panImagePath && !panImageFile && (
+                    <div className="mb-2">
+                      <img 
+                        src={reviewData.documents.panImagePath} 
+                        alt="PAN Image" 
+                        className="img-thumbnail" 
+                        style={{ maxHeight: '150px' }}
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/*"
+                    onChange={handlePanImageChange}
+                    required={!editMode}
+                  />
+                  {panImageError && <div className="text-danger small mt-1">{panImageError}</div>}
+                </div>
+              </form>
+            )}
+
+            {/* Step 6: Review */}
+            {currentStep === 6 && reviewData && (
               <div>
                 {editSection === 'personal' ? (
                   <div className="card mb-3">
@@ -928,6 +1374,23 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                         name="phone"
                         register={editPersonalForm.register}
                         error={editPersonalForm.formState.errors.phone?.message}
+                        required
+                      />
+                      <CustomInput
+                        label="Category"
+                        type="select"
+                        id="editCategoryId"
+                        name="categoryId"
+                        placeholder="Select Category"
+                        register={editPersonalForm.register}
+                        error={editPersonalForm.formState.errors.categoryId?.message}
+                        icon="bi-folder"
+                        options={categories.length > 0 ? categories.map(category => ({
+                          value: category.id,
+                          label: category.categoryName || category.name
+                        })) : [
+                          { value: '', label: 'No categories available' }
+                        ]}
                         required
                       />
                       <div className="mt-3">
@@ -964,6 +1427,14 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                           <label className="text-muted small mb-1">Phone</label>
                           <div className="fw-semibold">{reviewData.personal.phone}</div>
                         </div>
+                        <div className="col-md-6">
+                          <label className="text-muted small mb-1">Category</label>
+                          <div className="fw-semibold">
+                            {categories.find(c => String(c.id) === String(reviewData.personal.categoryId))?.categoryName || 
+                             categories.find(c => String(c.id) === String(reviewData.personal.categoryId))?.name || 
+                             'N/A'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -975,6 +1446,15 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                       <h6 className="mb-0">Edit Address</h6>
                     </div>
                     <div className="card-body">
+                      <CustomInput
+                        label="Flat Name / House Name"
+                        type="text"
+                        id="editHouseFlat"
+                        name="houseFlat"
+                        register={editAddressForm.register}
+                        error={editAddressForm.formState.errors.houseFlat?.message}
+                        required
+                      />
                       <CustomInput
                         label="State"
                         type="text"
@@ -1036,7 +1516,9 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                       {reviewData.address.length > 0 ? (
                         reviewData.address.map((addr, idx) => (
                           <div key={idx} className="mb-2">
-                            <div className="fw-semibold">{addr.address}</div>
+                            <div className="fw-semibold">
+                              {addr.houseFlat && `${addr.houseFlat}, `}{addr.address}
+                            </div>
                             <small className="text-muted">
                               {addr.city}, {addr.state} - {addr.pincode}
                             </small>
@@ -1181,6 +1663,117 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
                     </div>
                   </div>
                 )}
+
+                {editSection === 'documents' ? (
+                  <div className="card mb-3">
+                    <div className="card-header bg-primary text-white">
+                      <h6 className="mb-0">Edit Documents</h6>
+                    </div>
+                    <div className="card-body">
+                      <CustomInput
+                        label="Aadhar Number"
+                        type="text"
+                        id="editAadharNumber"
+                        name="aadharNumber"
+                        register={editDocumentForm.register}
+                        error={editDocumentForm.formState.errors.aadharNumber?.message}
+                        required
+                      />
+                      <div className="mb-3">
+                        <label className="form-label fw-medium">Aadhar Front Image</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/*"
+                          onChange={handleAadharFrontChange}
+                        />
+                        {aadharFrontError && <div className="text-danger small mt-1">{aadharFrontError}</div>}
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label fw-medium">Aadhar Back Image</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/*"
+                          onChange={handleAadharBackChange}
+                        />
+                        {aadharBackError && <div className="text-danger small mt-1">{aadharBackError}</div>}
+                      </div>
+                      <CustomInput
+                        label="PAN Number"
+                        type="text"
+                        id="editPanNumber"
+                        name="panNumber"
+                        register={editDocumentForm.register}
+                        error={editDocumentForm.formState.errors.panNumber?.message}
+                        required
+                      />
+                      <div className="mb-3">
+                        <label className="form-label fw-medium">PAN Image</label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          accept="image/*"
+                          onChange={handlePanImageChange}
+                        />
+                        {panImageError && <div className="text-danger small mt-1">{panImageError}</div>}
+                      </div>
+                      <div className="mt-3">
+                        <CustomButton variant="secondary" onClick={handleCancelEdit}>
+                          Cancel
+                        </CustomButton>
+                        <CustomButton variant="primary" onClick={() => handleSaveEdit('documents')} loading={loading}>
+                          Save
+                        </CustomButton>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card mb-3">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 text-primary">
+                        <i className="bi bi-file-earmark-medical me-2"></i>Documents
+                      </h6>
+                      <CustomButton variant="outline-primary" size="sm" onClick={() => handleEditSection('documents')}>
+                        <i className="bi bi-pencil me-1"></i>Edit
+                      </CustomButton>
+                    </div>
+                    <div className="card-body">
+                      {reviewData.documents ? (
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="text-muted small mb-1">Aadhar Number</label>
+                            <div className="fw-semibold">{reviewData.documents.aadharNumber}</div>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="text-muted small mb-1">PAN Number</label>
+                            <div className="fw-semibold">{reviewData.documents.panNumber}</div>
+                          </div>
+                          {reviewData.documents.aadharFrontPath && (
+                            <div className="col-md-4">
+                              <label className="text-muted small mb-1 d-block">Aadhar Front</label>
+                              <img src={reviewData.documents.aadharFrontPath} alt="Aadhar Front" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                            </div>
+                          )}
+                          {reviewData.documents.aadharBackPath && (
+                            <div className="col-md-4">
+                              <label className="text-muted small mb-1 d-block">Aadhar Back</label>
+                              <img src={reviewData.documents.aadharBackPath} alt="Aadhar Back" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                            </div>
+                          )}
+                          {reviewData.documents.panImagePath && (
+                            <div className="col-md-4">
+                              <label className="text-muted small mb-1 d-block">PAN Image</label>
+                              <img src={reviewData.documents.panImagePath} alt="PAN" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-muted">No documents uploaded</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1197,7 +1790,7 @@ console.log(addressRes,serviceLocRes,bankDetailRes)
               </CustomButton>
             )}
             <CustomButton variant="primary" onClick={handleNext} loading={loading}>
-              {currentStep === 5 ? (
+              {currentStep === 6 ? (
                 <>
                   <i className="bi bi-check-circle me-2"></i>
                   Submit

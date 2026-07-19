@@ -172,13 +172,13 @@ const Leads = () => {
           <div className="table-responsive flex-grow-1">
             <DataTable
               columns={[
-                {
-                  title: 'Id',
-                  key: 'id',
-                  render: (text, record) => (
-                    <div className="fw-semibold">{text}</div>
-                  )
-                },
+                // {
+                //   title: 'Id',
+                //   key: 'id',
+                //   render: (text, record) => (
+                //     <div className="fw-semibold">{text}</div>
+                //   )
+                // },
                 {
                   title: 'Booking Id',
                   key: 'bookingOrderId',
@@ -188,7 +188,7 @@ const Leads = () => {
                 },
                 {
                   title: 'Service',
-                  key: 'service',
+                  key: 'serviceName',
                   render: (text, record) => (
                     <div className="text-muted">N/A</div>
                   )

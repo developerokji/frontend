@@ -33,7 +33,7 @@ const PartnerModal = ({ show, handleClose, handleSave, editMode = false, partner
           last_name: lastName,
           email: partnerData.email || '',
           phone: partnerData.phone || '',
-          status: partnerData.account_status || 'active'
+          status: partnerData.accountStatus || 'active'
         });
       } else {
         reset({
@@ -73,7 +73,7 @@ const PartnerModal = ({ show, handleClose, handleSave, editMode = false, partner
         name: fullName,
         email: data.email,
         phone: data.phone,
-        account_status: data.status,
+        accountStatus: data.status,
         role: 'partner'
       };
       

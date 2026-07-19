@@ -73,19 +73,20 @@ const LocalityPage = () => {
   };
 
   const columns = [
-    {
-      title: 'Locality Name',
-      key: 'locality',
+     {
+      title: 'State Name',
+      key: 'state_name',
       render: (text) => <span>{text}</span>
     },
+    
     {
       title: 'City Name',
       key: 'city',
       render: (text) => <span>{text}</span>
     },
-    {
-      title: 'State Name',
-      key: 'state_name',
+   {
+      title: 'Pin Code',
+      key: 'locality',
       render: (text) => <span>{text}</span>
     },
     {

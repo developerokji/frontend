@@ -181,11 +181,11 @@ const LocalityModal = ({ show, handleClose, handleSave, editMode = false, locali
                 </div>
               </div>
               <CustomInput
-                label="Locality"
+                label="Pin Code"
                 type="text"
                 id="name"
                 name="name"
-                placeholder="Enter locality..."
+                placeholder="Enter Pin code..."
                 register={register}
                 error={errors.name?.message}
                 required

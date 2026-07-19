@@ -240,7 +240,7 @@ const BannerPage = () => {
       className: 'd-none d-lg-table-cell',
       render: (_, record) => (
         <div className="d-flex align-items-center gap-2">
-          <div className="form-check form-switch">
+          <div className="form-check form-switch ">
             <input 
               className="form-check-input" 
               type="checkbox" 
@@ -249,7 +249,7 @@ const BannerPage = () => {
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <div className="btn-group btn-group-sm" role="group">
+          <div className="btn-group btn-group-sm gap-2" role="group">
             <CustomButton 
               variant="primary" 
               size="sm"

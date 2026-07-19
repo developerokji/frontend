@@ -270,7 +270,7 @@ export const categoriesAPI = {
         { id: 2, name: 'Furniture', image: 'https://via.placeholder.com/150', status: 'active', created_at: '2024-01-16' },
         { id: 3, name: 'Clothing', image: 'https://via.placeholder.com/150', status: 'inactive', created_at: '2024-01-17' }
       ];
-      
+
       return {
         success: true,
         message: 'Categories fetched successfully (mock)',
@@ -290,20 +290,20 @@ export const categoriesAPI = {
   create: async (categoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (categoryData.categoryName) {
         formData.append('name', categoryData.categoryName);
       }
-      
+
       if (categoryData.image) {
         formData.append('image', categoryData.image);
       }
-      
+
       if (categoryData.status) {
         formData.append('status', categoryData.status);
       }
-      
+
       const response = await api.post('/categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -319,21 +319,21 @@ export const categoriesAPI = {
   update: async (id, categoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (categoryData.categoryName) {
         formData.append('name', categoryData.categoryName);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (categoryData.image && categoryData.image instanceof File) {
         formData.append('image', categoryData.image);
       }
-      
+
       if (categoryData.status) {
         formData.append('status', categoryData.status);
       }
-      
+
       const response = await api.patch(`/categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -384,24 +384,24 @@ export const subCategoriesAPI = {
   create: async (subCategoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (subCategoryData.name) {
         formData.append('name', subCategoryData.name);
       }
-      
+
       if (subCategoryData.categoryId) {
         formData.append('categoryId', subCategoryData.categoryId);
       }
-      
+
       if (subCategoryData.image) {
         formData.append('image', subCategoryData.image);
       }
-      
+
       if (subCategoryData.status) {
         formData.append('status', subCategoryData.status);
       }
-      
+
       const response = await api.post('/sub-categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -417,25 +417,25 @@ export const subCategoriesAPI = {
   update: async (id, subCategoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (subCategoryData.name) {
         formData.append('name', subCategoryData.name);
       }
-      
+
       if (subCategoryData.categoryId) {
         formData.append('categoryId', subCategoryData.categoryId);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (subCategoryData.image && subCategoryData.image instanceof File) {
         formData.append('image', subCategoryData.image);
       }
-      
+
       if (subCategoryData.status) {
         formData.append('status', subCategoryData.status);
       }
-      
+
       const response = await api.patch(`/sub-categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -477,34 +477,34 @@ export const clientsAPI = {
     try {
       // Check if there's a file to upload
       const hasFile = clientData.avatar && clientData.avatar instanceof File;
-      
+
       if (hasFile) {
         // Use FormData for file uploads
         const formData = new FormData();
-        
+
         // Add fields to FormData with correct field names
         if (clientData.firstName) {
           formData.append('firstName', clientData.firstName);
         }
-        
+
         if (clientData.lastName) {
           formData.append('lastName', clientData.lastName);
         }
-        
+
         if (clientData.email) {
           formData.append('email', clientData.email);
         }
-        
+
         if (clientData.phone) {
           formData.append('phone', clientData.phone);
         }
-        
+
         formData.append('avatar', clientData.avatar);
-        
+
         if (clientData.accountStatus) {
           formData.append('accountStatus', clientData.accountStatus);
         }
-        
+
         const response = await api.post('/admin/users', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -514,27 +514,27 @@ export const clientsAPI = {
       } else {
         // Use JSON for regular creation without files
         const jsonData = {};
-        
+
         if (clientData.firstName) {
           jsonData.firstName = clientData.firstName;
         }
-        
+
         if (clientData.lastName) {
           jsonData.lastName = clientData.lastName;
         }
-        
+
         if (clientData.email) {
           jsonData.email = clientData.email;
         }
-        
+
         if (clientData.phone) {
           jsonData.phone = clientData.phone;
         }
-        
+
         if (clientData.accountStatus) {
           jsonData.accountStatus = clientData.accountStatus;
         }
-        
+
         const response = await api.post('/admin/users', jsonData, {
           headers: {
             'Content-Type': 'application/json',
@@ -552,34 +552,34 @@ export const clientsAPI = {
     try {
       // Check if there's a file to upload
       const hasFile = clientData.avatar && clientData.avatar instanceof File;
-      
+
       if (hasFile) {
         // Use FormData for file uploads
         const formData = new FormData();
-        
+
         // Add fields to FormData with correct field names
         if (clientData.firstName) {
           formData.append('firstName', clientData.firstName);
         }
-        
+
         if (clientData.lastName) {
           formData.append('lastName', clientData.lastName);
         }
-        
+
         if (clientData.email) {
           formData.append('email', clientData.email);
         }
-        
+
         if (clientData.phone) {
           formData.append('phone', clientData.phone);
         }
-        
+
         formData.append('avatar', clientData.avatar);
-        
+
         if (clientData.accountStatus) {
           formData.append('accountStatus', clientData.accountStatus);
         }
-        
+
         const response = await api.patch(`/admin/users/${id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -589,27 +589,27 @@ export const clientsAPI = {
       } else {
         // Use JSON for regular updates without files
         const jsonData = {};
-        
+
         if (clientData.firstName) {
           jsonData.firstName = clientData.firstName;
         }
-        
+
         if (clientData.lastName) {
           jsonData.lastName = clientData.lastName;
         }
-        
+
         if (clientData.email) {
           jsonData.email = clientData.email;
         }
-        
+
         if (clientData.phone) {
           jsonData.phone = clientData.phone;
         }
-        
+
         if (clientData.accountStatus) {
           jsonData.accountStatus = clientData.accountStatus;
         }
-        
+
         const response = await api.patch(`/admin/users/${id}`, jsonData, {
           headers: {
             'Content-Type': 'application/json',
@@ -681,7 +681,7 @@ export const partnersAPI = {
 
 // Services API
 export const servicesAPI = {
-  getAll: async (page = 1, limit , search = '', subCategoryId = '') => {
+  getAll: async (page = 1, limit, search = '', subCategoryId = '') => {
     try {
       const response = await api.get('/services', {
         params: { page, limit, search, subCategoryId }
@@ -716,49 +716,49 @@ export const servicesAPI = {
   create: async (serviceData) => {
     try {
       const formData = new FormData();
-      
+
       // Match backend controller field names exactly
       if (serviceData.service_name) {
         formData.append('serviceName', serviceData.service_name);
       }
-      
+
       if (serviceData.price) {
         formData.append('price', serviceData.price);
       }
-      
+
       if (serviceData.sale_price) {
         formData.append('salePrice', serviceData.sale_price);
       }
-      
+
       if (serviceData.category_id) {
         formData.append('categoryId', serviceData.category_id);
       }
-      
+
       if (serviceData.sub_category_id) {
         formData.append('subCategoryId', serviceData.sub_category_id);
       }
-      
+
       if (serviceData.status) {
         formData.append('status', serviceData.status);
       }
-      
+
       if (serviceData.service_details) {
         formData.append('serviceDescription', serviceData.service_details);
       }
-      
+
       if (serviceData.service_included) {
         formData.append('serviceIncluded', serviceData.service_included);
       }
-      
+
       if (serviceData.service_excluded) {
         formData.append('serviceExcluded', serviceData.service_excluded);
       }
-      
+
       // Add image if selected
       if (serviceData.image) {
         formData.append('serviceImage', serviceData.image);
       }
-      
+
       const response = await api.post('/services', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -774,49 +774,49 @@ export const servicesAPI = {
   update: async (id, serviceData) => {
     try {
       const formData = new FormData();
-      
+
       // Match backend controller field names exactly
       if (serviceData.service_name) {
         formData.append('serviceName', serviceData.service_name);
       }
-      
+
       if (serviceData.price) {
         formData.append('price', serviceData.price);
       }
-      
+
       if (serviceData.sale_price) {
         formData.append('salePrice', serviceData.sale_price);
       }
-      
+
       if (serviceData.category_id) {
         formData.append('categoryId', serviceData.category_id);
       }
-      
+
       if (serviceData.sub_category_id) {
         formData.append('subCategoryId', serviceData.sub_category_id);
       }
-      
+
       if (serviceData.status) {
         formData.append('status', serviceData.status);
       }
-      
+
       if (serviceData.service_details) {
         formData.append('serviceDescription', serviceData.service_details);
       }
-      
+
       if (serviceData.service_included) {
         formData.append('serviceIncluded', serviceData.service_included);
       }
-      
+
       if (serviceData.service_excluded) {
         formData.append('serviceExcluded', serviceData.service_excluded);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (serviceData.image && serviceData.image instanceof File) {
         formData.append('serviceImage', serviceData.image);
       }
-      
+
       const response = await api.patch(`/services/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -1051,6 +1051,33 @@ export const partnerStepperAPI = {
       return response.data;
     } catch (error) {
       console.error('Update User Error:', error);
+      throw error;
+    }
+  },
+
+  uploadDocuments: async (userId, formData) => {
+    try {
+      // if (userId && !formData.has('userId')) {
+      //   formData.append('userId', userId);
+      // }
+      const response = await api.post(`/admin/users/${userId}/documents`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Upload Documents Error:', error);
+      throw error;
+    }
+  },
+
+  getDocuments: async (userId) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/documents/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Documents Error:', error);
       throw error;
     }
   }

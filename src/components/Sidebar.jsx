@@ -12,9 +12,10 @@ const Sidebar = () => {
     { icon: 'bi-geo-alt', text: 'Locality', path: '/locality' },
     { icon: 'bi-image', text: 'Banner', path: '/banner' },
     { icon: 'bi-tags', text: 'Categories', path: '/categories', hasSubmenu: true },
+    { icon: 'bi-gear', text: 'Services', path: '/services' },
     { icon: 'bi-person-badge', text: 'Client', path: '/client' },
     { icon: 'bi-people', text: 'Partner', path: '/partner', hasSubmenu: true },
-    { icon: 'bi-gear', text: 'Services', path: '/services' },
+    
     { icon: 'bi-box', text: 'Package', path: '/package' },
     { icon: 'bi-telephone', text: 'Lead', path: '/lead' },
     // { icon: 'bi-people', text: 'Users', path: '/users' },
