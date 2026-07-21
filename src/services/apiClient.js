@@ -2,9 +2,11 @@ import axios from "axios";
 
 // Create axios instance with base configuration
 // let localhost = "http://localhost:5000/api/v1";
-let prod ="http://13.234.214.196:5000/api/v1"
+// let prod ="http://13.234.214.196:5000/api/v1"
+let prod ="https://dev-api.okjii.com"
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: prod,
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
