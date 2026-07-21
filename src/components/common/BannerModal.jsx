@@ -384,11 +384,11 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                   </label>
                   
                   {/* Show existing image in edit mode */}
-                  {editMode && bannerData?.banner_img_path && !selectedFile && (
+                  {editMode && (bannerData?.imagePath || bannerData?.banner_img_path) && !selectedFile && (
                     <div className="mb-3">
                       <div className="d-flex align-items-center gap-3 p-3 bg-light rounded">
                         <img
-                          src={`${bannerData.banner_img_path}`}
+                          src={bannerData.imagePath || bannerData.banner_img_path}
                           alt="Current banner image"
                           style={{ 
                             width: '80px', 
@@ -397,8 +397,8 @@ const BannerModal = ({ show, handleClose, handleSave, editMode = false, bannerDa
                             borderRadius: '8px',
                             border: '2px solid #dee2e6'
                           }}
-                          onLoad={() => console.log('Banner image loaded successfully:', `${bannerData.banner_img_path}`)}
-                          onError={() => console.log('Banner image failed to load:', `${bannerData.banner_img_path}`)}
+                          onLoad={() => console.log('Banner image loaded successfully:', bannerData.imagePath || bannerData.banner_img_path)}
+                          onError={() => console.log('Banner image failed to load:', bannerData.imagePath || bannerData.banner_img_path)}
                         />
                         <div>
                           <small className="text-muted d-block">Current image</small>

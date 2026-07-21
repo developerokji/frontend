@@ -5,7 +5,8 @@ const patterns = {
   email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
   password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
   phone: /^[0-9]{10}$/,
-  alphanumeric: /^[A-Za-z0-9\s]+$/
+  alphanumeric: /^[A-Za-z0-9\s]+$/,
+  pincode: /^[0-9]+$/
 };
 
 // Stories validation schema
@@ -23,7 +24,7 @@ export const localityValidationSchema = yup.object().shape({
     .required('Locality name is required')
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name must be less than 100 characters')
-    .matches(patterns.alphanumeric, 'Name can only contain letters, numbers, and spaces'),
+    .matches(patterns.pincode, 'Pin code can only contain numbers'),
   state: yup
     .string()
     .required('State is required')
@@ -176,8 +177,7 @@ export const clientValidationSchema = yup.object().shape({
     .matches(patterns.phone, 'Please enter a valid 10-digit phone number'),
   status: yup
     .string()
-    .required('Status is required')
-    .oneOf(['active', 'inactive'], 'Invalid status')
+    .oneOf(['active', 'inactive', 'suspended', 'deleted'], 'Invalid status')
 });
 
 // Package validation schema

@@ -16,7 +16,8 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
     resolver: yupResolver(clientValidationSchema),
     defaultValues: {
       status: 'active'
-    }
+    },
+    mode: 'onChange'
   });
 
   // Reset form when modal opens or clientData changes
@@ -27,7 +28,7 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
         const nameParts = (clientData.name || '').split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
-        
+
         reset({
           firstName: firstName,
           lastName: lastName,
@@ -51,6 +52,12 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
 
   const onSubmit = async (data) => {
     try {
+      // Image is required when creating a new client
+      if (!editMode && !selectedFile) {
+        setFileError('Profile image is required');
+        return;
+      }
+
       // Check file type if file is selected
       if (selectedFile) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -65,7 +72,7 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
         lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        accountStatus: data.status
+        accountStatus: editMode ? data.status : 'active' // Default to active when creating
       };
       
       // Add avatar if selected
@@ -145,6 +152,7 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                       accept="image/*" 
                       onChange={handleFileChange}
                       style={{ display: 'none' }}
+                      required={!editMode}
                     />
                   </label>
                 </div>
@@ -155,6 +163,7 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                 )}
                 <small className="text-muted d-block mt-2">
                   Supported formats: JPG, PNG, GIF (Max size: 5MB)
+                  {!editMode && <span className="text-danger"> * Required</span>}
                 </small>
               </div>
 
@@ -209,19 +218,24 @@ const ClientModal = ({ show, handleClose, handleSave, editMode = false, clientDa
                 required
               />
 
-              <CustomInput
-                label="Status"
-                type="select"
-                id="status"
-                name="status"
-                register={register}
-                error={errors.status?.message}
-                options={[
-                  { value: 'active', label: 'Active' },
-                  { value: 'inactive', label: 'Inactive' }
-                ]}
-                required
-              />
+              {/* Show status dropdown only in edit mode */}
+              {editMode && (
+                <CustomInput
+                  label="Status"
+                  type="select"
+                  id="status"
+                  name="status"
+                  register={register}
+                  error={errors.status?.message}
+                  options={[
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'suspended', label: 'Suspended' },
+                    { value: 'deleted', label: 'Deleted' }
+                  ]}
+                  required
+                />
+              )}
             </div>
             <div className="modal-footer border-top">
               <CustomButton variant="secondary" onClick={handleClose}>

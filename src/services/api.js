@@ -1,5 +1,7 @@
 import { api } from './apiClient';
 
+export { api };
+
 // Stories API
 export const storiesAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
@@ -51,7 +53,7 @@ export const storiesAPI = {
 export const authAPI = {
   login: async (credentials) => {
     try {
-      const response = await api.post('/users/login', credentials);
+      const response = await api.post('/auth/login', credentials);
       return response;
     } catch (error) {
       console.error('Login API Error:', error);
@@ -268,7 +270,7 @@ export const categoriesAPI = {
         { id: 2, name: 'Furniture', image: 'https://via.placeholder.com/150', status: 'active', created_at: '2024-01-16' },
         { id: 3, name: 'Clothing', image: 'https://via.placeholder.com/150', status: 'inactive', created_at: '2024-01-17' }
       ];
-      
+
       return {
         success: true,
         message: 'Categories fetched successfully (mock)',
@@ -288,20 +290,20 @@ export const categoriesAPI = {
   create: async (categoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (categoryData.categoryName) {
         formData.append('name', categoryData.categoryName);
       }
-      
+
       if (categoryData.image) {
         formData.append('image', categoryData.image);
       }
-      
+
       if (categoryData.status) {
         formData.append('status', categoryData.status);
       }
-      
+
       const response = await api.post('/categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -317,21 +319,21 @@ export const categoriesAPI = {
   update: async (id, categoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (categoryData.categoryName) {
         formData.append('name', categoryData.categoryName);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (categoryData.image && categoryData.image instanceof File) {
         formData.append('image', categoryData.image);
       }
-      
+
       if (categoryData.status) {
         formData.append('status', categoryData.status);
       }
-      
+
       const response = await api.patch(`/categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -382,24 +384,24 @@ export const subCategoriesAPI = {
   create: async (subCategoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (subCategoryData.name) {
         formData.append('name', subCategoryData.name);
       }
-      
+
       if (subCategoryData.categoryId) {
         formData.append('categoryId', subCategoryData.categoryId);
       }
-      
+
       if (subCategoryData.image) {
         formData.append('image', subCategoryData.image);
       }
-      
+
       if (subCategoryData.status) {
         formData.append('status', subCategoryData.status);
       }
-      
+
       const response = await api.post('/sub-categories', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -415,25 +417,25 @@ export const subCategoriesAPI = {
   update: async (id, subCategoryData) => {
     try {
       const formData = new FormData();
-      
+
       // Add fields to FormData
       if (subCategoryData.name) {
         formData.append('name', subCategoryData.name);
       }
-      
+
       if (subCategoryData.categoryId) {
         formData.append('categoryId', subCategoryData.categoryId);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (subCategoryData.image && subCategoryData.image instanceof File) {
         formData.append('image', subCategoryData.image);
       }
-      
+
       if (subCategoryData.status) {
         formData.append('status', subCategoryData.status);
       }
-      
+
       const response = await api.patch(`/sub-categories/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -461,7 +463,7 @@ export const subCategoriesAPI = {
 export const clientsAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
     try {
-      const response = await api.get('/users/', {
+      const response = await api.get('/admin/users/', {
         params: { page, limit, search, role: 'customer' }
       });
       return response.data;
@@ -475,35 +477,35 @@ export const clientsAPI = {
     try {
       // Check if there's a file to upload
       const hasFile = clientData.avatar && clientData.avatar instanceof File;
-      
+
       if (hasFile) {
         // Use FormData for file uploads
         const formData = new FormData();
-        
+
         // Add fields to FormData with correct field names
         if (clientData.firstName) {
           formData.append('firstName', clientData.firstName);
         }
-        
+
         if (clientData.lastName) {
           formData.append('lastName', clientData.lastName);
         }
-        
+
         if (clientData.email) {
           formData.append('email', clientData.email);
         }
-        
+
         if (clientData.phone) {
           formData.append('phone', clientData.phone);
         }
-        
+
         formData.append('avatar', clientData.avatar);
-        
+
         if (clientData.accountStatus) {
           formData.append('accountStatus', clientData.accountStatus);
         }
-        
-        const response = await api.post('/users/clients', formData, {
+
+        const response = await api.post('/admin/users', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -512,28 +514,28 @@ export const clientsAPI = {
       } else {
         // Use JSON for regular creation without files
         const jsonData = {};
-        
+
         if (clientData.firstName) {
           jsonData.firstName = clientData.firstName;
         }
-        
+
         if (clientData.lastName) {
           jsonData.lastName = clientData.lastName;
         }
-        
+
         if (clientData.email) {
           jsonData.email = clientData.email;
         }
-        
+
         if (clientData.phone) {
           jsonData.phone = clientData.phone;
         }
-        
+
         if (clientData.accountStatus) {
           jsonData.accountStatus = clientData.accountStatus;
         }
-        
-        const response = await api.post('/users/clients', jsonData, {
+
+        const response = await api.post('/admin/users', jsonData, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -550,35 +552,35 @@ export const clientsAPI = {
     try {
       // Check if there's a file to upload
       const hasFile = clientData.avatar && clientData.avatar instanceof File;
-      
+
       if (hasFile) {
         // Use FormData for file uploads
         const formData = new FormData();
-        
+
         // Add fields to FormData with correct field names
         if (clientData.firstName) {
           formData.append('firstName', clientData.firstName);
         }
-        
+
         if (clientData.lastName) {
           formData.append('lastName', clientData.lastName);
         }
-        
+
         if (clientData.email) {
           formData.append('email', clientData.email);
         }
-        
+
         if (clientData.phone) {
           formData.append('phone', clientData.phone);
         }
-        
+
         formData.append('avatar', clientData.avatar);
-        
+
         if (clientData.accountStatus) {
           formData.append('accountStatus', clientData.accountStatus);
         }
-        
-        const response = await api.patch(`/users/clients/${id}`, formData, {
+
+        const response = await api.patch(`/admin/users/${id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -587,28 +589,28 @@ export const clientsAPI = {
       } else {
         // Use JSON for regular updates without files
         const jsonData = {};
-        
+
         if (clientData.firstName) {
           jsonData.firstName = clientData.firstName;
         }
-        
+
         if (clientData.lastName) {
           jsonData.lastName = clientData.lastName;
         }
-        
+
         if (clientData.email) {
           jsonData.email = clientData.email;
         }
-        
+
         if (clientData.phone) {
           jsonData.phone = clientData.phone;
         }
-        
+
         if (clientData.accountStatus) {
           jsonData.accountStatus = clientData.accountStatus;
         }
-        
-        const response = await api.patch(`/users/clients/${id}`, jsonData, {
+
+        const response = await api.patch(`/admin/users/${id}`, jsonData, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -623,7 +625,7 @@ export const clientsAPI = {
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/users/clients/${id}`);
+      const response = await api.delete(`/admin/users/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Client Error:', error);
@@ -636,7 +638,7 @@ export const clientsAPI = {
 export const partnersAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
     try {
-      const response = await api.get('/users', {
+      const response = await api.get('/admin/users', {
         params: { page, limit, search, role: 'partner' }
       });
       return response.data;
@@ -648,7 +650,7 @@ export const partnersAPI = {
 
   create: async (partnerData) => {
     try {
-      const response = await api.post('/users', partnerData);
+      const response = await api.post('/admin/users', partnerData);
       return response;
     } catch (error) {
       console.error('Create Partner Error:', error);
@@ -658,7 +660,7 @@ export const partnersAPI = {
 
   update: async (id, partnerData) => {
     try {
-      const response = await api.patch(`/users/${id}`, partnerData);
+      const response = await api.patch(`/admin/users/${id}`, partnerData);
       return response;
     } catch (error) {
       console.error('Update Partner Error:', error);
@@ -668,7 +670,7 @@ export const partnersAPI = {
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/users/${id}`);
+      const response = await api.delete(`/admin/users/${id}`);
       return response;
     } catch (error) {
       console.error('Delete Partner Error:', error);
@@ -679,7 +681,7 @@ export const partnersAPI = {
 
 // Services API
 export const servicesAPI = {
-  getAll: async (page = 1, limit , search = '', subCategoryId = '') => {
+  getAll: async (page = 1, limit, search = '', subCategoryId = '') => {
     try {
       const response = await api.get('/services', {
         params: { page, limit, search, subCategoryId }
@@ -714,49 +716,49 @@ export const servicesAPI = {
   create: async (serviceData) => {
     try {
       const formData = new FormData();
-      
+
       // Match backend controller field names exactly
       if (serviceData.service_name) {
         formData.append('serviceName', serviceData.service_name);
       }
-      
+
       if (serviceData.price) {
         formData.append('price', serviceData.price);
       }
-      
+
       if (serviceData.sale_price) {
         formData.append('salePrice', serviceData.sale_price);
       }
-      
+
       if (serviceData.category_id) {
         formData.append('categoryId', serviceData.category_id);
       }
-      
+
       if (serviceData.sub_category_id) {
         formData.append('subCategoryId', serviceData.sub_category_id);
       }
-      
+
       if (serviceData.status) {
         formData.append('status', serviceData.status);
       }
-      
+
       if (serviceData.service_details) {
         formData.append('serviceDescription', serviceData.service_details);
       }
-      
+
       if (serviceData.service_included) {
         formData.append('serviceIncluded', serviceData.service_included);
       }
-      
+
       if (serviceData.service_excluded) {
         formData.append('serviceExcluded', serviceData.service_excluded);
       }
-      
+
       // Add image if selected
       if (serviceData.image) {
         formData.append('serviceImage', serviceData.image);
       }
-      
+
       const response = await api.post('/services', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -772,49 +774,49 @@ export const servicesAPI = {
   update: async (id, serviceData) => {
     try {
       const formData = new FormData();
-      
+
       // Match backend controller field names exactly
       if (serviceData.service_name) {
         formData.append('serviceName', serviceData.service_name);
       }
-      
+
       if (serviceData.price) {
         formData.append('price', serviceData.price);
       }
-      
+
       if (serviceData.sale_price) {
         formData.append('salePrice', serviceData.sale_price);
       }
-      
+
       if (serviceData.category_id) {
         formData.append('categoryId', serviceData.category_id);
       }
-      
+
       if (serviceData.sub_category_id) {
         formData.append('subCategoryId', serviceData.sub_category_id);
       }
-      
+
       if (serviceData.status) {
         formData.append('status', serviceData.status);
       }
-      
+
       if (serviceData.service_details) {
         formData.append('serviceDescription', serviceData.service_details);
       }
-      
+
       if (serviceData.service_included) {
         formData.append('serviceIncluded', serviceData.service_included);
       }
-      
+
       if (serviceData.service_excluded) {
         formData.append('serviceExcluded', serviceData.service_excluded);
       }
-      
+
       // Only append image if it's a new file (not old image path)
       if (serviceData.image && serviceData.image instanceof File) {
         formData.append('serviceImage', serviceData.image);
       }
-      
+
       const response = await api.patch(`/services/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -911,6 +913,171 @@ export const bookingsAPI = {
       return response.data;
     } catch (error) {
       console.error('Get Booking Error:', error);
+      throw error;
+    }
+  }
+};
+
+// Partner Stepper APIs
+export const partnerStepperAPI = {
+  // Address API
+  createAddress: async (userId, addressData) => {
+    try {
+      const response = await api.post(`/admin/users/${userId}/addresses`, addressData);
+      return response.data;
+    } catch (error) {
+      console.error('Create Address Error:', error);
+      throw error;
+    }
+  },
+
+  getAddresses: async (userId) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/addresses`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Addresses Error:', error);
+      throw error;
+    }
+  },
+
+  deleteAddress: async (userId, addressId) => {
+    try {
+      const response = await api.delete(`/admin/users/${userId}/addresses/${addressId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete Address Error:', error);
+      throw error;
+    }
+  },
+
+  updateAddress: async (userId, addressId, addressData) => {
+    try {
+      const response = await api.patch(`/admin/users/${userId}/addresses/${addressId}`, addressData);
+      return response.data;
+    } catch (error) {
+      console.error('Update Address Error:', error);
+      throw error;
+    }
+  },
+
+  // Service Locations (Pincode Mapping) API
+  createServiceLocations: async (partnerId, pincodes) => {
+    try {
+      const response = await api.post(`/admin/partners/${partnerId}/service-locations`, { pincodes });
+      return response.data;
+    } catch (error) {
+      console.error('Create Service Locations Error:', error);
+      throw error;
+    }
+  },
+
+  getServiceLocations: async (partnerId) => {
+    try {
+      const response = await api.get(`/admin/partners/${partnerId}/service-locations`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Service Locations Error:', error);
+      throw error;
+    }
+  },
+
+  updateServiceLocation: async (partnerId, locationId, pincode) => {
+    try {
+      const response = await api.patch(`/admin/partners/${partnerId}/service-locations/${locationId}`, { pincode });
+      return response.data;
+    } catch (error) {
+      console.error('Update Service Location Error:', error);
+      throw error;
+    }
+  },
+
+  deleteServiceLocation: async (partnerId, locationId, pincode) => {
+    try {
+      const response = await api.delete(`/admin/partners/${partnerId}/service-locations/${locationId}`, { data: { pincode } });
+      return response.data;
+    } catch (error) {
+      console.error('Delete Service Location Error:', error);
+      throw error;
+    }
+  },
+
+  // Bank Details API
+  createBankDetail: async (userId, formData) => {
+    try {
+      const response = await api.post(`/admin/users/${userId}/bank-detail`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Create Bank Detail Error:', error);
+      throw error;
+    }
+  },
+
+  getBankDetail: async (userId) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/bank-detail`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Bank Detail Error:', error);
+      throw error;
+    }
+  },
+
+  updateBankDetail: async (userId, bankDetailId, formData) => {
+    try {
+      const response = await api.patch(`/admin/users/${userId}/bank-detail/${bankDetailId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Update Bank Detail Error:', error);
+      throw error;
+    }
+  },
+
+  updateUser: async (userId, formData) => {
+    try {
+      const response = await api.patch(`/admin/users/${userId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Update User Error:', error);
+      throw error;
+    }
+  },
+
+  uploadDocuments: async (userId, formData) => {
+    try {
+      // if (userId && !formData.has('userId')) {
+      //   formData.append('userId', userId);
+      // }
+      const response = await api.post(`/admin/users/${userId}/documents`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Upload Documents Error:', error);
+      throw error;
+    }
+  },
+
+  getDocuments: async (userId) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/documents/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Documents Error:', error);
       throw error;
     }
   }

@@ -122,7 +122,7 @@ const BannerPage = () => {
   const columns = [
     {
       title: 'Category',
-      key: 'category_id',
+      key: 'category_name',
       render: (text) => (
         <span >
           {text}
@@ -240,7 +240,7 @@ const BannerPage = () => {
       className: 'd-none d-lg-table-cell',
       render: (_, record) => (
         <div className="d-flex align-items-center gap-2">
-          <div className="form-check form-switch">
+          <div className="form-check form-switch ">
             <input 
               className="form-check-input" 
               type="checkbox" 
@@ -249,7 +249,7 @@ const BannerPage = () => {
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <div className="btn-group btn-group-sm" role="group">
+          <div className="btn-group btn-group-sm gap-2" role="group">
             <CustomButton 
               variant="primary" 
               size="sm"
@@ -303,12 +303,14 @@ const BannerPage = () => {
     category_id: item.categoryId,           // Column 1: Category
     banner_title: item.bannerTitle,         // Column 2: Title
     banner_desc: item.bannerDesc,           // Column 3: Description
-    banner_img: item.bannerImg,             // Column 4: Image name
-    banner_img_path: item.bannerImgPath,    // For image rendering
+    banner_img: item.imagePath,             // Column 4: Image name
+    banner_img_path: item.imagePath,        // For image rendering
     status: item.status,                    // Column 5: Status
     is_visible: item.isVisible,             // For position visibility
     sub_category_id: item.subCategoryId,   // Additional fields
-    service_id: item.serviceId              // Additional fields
+    service_id: item.serviceId,
+    category_name:item.categoryName,           // Additional fields
+    sub_category_name: item.subCategoryName     // Additional fields
   })) || [];
   
   const meta = banners?.meta || {};

@@ -1,0 +1,122 @@
+name: React Deploy
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      ##################################################
+      # CREATE DEV ENV
+      ##################################################
+
+      - name: Create DEV Env File
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "VITE_API_URL=${{ secrets.DEV_API_URL }}" > .env.development
+
+      ##################################################
+      # CREATE PROD ENV
+      ##################################################
+
+      - name: Create PROD Env File
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "VITE_API_URL=${{ secrets.PROD_API_URL }}" > .env.production
+
+      ##################################################
+      # DEBUG ENV
+      ##################################################
+
+      - name: Debug DEV ENV
+        if: github.ref == 'refs/heads/dev'
+        run: cat .env.development
+
+      - name: Debug PROD ENV
+        if: github.ref == 'refs/heads/main'
+        run: cat .env.production
+
+      ##################################################
+      # BUILD
+      ##################################################
+
+      - name: Build DEV
+        if: github.ref == 'refs/heads/dev'
+        run: npm run build -- --mode development
+
+      - name: Build PROD
+        if: github.ref == 'refs/heads/main'
+        run: npm run build -- --mode production
+
+      ##################################################
+      # AWS CONFIG
+      ##################################################
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      ##################################################
+      # DEV DEPLOY
+      ##################################################
+
+      - name: Deploy Assets to DEV S3
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.DEV_S3_BUCKET }} \
+            --delete \
+            --exclude "index.html" \
+            --cache-control "public,max-age=31536000,immutable"
+
+          aws s3 cp dist/index.html s3://${{ secrets.DEV_S3_BUCKET }}/index.html \
+            --cache-control "no-cache" \
+            --content-type "text/html"
+
+      - name: Invalidate DEV CloudFront
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.DEV_CLOUDFRONT_ID }} \
+            --paths "/*"
+
+      ##################################################
+      # PROD DEPLOY
+      ##################################################
+
+      - name: Deploy Assets to PROD S3
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.PROD_S3_BUCKET }} \
+            --delete \
+            --exclude "index.html" \
+            --cache-control "public,max-age=31536000,immutable"
+
+          aws s3 cp dist/index.html s3://${{ secrets.PROD_S3_BUCKET }}/index.html \
+            --cache-control "no-cache" \
+            --content-type "text/html"
+
+      - name: Invalidate PROD CloudFront
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.PROD_CLOUDFRONT_ID }} \
+            --paths "/*"
