@@ -21,6 +21,8 @@ import Clients from './components/Clients';
 import PartnerList from './components/PartnerList';
 import Packages from './components/Packages';
 import Leads from './components/Leads';
+import PaymentPage from './pages/PaymentPage';
+import PaymentStatusPage from './pages/PaymentStatusPage';
 
 // Placeholder components for new routes
 const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
@@ -61,6 +63,8 @@ function App() {
                       <Route path="/lead" element={<Leads />} />
                       <Route path="/users" element={<UsersPage />} />
                       <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/payment/:bookingId" element={<PaymentPage />} />
+                      <Route path="/payment-status" element={<PaymentStatusPage />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
                   </main>
