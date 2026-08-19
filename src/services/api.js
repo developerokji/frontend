@@ -893,6 +893,33 @@ export const packagesAPI = {
   }
 };
 
+// Partner Subscriptions API
+export const partnerSubscriptionsAPI = {
+  getAll: async (page = 1, limit = 25, search = '', status = 'active') => {
+    try {
+      const response = await api.get('/admin/partner-subscriptions', {
+        params: { page, limit, search, status }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Partner Subscriptions API Error:', error);
+      throw error;
+    }
+  },
+
+  getExpired: async (page = 1, limit = 25, search = '') => {
+    try {
+      const response = await api.get('/admin/partner-subscriptions/expired', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Expired Partner Subscriptions API Error:', error);
+      throw error;
+    }
+  }
+};
+
 // Bookings API (Leads)
 export const bookingsAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
