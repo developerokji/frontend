@@ -21,12 +21,14 @@ import Clients from './components/Clients';
 import PartnerList from './components/PartnerList';
 import Packages from './components/Packages';
 import Leads from './components/Leads';
+import PaymentPage from './pages/PaymentPage';
+import PaymentStatusPage from './pages/PaymentStatusPage';
+import SubscriptionPartner from './components/SubscriptionPartner';
+import ExpiredPartner from './components/ExpiredPartner';
 
 // Placeholder components for new routes
 const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
 const PartnerPage = () => <div className="p-4"><h2>Partner Management</h2><p>Partner content will go here...</p></div>;
-const SubscriptionPartnerPage = () => <div className="p-4"><h2>Subscription Partner</h2><p>Subscription partner content will go here...</p></div>;
-const ExpirePartnerPage = () => <div className="p-4"><h2>Expire Partner</h2><p>Expire partner content will go here...</p></div>;
 
 function App() {
   return (
@@ -54,13 +56,15 @@ function App() {
                       <Route path="/client" element={<Clients />} />
                       <Route path="/partner" element={<PartnerPage />} />
                       <Route path="/partner/list" element={<PartnerList />} />
-                      <Route path="/partner/subscription" element={<SubscriptionPartnerPage />} />
-                      <Route path="/partner/expire" element={<ExpirePartnerPage />} />
+                      <Route path="/partner/subscription" element={<SubscriptionPartner />} />
+                      <Route path="/partner/expire" element={<ExpiredPartner />} />
                       <Route path="/services" element={<Services />} />
                       <Route path="/package" element={<Packages />} />
                       <Route path="/lead" element={<Leads />} />
                       <Route path="/users" element={<UsersPage />} />
                       <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/payment/:bookingId" element={<PaymentPage />} />
+                      <Route path="/payment-success" element={<PaymentStatusPage />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
                   </main>

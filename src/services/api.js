@@ -893,6 +893,33 @@ export const packagesAPI = {
   }
 };
 
+// Partner Subscriptions API
+export const partnerSubscriptionsAPI = {
+  getAll: async (page = 1, limit = 25, search = '', status = 'active') => {
+    try {
+      const response = await api.get('/admin/partner-subscriptions', {
+        params: { page, limit, search, status }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Partner Subscriptions API Error:', error);
+      throw error;
+    }
+  },
+
+  getExpired: async (page = 1, limit = 25, search = '') => {
+    try {
+      const response = await api.get('/admin/partner-subscriptions/expired', {
+        params: { page, limit, search }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Expired Partner Subscriptions API Error:', error);
+      throw error;
+    }
+  }
+};
+
 // Bookings API (Leads)
 export const bookingsAPI = {
   getAll: async (page = 1, limit = 25, search = '') => {
@@ -1082,3 +1109,37 @@ export const partnerStepperAPI = {
     }
   }
 };
+
+// Payment API
+export const paymentAPI = {
+  create: async (bookingId) => {
+    try {
+      const response = await api.post('/payments/create', { bookingId });
+      return response.data;
+    } catch (error) {
+      console.error('Create Payment Session Error:', error);
+      throw error;
+    }
+  },
+
+  verify: async (orderId) => {
+    try {
+      const response = await api.get(`/payments/verify/${orderId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Verify Payment Error:', error);
+      throw error;
+    }
+  },
+
+  getStatus: async (bookingId) => {
+    try {
+      const response = await api.get(`/payments/booking/${bookingId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Payment Status Error:', error);
+      throw error;
+    }
+  }
+};
+
