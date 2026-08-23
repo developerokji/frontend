@@ -1,13 +1,10 @@
 import axios from "axios";
 
-// Create axios instance with base configuration
-// let prod = "http://localhost:5000/api/v1";
-// let prod ="http://13.234.214.196:5000/api/v1"
-// let prod ="https://api.okjii.com/api/v1"
-let prod ="https://dev-api.okjii.com/api/v1"
+// Create axios instance with base configuration using environment variables
+const baseURL = import.meta.env.VITE_API_URL || "https://dev-api.okjii.com/api/v1";
 
 const apiClient = axios.create({
-  baseURL: prod,
+  baseURL,
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -28,7 +25,7 @@ apiClient.interceptors.request.use(
     }
 
     // Log request in development
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       console.log(
         `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
         {
@@ -50,7 +47,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     // Log response in development
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       console.log(
         `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
         {
