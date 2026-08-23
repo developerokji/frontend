@@ -190,7 +190,7 @@ const Leads = () => {
                   title: 'Service',
                   key: 'serviceName',
                   render: (text, record) => (
-                    <div className="text-muted">N/A</div>
+                    <div className="text-muted">{text}</div>
                   )
                 },
                 {
@@ -223,9 +223,9 @@ const Leads = () => {
                 },
                 {
                   title: 'Partner',
-                  key: 'partner',
+                  key: 'acceptedPartnerName',
                   render: (text, record) => (
-                    <div className="text-muted">N/A</div>
+                    <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
