@@ -1144,7 +1144,7 @@ export const partnerStepperAPI = {
 
   getDocuments: async (userId) => {
     try {
-      const response = await api.get(`/admin/users/${userId}/documents/${userId}`);
+      const response = await api.get(`/admin/users/${userId}/documents/`);
       return response.data;
     } catch (error) {
       console.error('Get Documents Error:', error);
