@@ -241,16 +241,59 @@ export const bannersAPI = {
     }
   }
 };
+// Admin dashboard API (all admin-only). Each method returns the `data` payload
+// of the standard { success, message, data, error } envelope. `config` lets
+// callers pass an AbortController signal.
 export const dashboardAPI = {
-  getStats: async () => {
-    try {
-      const response = await api.get('/dashboard/stats');
-      return response.data;
-    } catch (error) {
-      console.error('Dashboard API Error:', error);
-      throw error;
-    }
-  }
+  // KPI counts: customers, partners, leads, locations, revenue, catalogue,
+  // topCategories, topPincodes.
+  getSummary: async (expiringDays = 7, config = {}) => {
+    const response = await api.get('/admin/dashboard', {
+      ...config,
+      params: { expiringDays },
+    });
+    return response.data;
+  },
+
+  // { days, items: [{ date: 'DD-MM-YYYY', bookings, completed, cancelled,
+  //   subscriptionRevenue, newCustomers }] }
+  getTrends: async (days = 30, config = {}) => {
+    const response = await api.get('/admin/dashboard/trends', {
+      ...config,
+      params: { days },
+    });
+    return response.data;
+  },
+
+  // Paginated { items, meta }
+  getExpiringPartners: async ({ days = 7, page = 1, limit = 10 } = {}, config = {}) => {
+    const response = await api.get('/admin/dashboard/partners/expiring', {
+      ...config,
+      params: { days, page, limit },
+    });
+    return response.data;
+  },
+
+  // Paginated { items, meta }
+  getExpiredPartners: async ({ page = 1, limit = 10 } = {}, config = {}) => {
+    const response = await api.get('/admin/dashboard/partners/expired', {
+      ...config,
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  // Most recent bookings (the bookings list is ordered newest first).
+  getRecentLeads: async ({ page = 1, limit = 10 } = {}, config = {}) => {
+    const response = await api.get('/bookings', {
+      ...config,
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  // Kept for the legacy useDashboardStats hook.
+  getStats: async () => dashboardAPI.getSummary(),
 };
 
 // Categories API
