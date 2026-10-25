@@ -1127,10 +1127,13 @@ export const partnerStepperAPI = {
 
   uploadDocuments: async (userId, formData) => {
     try {
-      // if (userId && !formData.has('userId')) {
-      //   formData.append('userId', userId);
-      // }
-      const response = await api.post(`/admin/users/${userId}/documents`, formData, {
+      // Check if this is an update (has document IDs) or create (no document IDs)
+      const isUpdate = formData.has('aadharDocumentId') || 
+                      formData.has('aadharBackId') || 
+                      formData.has('panDocumentId');
+      
+      const method = isUpdate ? 'patch' : 'post';
+      const response = await api[method](`/admin/users/${userId}/documents`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -1144,7 +1147,7 @@ export const partnerStepperAPI = {
 
   getDocuments: async (userId) => {
     try {
-      const response = await api.get(`/admin/users/${userId}/documents/${userId}`);
+      const response = await api.get(`/admin/users/${userId}/documents/`);
       return response.data;
     } catch (error) {
       console.error('Get Documents Error:', error);
