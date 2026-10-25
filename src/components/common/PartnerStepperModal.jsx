@@ -6,6 +6,18 @@ import { CustomButton } from './CustomButton';
 import CustomInput from './CustomInput';
 import { partnerStepperAPI, api, categoriesAPI, localitiesAPI } from '../../services/api';
 
+// Uppercase the field's value as the user types. Runs on `input`, before
+// react-hook-form's `change` handler reads the value, and keeps the caret
+// where it was so editing mid-string doesn't jump to the end.
+const toUpperCaseInput = (e) => {
+  const input = e.target;
+  const upper = input.value.toUpperCase();
+  if (input.value === upper) return;
+  const { selectionStart, selectionEnd } = input;
+  input.value = upper;
+  input.setSelectionRange(selectionStart, selectionEnd);
+};
+
 const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, partnerData = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [userId, setUserId] = useState(null);
@@ -89,7 +101,7 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
   const documentForm = useForm({
     resolver: yupResolver(yup.object().shape({
       aadharNumber: yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
-      panNumber: yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
+      panNumber: yup.string().trim().uppercase().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
     })),
     defaultValues: {
       aadharNumber: '',
@@ -150,7 +162,7 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
   const editDocumentForm = useForm({
     resolver: yupResolver(yup.object().shape({
       aadharNumber: yup.string().matches(/^[0-9]{12}$/, 'Aadhar number must be 12 digits').required('Aadhar number is required'),
-      panNumber: yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
+      panNumber: yup.string().trim().uppercase().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format').required('PAN number is required')
     })),
     defaultValues: {
       aadharNumber: '',
@@ -1311,6 +1323,9 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                   register={documentForm.register}
                   error={documentForm.formState.errors.panNumber?.message}
                   placeholder="Enter 10-digit PAN number (e.g., ABCDE1234F)"
+                  maxLength={10}
+                  autoCapitalize="characters"
+                  onInput={toUpperCaseInput}
                   required
                 />
 
@@ -1706,6 +1721,9 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                         name="panNumber"
                         register={editDocumentForm.register}
                         error={editDocumentForm.formState.errors.panNumber?.message}
+                        maxLength={10}
+                        autoCapitalize="characters"
+                        onInput={toUpperCaseInput}
                         required
                       />
                       <div className="mb-3">
