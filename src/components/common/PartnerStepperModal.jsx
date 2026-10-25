@@ -45,6 +45,12 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
   const [aadharBackError, setAadharBackError] = useState('');
   const [panImageError, setPanImageError] = useState('');
 
+  // Document paths from API (for edit mode preview)
+  const [existingDocuments, setExistingDocuments] = useState([]);
+  const [aadharFrontPath, setAadharFrontPath] = useState('');
+  const [aadharBackPath, setAadharBackPath] = useState('');
+  const [panImagePath, setPanImagePath] = useState('');
+
   // Form for Personal Info
   const personalInfoForm = useForm({
     resolver: yupResolver(yup.object().shape({
@@ -445,6 +451,26 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       formData.append('aadharNumber', data.aadharNumber);
       formData.append('panNumber', data.panNumber);
       
+      // Add document IDs and types if editing
+      if (editMode && existingDocuments.length > 0) {
+        const aadharFrontDoc = existingDocuments.find(doc => doc.documentType === 'aadhaar_front');
+        const aadharBackDoc = existingDocuments.find(doc => doc.documentType === 'aadhaar_back');
+        const panDoc = existingDocuments.find(doc => doc.documentType === 'pan');
+        
+        if (aadharFrontDoc?.id) {
+          formData.append('aadharDocumentId', aadharFrontDoc.id);
+          formData.append('aadharDocumentType', aadharFrontDoc.documentType);
+        }
+        if (aadharBackDoc?.id) {
+          formData.append('aadharBackId', aadharBackDoc.id);
+          formData.append('aadharBackDocumentType', aadharBackDoc.documentType);
+        }
+        if (panDoc?.id) {
+          formData.append('panDocumentId', panDoc.id);
+          formData.append('panDocumentType', panDoc.documentType);
+        }
+      }
+      
       if (aadharFrontFile) {
         formData.append('aadharFront', aadharFrontFile);
       }
@@ -561,10 +587,26 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     } else if (section === 'bank' && reviewData?.bankDetail) {
       editBankForm.reset(reviewData.bankDetail);
     } else if (section === 'documents' && reviewData?.documents) {
-      editDocumentForm.reset({
-        aadharNumber: reviewData.documents.aadharNumber || '',
-        panNumber: reviewData.documents.panNumber || ''
-      });
+      // Handle new array format
+      if (Array.isArray(reviewData.documents)) {
+        const aadharFrontDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_front');
+        const aadharBackDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_back');
+        const panDoc = reviewData.documents.find(doc => doc.documentType === 'pan');
+        
+        const aadharNumber = aadharFrontDoc?.documentNumber || aadharBackDoc?.documentNumber || '';
+        const panNumber = panDoc?.documentNumber || '';
+        
+        editDocumentForm.reset({
+          aadharNumber: aadharNumber,
+          panNumber: panNumber
+        });
+      } else {
+        // Fallback to old format
+        editDocumentForm.reset({
+          aadharNumber: reviewData.documents.aadharNumber || '',
+          panNumber: reviewData.documents.panNumber || ''
+        });
+      }
     }
   };
 
@@ -611,6 +653,27 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
         const formData = new FormData();
         formData.append('aadharNumber', data.aadharNumber);
         formData.append('panNumber', data.panNumber);
+        
+        // Add document IDs and types from existing documents
+        if (reviewData.documents && Array.isArray(reviewData.documents)) {
+          const aadharFrontDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_front');
+          const aadharBackDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_back');
+          const panDoc = reviewData.documents.find(doc => doc.documentType === 'pan');
+          
+          if (aadharFrontDoc?.id) {
+            formData.append('aadharDocumentId', aadharFrontDoc.id);
+            formData.append('aadharDocumentType', aadharFrontDoc.documentType);
+          }
+          if (aadharBackDoc?.id) {
+            formData.append('aadharBackId', aadharBackDoc.id);
+            formData.append('aadharBackDocumentType', aadharBackDoc.documentType);
+          }
+          if (panDoc?.id) {
+            formData.append('panDocumentId', panDoc.id);
+            formData.append('panDocumentType', panDoc.documentType);
+          }
+        }
+        
         if (aadharFrontFile) {
           formData.append('aadharFront', aadharFrontFile);
         }
@@ -646,6 +709,9 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     setAadharFrontError('');
     setAadharBackError('');
     setPanImageError('');
+    setAadharFrontPath('');
+    setAadharBackPath('');
+    setPanImagePath('');
   };
 
   const handleModalClose = () => {
@@ -672,6 +738,10 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
     setAadharBackError('');
     setPanImageError('');
     setDropdownOpen(false);
+    setExistingDocuments([]);
+    setAadharFrontPath('');
+    setAadharBackPath('');
+    setPanImagePath('');
     handleClose();
   };
 
@@ -744,6 +814,10 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
       setAadharBackError('');
       setPanImageError('');
       setDropdownOpen(false);
+      setExistingDocuments([]);
+      setAadharFrontPath('');
+      setAadharBackPath('');
+      setPanImagePath('');
       personalInfoForm.reset();
       addressForm.reset();
       bankForm.reset();
@@ -807,12 +881,27 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
         });
       }
 
-      // Set documents
-      if (documentsRes) {
+      // Set documents from new array format
+      if (documentsRes && Array.isArray(documentsRes)) {
+        setExistingDocuments(documentsRes);
+        
+        // Extract document numbers and paths by type
+        const aadharFrontDoc = documentsRes.find(doc => doc.documentType === 'aadhaar_front');
+        const aadharBackDoc = documentsRes.find(doc => doc.documentType === 'aadhaar_back');
+        const panDoc = documentsRes.find(doc => doc.documentType === 'pan');
+        
+        const aadharNumber = aadharFrontDoc?.documentNumber || aadharBackDoc?.documentNumber || '';
+        const panNumber = panDoc?.documentNumber || '';
+        
         documentForm.reset({
-          aadharNumber: documentsRes.aadharNumber || '',
-          panNumber: documentsRes.panNumber || ''
+          aadharNumber: aadharNumber,
+          panNumber: panNumber
         });
+        
+        // Set document paths for preview
+        setAadharFrontPath(aadharFrontDoc?.documentPath || '');
+        setAadharBackPath(aadharBackDoc?.documentPath || '');
+        setPanImagePath(panDoc?.documentPath || '');
       }
 
       setReviewData({
@@ -1271,10 +1360,10 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                   <label className="form-label fw-medium">
                     Aadhar Front Image {!editMode && <span className="text-danger">*</span>}
                   </label>
-                  {editMode && reviewData?.documents?.aadharFrontPath && !aadharFrontFile && (
+                  {editMode && aadharFrontPath && !aadharFrontFile && (
                     <div className="mb-2">
                       <img 
-                        src={reviewData.documents.aadharFrontPath} 
+                        src={aadharFrontPath} 
                         alt="Aadhar Front" 
                         className="img-thumbnail" 
                         style={{ maxHeight: '150px' }}
@@ -1295,10 +1384,10 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                   <label className="form-label fw-medium">
                     Aadhar Back Image {!editMode && <span className="text-danger">*</span>}
                   </label>
-                  {editMode && reviewData?.documents?.aadharBackPath && !aadharBackFile && (
+                  {editMode && aadharBackPath && !aadharBackFile && (
                     <div className="mb-2">
                       <img 
-                        src={reviewData.documents.aadharBackPath} 
+                        src={aadharBackPath} 
                         alt="Aadhar Back" 
                         className="img-thumbnail" 
                         style={{ maxHeight: '150px' }}
@@ -1333,10 +1422,10 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                   <label className="form-label fw-medium">
                     PAN Image {!editMode && <span className="text-danger">*</span>}
                   </label>
-                  {editMode && reviewData?.documents?.panImagePath && !panImageFile && (
+                  {editMode && panImagePath && !panImageFile && (
                     <div className="mb-2">
                       <img 
-                        src={reviewData.documents.panImagePath} 
+                        src={panImagePath} 
                         alt="PAN Image" 
                         className="img-thumbnail" 
                         style={{ maxHeight: '150px' }}
@@ -1757,34 +1846,50 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
                       </CustomButton>
                     </div>
                     <div className="card-body">
-                      {reviewData.documents ? (
+                      {reviewData.documents && Array.isArray(reviewData.documents) && reviewData.documents.length > 0 ? (
                         <div className="row g-3">
-                          <div className="col-md-6">
-                            <label className="text-muted small mb-1">Aadhar Number</label>
-                            <div className="fw-semibold">{reviewData.documents.aadharNumber}</div>
-                          </div>
-                          <div className="col-md-6">
-                            <label className="text-muted small mb-1">PAN Number</label>
-                            <div className="fw-semibold">{reviewData.documents.panNumber}</div>
-                          </div>
-                          {reviewData.documents.aadharFrontPath && (
-                            <div className="col-md-4">
-                              <label className="text-muted small mb-1 d-block">Aadhar Front</label>
-                              <img src={reviewData.documents.aadharFrontPath} alt="Aadhar Front" className="img-thumbnail" style={{ maxHeight: '100px' }} />
-                            </div>
-                          )}
-                          {reviewData.documents.aadharBackPath && (
-                            <div className="col-md-4">
-                              <label className="text-muted small mb-1 d-block">Aadhar Back</label>
-                              <img src={reviewData.documents.aadharBackPath} alt="Aadhar Back" className="img-thumbnail" style={{ maxHeight: '100px' }} />
-                            </div>
-                          )}
-                          {reviewData.documents.panImagePath && (
-                            <div className="col-md-4">
-                              <label className="text-muted small mb-1 d-block">PAN Image</label>
-                              <img src={reviewData.documents.panImagePath} alt="PAN" className="img-thumbnail" style={{ maxHeight: '100px' }} />
-                            </div>
-                          )}
+                          {(() => {
+                            const aadharFrontDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_front');
+                            const aadharBackDoc = reviewData.documents.find(doc => doc.documentType === 'aadhaar_back');
+                            const panDoc = reviewData.documents.find(doc => doc.documentType === 'pan');
+                            const aadharNumber = aadharFrontDoc?.documentNumber || aadharBackDoc?.documentNumber || '';
+                            const panNumber = panDoc?.documentNumber || '';
+                            
+                            return (
+                              <>
+                                {aadharNumber && (
+                                  <div className="col-md-6">
+                                    <label className="text-muted small mb-1">Aadhar Number</label>
+                                    <div className="fw-semibold">{aadharNumber}</div>
+                                  </div>
+                                )}
+                                {panNumber && (
+                                  <div className="col-md-6">
+                                    <label className="text-muted small mb-1">PAN Number</label>
+                                    <div className="fw-semibold">{panNumber}</div>
+                                  </div>
+                                )}
+                                {aadharFrontDoc?.documentPath && (
+                                  <div className="col-md-4">
+                                    <label className="text-muted small mb-1 d-block">Aadhar Front</label>
+                                    <img src={aadharFrontDoc.documentPath} alt="Aadhar Front" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                                  </div>
+                                )}
+                                {aadharBackDoc?.documentPath && (
+                                  <div className="col-md-4">
+                                    <label className="text-muted small mb-1 d-block">Aadhar Back</label>
+                                    <img src={aadharBackDoc.documentPath} alt="Aadhar Back" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                                  </div>
+                                )}
+                                {panDoc?.documentPath && (
+                                  <div className="col-md-4">
+                                    <label className="text-muted small mb-1 d-block">PAN Image</label>
+                                    <img src={panDoc.documentPath} alt="PAN" className="img-thumbnail" style={{ maxHeight: '100px' }} />
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div className="text-muted">No documents uploaded</div>
