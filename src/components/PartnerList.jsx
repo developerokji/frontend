@@ -202,6 +202,13 @@ const PartnerList = () => {
                     <div className="text-muted">{phone || 'N/A'}</div>
                   )
                 },
+                {
+                  title: 'Category',
+                  key: 'categoryName',
+                  render: (categoryName, record) => (
+                    <div className="text-muted">{categoryName || 'N/A'}</div>
+                  )
+                },
                 // {
                 //   title: 'Status',
                 //   key: 'account_status',
