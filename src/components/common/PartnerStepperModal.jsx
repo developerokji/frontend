@@ -940,32 +940,38 @@ const PartnerStepperModal = ({ show, handleClose, handleSave, editMode = false, 
           </div>
 
           {/* Stepper Progress */}
-          <div className="px-4 pt-4">
-            <div className="d-flex justify-content-between align-items-center position-relative">
+          <div className="px-3 px-md-4 pt-3 pt-md-4">
+            <ol className="partner-stepper list-unstyled d-flex justify-content-between align-items-start mb-0">
               {steps.map((step, index) => (
                 <React.Fragment key={step.id}>
-                  <div className="text-center" style={{ flex: 1 }}>
+                  <li
+                    className="partner-stepper-step text-center"
+                    aria-current={currentStep === step.id ? 'step' : undefined}
+                  >
                     <div
-                      className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${
+                      className={`partner-stepper-dot rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${
                         currentStep >= step.id ? 'bg-primary text-white' : 'bg-light text-muted'
                       }`}
-                      style={{ width: '40px', height: '40px', fontSize: '14px' }}
                     >
-                      {currentStep > step.id ? <i className="bi bi-check"></i> : step.id}
+                      {currentStep > step.id ? <i className="bi bi-check" aria-hidden="true"></i> : step.id}
                     </div>
-                    <small className={currentStep >= step.id ? 'text-primary fw-semibold' : 'text-muted'}>
+                    {/* Labels only fit from md up; phones show the current step below. */}
+                    <small className={`d-none d-md-block ${currentStep >= step.id ? 'text-primary fw-semibold' : 'text-muted'}`}>
                       {step.title}
                     </small>
-                  </div>
+                  </li>
                   {index < steps.length - 1 && (
-                    <div
-                      className={`flex-grow-1 mx-2 ${currentStep > step.id ? 'bg-primary' : 'bg-light'}`}
-                      style={{ height: '2px' }}
-                    ></div>
+                    <li
+                      aria-hidden="true"
+                      className={`partner-stepper-line flex-grow-1 mx-1 mx-md-2 ${currentStep > step.id ? 'bg-primary' : 'bg-light'}`}
+                    ></li>
                   )}
                 </React.Fragment>
               ))}
-            </div>
+            </ol>
+            <p className="d-md-none text-center small text-primary fw-semibold mb-0">
+              Step {currentStep} of {steps.length}: {steps[currentStep - 1]?.title}
+            </p>
           </div>
 
           <div className="modal-body py-4">

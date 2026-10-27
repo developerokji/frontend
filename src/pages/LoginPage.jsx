@@ -65,8 +65,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light" style={{ width: '100vw' }}>
-      <div className="w-100" style={{ maxWidth: '400px', padding: '0 20px' }}>
+    <div className="min-vh-100 w-100 d-flex align-items-center justify-content-center bg-light py-4">
+      <div className="w-100 px-3" style={{ maxWidth: '420px' }}>
         <div className="card shadow-lg border-0">
           <div className="card-body p-4">
             <div className="text-center mb-4">
