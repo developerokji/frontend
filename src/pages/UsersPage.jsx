@@ -60,8 +60,8 @@ const UsersPage = () => {
 
   return (
     <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold">Users Management</h2>
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 className="fw-bold h4 mb-0">Users Management</h2>
         <CustomButton variant="primary" icon="bi-plus-circle">
           Add User
         </CustomButton>

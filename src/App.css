@@ -1,16 +1,108 @@
-.App {
+/* ==================== App shell ==================== */
+
+/*
+ * Sidebar + content layout.
+ * - lg (>= 992px): sidebar is a fixed 250px column.
+ * - below lg: sidebar becomes an off-canvas drawer opened from the navbar.
+ * Height uses 100vh with a 100dvh override so iOS Safari's collapsing
+ * address bar doesn't cut off the bottom of the page.
+ */
+.app-shell {
+  display: flex;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
-main {
-  flex-grow: 1;
-  overflow: auto;
-  padding: 0;
-  width: 100%;
+.app-sidebar {
+  width: 250px;
+  flex: 0 0 250px;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-/* Navbar Styles */
+.app-sidebar-logo {
+  width: 100%;
+  max-width: 200px;
+  height: 120px;
+  margin: 0 auto;
+  background: url(/image.png) center / contain no-repeat;
+}
+
+/* min-width: 0 lets wide children (tables) scroll instead of stretching the page. */
+.app-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.app-backdrop {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1045; /* below Bootstrap modals (1055) */
+    max-width: 85vw;
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.25s ease, visibility 0.25s;
+  }
+
+  .app-sidebar.is-open {
+    -webkit-transform: none;
+    transform: none;
+    visibility: visible;
+    box-shadow: 0 0 2rem rgba(0, 0, 0, 0.25);
+  }
+
+  .app-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 0;
+    padding: 0;
+  }
+
+  .app-main {
+    padding: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar {
+    transition: none;
+  }
+}
+
+/* ==================== Navbar ==================== */
+
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
@@ -21,34 +113,23 @@ main {
   color: #0a58ca !important;
 }
 
-.navbar-toggler {
-  border: none;
-  padding: 0.25rem 0.5rem;
+.app-navbar {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
 }
 
-.navbar-toggler:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Sidebar Styles */
-.sidebar {
-  background-color: #f8f9fa;
-  border-right: 1px solid #dee2e6;
-  transition: all 0.3s ease-in-out;
-}
+/* ==================== Sidebar nav ==================== */
 
 .nav-link {
   border-radius: 0.375rem;
   margin-bottom: 0.25rem;
   padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   display: flex;
   align-items: center;
 }
 
 .nav-link:hover {
   background-color: #e9ecef;
-  transform: translateX(2px);
 }
 
 .nav-link.active {
@@ -63,7 +144,8 @@ main {
   text-align: center;
 }
 
-/* Table Styles */
+/* ==================== Tables ==================== */
+
 .table {
   margin-bottom: 0;
 }
@@ -73,9 +155,14 @@ main {
   font-weight: 600;
   color: #495057;
   background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+.table thead th {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 2;
 }
 
 .table td {
@@ -86,22 +173,38 @@ main {
   background-color: rgba(13, 110, 253, 0.05);
 }
 
-/* Badge Styles */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== Badges ==================== */
+
 .badge {
-  font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.65rem;
   border-radius: 0.5rem;
   font-weight: 500;
 }
 
-/* Modal Styles */
+/* ==================== Modals ==================== */
+
 .modal {
   background-color: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .modal.show {
   display: block !important;
+}
+
+/* Stop the page behind an open modal from scrolling (Safari 15.4+, Chrome/Edge 105+, Firefox 121+). */
+body:has(.modal.show) .app-main {
+  overflow: hidden;
 }
 
 .modal-content {
@@ -122,17 +225,34 @@ main {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .modal-content {
+    animation: none;
+  }
+}
+
 .modal-header {
   border-bottom: 1px solid #dee2e6;
   padding: 1.25rem 1.5rem;
 }
 
+.modal-body {
+  overflow-wrap: anywhere;
+}
+
 .modal-footer {
   border-top: 1px solid #dee2e6;
   padding: 1rem 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-/* Card Styles */
+.modal-footer > * {
+  margin: 0;
+}
+
+/* ==================== Cards ==================== */
+
 .card {
   border: none;
   border-radius: 0.75rem;
@@ -140,24 +260,28 @@ main {
   transition: box-shadow 0.3s ease;
 }
 
-.card:hover {
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
 }
 
-/* Form Styles */
+/* ==================== Forms ==================== */
+
 .input-group-text {
   background-color: #f8f9fa;
   border-right: none;
   border-color: #ced4da;
 }
 
+/* Only drop the left border when an icon sits on that side. */
+.input-group > .input-group-text + .form-control {
+  border-left: none;
+}
+
 .form-control:focus {
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-.form-control {
-  border-left: none;
 }
 
 .form-label {
@@ -166,18 +290,21 @@ main {
   margin-bottom: 0.5rem;
 }
 
-/* Button Styles */
+/* Safari/iOS: consistent look for date/time/select controls. */
+input[type='date'].form-control,
+input[type='time'].form-control,
+input[type='datetime-local'].form-control {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+/* ==================== Buttons ==================== */
+
 .btn-primary {
   background-color: #0d6efd;
   border-color: #0d6efd;
   transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-  background-color: #0b5ed7;
-  border-color: #0a58ca;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
 }
 
 .btn-secondary {
@@ -186,13 +313,29 @@ main {
   transition: all 0.2s ease;
 }
 
-.btn-secondary:hover {
-  background-color: #5c636a;
-  border-color: #56606b;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+  }
+
+  .btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #56606b;
+    transform: translateY(-1px);
+  }
 }
 
-/* Pagination Styles */
+/* ==================== Pagination ==================== */
+
+/* Pages render every page number; wrap instead of overflowing on phones. */
+.pagination {
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+
 .pagination .page-link {
   color: #0d6efd;
   border: 1px solid #dee2e6;
@@ -218,51 +361,88 @@ main {
   border-color: #dee2e6;
 }
 
-/* Responsive Design */
-@media (max-width: 576px) {
+/* ==================== Small screens ==================== */
+
+@media (max-width: 767.98px) {
   .container-fluid {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   .table {
     font-size: 0.875rem;
   }
-  
-  .btn {
-    font-size: 0.875rem;
-  }
-}
 
-@media (max-width: 768px) {
-  .modal-dialog {
-    margin: 1rem;
+  /* iOS Safari zooms the page when a focused field is under 16px. */
+  .form-control,
+  .form-select,
+  .input-group-text {
+    font-size: 16px;
   }
-  
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
   .modal-content {
     border-radius: 0.5rem;
   }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  /* Full-width action buttons in modal footers are easier to tap. */
+  .modal-footer > .btn {
+    flex: 1 1 auto;
+  }
+
+  .pagination .page-link {
+    padding: 0.375rem 0.6rem;
+  }
 }
 
-@media (max-width: 992px) {
-  .d-lg-flex {
-    display: none !important;
+@media (max-width: 575.98px) {
+  .btn {
+    font-size: 0.875rem;
   }
-  
-  main.opacity-50 {
-    pointer-events: none;
+
+  h4,
+  .h4 {
+    font-size: 1.2rem;
   }
 }
 
-/* Utility Classes */
+/* ==================== Utilities ==================== */
+
 .text-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.object-cover {
+  object-fit: cover;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .shadow-sm {
@@ -273,7 +453,6 @@ main {
   transition: all 0.3s ease;
 }
 
-/* Image placeholder styles */
 .image-placeholder {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -284,9 +463,42 @@ main {
   border-radius: 0.5rem;
 }
 
-/* Loading spinner */
 .spinner-border-sm {
   width: 1rem;
   height: 1rem;
   border-width: 0.15rem;
+}
+
+/* ==================== Partner stepper ==================== */
+
+.partner-stepper-step {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.partner-stepper-dot {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.partner-stepper-line {
+  height: 2px;
+  margin-top: 19px; /* vertically centre on the 40px dot */
+}
+
+@media (max-width: 767.98px) {
+  .partner-stepper-step {
+    flex: 0 0 auto;
+  }
+
+  .partner-stepper-dot {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .partner-stepper-line {
+    margin-top: 14px;
+  }
 }
