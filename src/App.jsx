@@ -12,8 +12,7 @@ import LocalityPage from './pages/LocalityPage';
 import BannerPage from './pages/BannerPage';
 import UsersPage from './pages/UsersPage';
 import SettingsPage from './pages/SettingsPage';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import AppLayout from './components/AppLayout';
 import AddCategoryPage from './pages/AddCategoryPage';
 import AddSubCategoryPage from './pages/AddSubCategoryPage';
 import Services from './components/Services';
@@ -39,11 +38,7 @@ function App() {
           path="/*"
           element={
             <AuthGuard>
-              <div className="d-flex" style={{ height: '100vh', width: '100vw' }}>
-                <Sidebar />
-                <div className="flex-grow-1 d-flex flex-column">
-                  <Navbar />
-                  <main className="flex-grow-1 overflow-auto p-3" style={{ width: 'calc(100vw - 250px)' }}>
+              <AppLayout>
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
@@ -67,9 +62,7 @@ function App() {
                       <Route path="/payment-success" element={<PaymentStatusPage />} />
                       <Route path="*" element={<Navigate to="/dashboard" replace />} />
                     </Routes>
-                  </main>
-                </div>
-              </div>
+              </AppLayout>
             </AuthGuard>
           }
         />
