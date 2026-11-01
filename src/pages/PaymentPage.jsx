@@ -9,6 +9,9 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [cashfreeMode, setCashfreeMode] = useState('dev');
+  const [modeLoading, setModeLoading] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
@@ -28,10 +31,58 @@ const PaymentPage = () => {
       }
     };
 
+    const fetchCashfreeMode = async () => {
+      try {
+        const data = await paymentAPI.getCashfreeSettings();
+        if (data?.settings?.server) {
+          const isProd = ['prod', 'pro', 'production', 'live'].includes(
+            String(data.settings.server).toLowerCase()
+          );
+          setCashfreeMode(isProd ? 'prod' : 'dev');
+        }
+      } catch (err) {
+        console.warn('Could not load Cashfree mode:', err);
+      }
+    };
+
+    const checkExistingTransaction = async () => {
+      try {
+        const tx = await paymentAPI.getStatusByBooking(bookingId);
+        if (tx?.orderId) {
+          setPendingOrderId(tx.orderId);
+          if (tx.status === 'initiate' || tx.status === 'pending') {
+            const verifyRes = await paymentAPI.verify(tx.orderId);
+            if (verifyRes?.verified || verifyRes?.status === 'success') {
+              navigate(`/payment-success?orderId=${encodeURIComponent(tx.orderId)}&bookingId=${encodeURIComponent(bookingId)}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not check existing payment status:', err);
+      }
+    };
+
     if (bookingId) {
       fetchBookingDetails();
+      fetchCashfreeMode();
+      checkExistingTransaction();
     }
-  }, [bookingId]);
+  }, [bookingId, navigate]);
+
+  const handleToggleCashfreeMode = async (newMode) => {
+    if (newMode === cashfreeMode || modeLoading) return;
+    try {
+      setModeLoading(true);
+      setError(null);
+      await paymentAPI.setCashfreeServerMode(newMode);
+      setCashfreeMode(newMode);
+    } catch (err) {
+      console.error('Failed to switch Cashfree mode:', err);
+      setError(err.response?.data?.message || 'Failed to switch payment environment mode.');
+    } finally {
+      setModeLoading(false);
+    }
+  };
 
   const handlePayment = async () => {
     try {
@@ -45,27 +96,45 @@ const PaymentPage = () => {
         throw new Error('Failed to create payment session. No session ID returned.');
       }
 
+      setPendingOrderId(res.orderId);
+
       // 2. Initialize Cashfree Web SDK
       if (!window.Cashfree) {
         throw new Error('Cashfree SDK failed to load. Please refresh the page and try again.');
       }
 
-      const isProduction = window.location.hostname !== 'localhost';
+      const sdkMode =
+        res.environment ||
+        (cashfreeMode === 'prod'
+          ? 'production'
+          : window.location.hostname !== 'localhost'
+            ? 'production'
+            : 'sandbox');
+
       const cashfree = window.Cashfree({
-        mode: isProduction ? 'production' : 'sandbox',
+        mode: sdkMode,
       });
 
-      // 3. Initiate Cashfree Checkout
+      // 3. Initiate Cashfree Checkout in modal mode so completion resolves in-page (works on localhost & hosted)
       const checkoutOptions = {
         paymentSessionId: res.paymentSessionId,
+        redirectTarget: '_modal',
       };
 
-      console.log('Initiating Cashfree checkout with options:', checkoutOptions);
-      await cashfree.checkout(checkoutOptions);
+      console.log('Initiating Cashfree checkout with options:', { ...checkoutOptions, mode: sdkMode });
+      const result = await cashfree.checkout(checkoutOptions);
+
+      if (result?.error) {
+        setError(result.error.message || 'Payment was not completed or was cancelled.');
+        return;
+      }
+
+      // 4. Redirect to verification page immediately after modal checkout completes
+      navigate(`/payment-success?orderId=${encodeURIComponent(res.orderId)}&bookingId=${encodeURIComponent(bookingId)}`);
 
     } catch (err) {
       console.error('Payment checkout initiation failed:', err);
-      setError(err.message || 'Payment initiation failed. Please try again.');
+      setError(err.response?.data?.message || err.message || 'Payment initiation failed. Please try again.');
     } finally {
       setPaymentLoading(false);
     }
@@ -94,9 +163,14 @@ const PaymentPage = () => {
             </div>
             <h3 className="card-title fw-bold text-dark mb-3">Error Occurred</h3>
             <p className="card-text text-muted mb-4">{error}</p>
-            <button className="btn btn-primary px-4 py-2" onClick={() => navigate('/dashboard')} style={{ borderRadius: '8px' }}>
-              Go back to Dashboard
-            </button>
+            <div className="d-flex justify-content-center gap-2">
+              <button className="btn btn-primary px-4 py-2" onClick={() => navigate('/lead')} style={{ borderRadius: '8px' }}>
+                Back to Leads
+              </button>
+              <button className="btn btn-outline-secondary px-4 py-2" onClick={() => navigate('/dashboard')} style={{ borderRadius: '8px' }}>
+                Dashboard
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -106,18 +180,46 @@ const PaymentPage = () => {
   return (
     <div className="container py-4 py-lg-5" style={{ maxWidth: '1000px' }}>
       {/* Page Header */}
-      <div className="d-flex align-items-center justify-content-between mb-4">
+      <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
         <div>
-          <button className="btn btn-link text-decoration-none text-muted p-0 mb-2" onClick={() => navigate('/dashboard')}>
-            <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
-          </button>
+          <div className="d-flex align-items-center gap-3 mb-2">
+            <button className="btn btn-link text-decoration-none text-muted p-0" onClick={() => navigate('/lead')}>
+              <i className="bi bi-arrow-left me-1"></i>Back to Leads
+            </button>
+            <span className="text-muted">|</span>
+            <button className="btn btn-link text-decoration-none text-muted p-0" onClick={() => navigate('/dashboard')}>
+              Dashboard
+            </button>
+          </div>
           <h2 className="fw-bold mb-0 text-gradient" style={{ background: 'linear-gradient(45deg, #12c2e9, #c471ed, #f64f59)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Complete Your Payment
           </h2>
         </div>
-        <span className="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill fw-semibold">
-          Payment Pending
-        </span>
+
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
+            <button
+              type="button"
+              className={`btn ${cashfreeMode !== 'prod' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
+              disabled={modeLoading || paymentLoading}
+              onClick={() => handleToggleCashfreeMode('dev')}
+            >
+              <i className="bi bi-bug me-1"></i>UAT (Sandbox)
+            </button>
+            <button
+              type="button"
+              className={`btn ${cashfreeMode === 'prod' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
+              disabled={modeLoading || paymentLoading}
+              onClick={() => handleToggleCashfreeMode('prod')}
+            >
+              <i className="bi bi-shield-check me-1"></i>Production
+            </button>
+          </div>
+
+          <span className="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill fw-semibold">
+            {booking.customerPayment === 'received' ? 'Payment Received' : 'Payment Pending'}
+          </span>
+        </div>
       </div>
 
       {error && (
@@ -187,28 +289,31 @@ const PaymentPage = () => {
         {/* Right Side: Price details & Checkout */}
         <div className="col-12 col-lg-5">
           <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(10px)' }}>
-            <div className="card-header bg-transparent border-0 pt-4 px-4">
+            <div className="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
               <h5 className="fw-bold text-dark mb-0">Payment Summary</h5>
+              <span className={`badge ${cashfreeMode === 'prod' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+                {cashfreeMode === 'prod' ? 'PRODUCTION' : 'UAT / SANDBOX'}
+              </span>
             </div>
             <div className="card-body p-4">
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted">Subtotal</span>
-                <span className="fw-semibold text-dark">₹{booking.subTotal?.toFixed(2)}</span>
+                <span className="fw-semibold text-dark">₹{Number(booking.subTotal || 0).toFixed(2)}</span>
               </div>
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted">Visiting Fee</span>
-                <span className="fw-semibold text-dark">₹{booking.visitingFee?.toFixed(2)}</span>
+                <span className="fw-semibold text-dark">₹{Number(booking.visitingFee || 0).toFixed(2)}</span>
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <span className="text-muted">Platform Fee</span>
-                <span className="fw-semibold text-dark">₹{booking.platformFee?.toFixed(2)}</span>
+                <span className="fw-semibold text-dark">₹{Number(booking.platformFee || 0).toFixed(2)}</span>
               </div>
 
               <hr className="opacity-10" />
 
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <span className="fw-bold text-dark">Total Amount</span>
-                <span className="fs-4 fw-bold text-primary">₹{booking.total?.toFixed(2)}</span>
+                <span className="fs-4 fw-bold text-primary">₹{Number(booking.total || 0).toFixed(2)}</span>
               </div>
 
               {/* Cashfree branding and trust badges */}
@@ -217,7 +322,9 @@ const PaymentPage = () => {
                   <i className="bi bi-shield-check-fill text-success fs-3 me-2"></i>
                   <div>
                     <p className="mb-0 fw-semibold text-dark small">Secured by Cashfree</p>
-                    <p className="mb-0 text-muted extra-small" style={{ fontSize: '11px' }}>PCI-DSS Compliant Payments</p>
+                    <p className="mb-0 text-muted extra-small" style={{ fontSize: '11px' }}>
+                      {cashfreeMode === 'prod' ? 'Live Production Gateway' : 'UAT Sandbox Testing Mode'}
+                    </p>
                   </div>
                 </div>
                 <div className="d-flex gap-1 text-muted fs-4">
@@ -231,7 +338,7 @@ const PaymentPage = () => {
               <button
                 className="btn btn-primary w-100 py-3 fw-bold d-flex align-items-center justify-content-center shadow-lg hover-scale transition-all"
                 style={{ borderRadius: '12px', background: 'linear-gradient(45deg, #12c2e9, #c471ed)' }}
-                disabled={paymentLoading}
+                disabled={paymentLoading || booking.customerPayment === 'received'}
                 onClick={handlePayment}
               >
                 {paymentLoading ? (
@@ -239,13 +346,34 @@ const PaymentPage = () => {
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     Initializing Payment...
                   </>
+                ) : booking.customerPayment === 'received' ? (
+                  <>
+                    <i className="bi bi-check-circle-fill me-2"></i>
+                    Already Paid
+                  </>
                 ) : (
                   <>
                     <i className="bi bi-lock-fill me-2"></i>
-                    Pay Now ₹{booking.total?.toFixed(2)}
+                    Pay Now ₹{Number(booking.total || 0).toFixed(2)} ({cashfreeMode === 'prod' ? 'Prod' : 'UAT'})
                   </>
                 )}
               </button>
+
+              {pendingOrderId && booking.customerPayment !== 'received' && (
+                <button
+                  type="button"
+                  className="btn btn-outline-success w-100 mt-2 py-2 fw-semibold"
+                  style={{ borderRadius: '10px' }}
+                  onClick={() =>
+                    navigate(
+                      `/payment-success?orderId=${encodeURIComponent(pendingOrderId)}&bookingId=${encodeURIComponent(bookingId)}`
+                    )
+                  }
+                >
+                  <i className="bi bi-arrow-repeat me-2"></i>
+                  Verify Payment Status ({pendingOrderId})
+                </button>
+              )}
             </div>
           </div>
         </div>
