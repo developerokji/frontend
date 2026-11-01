@@ -52,15 +52,15 @@ const Leads = () => {
     }
   };
 
-  // Load Cashfree gateway mode (UAT 'dev' vs Production 'prod')
+  // Load Cashfree gateway mode (UAT 'dev' vs Production 'pro' matching settings.server enum('dev','pro'))
   const loadCashfreeMode = async () => {
     try {
       const data = await paymentAPI.getCashfreeSettings();
       if (data?.settings?.server) {
-        const isProd = ['prod', 'pro', 'production', 'live'].includes(
+        const isProd = ['pro', 'prod', 'production', 'live'].includes(
           String(data.settings.server).toLowerCase()
         );
-        setCashfreeMode(isProd ? 'prod' : 'dev');
+        setCashfreeMode(isProd ? 'pro' : 'dev');
       }
     } catch (err) {
       console.warn('Could not load Cashfree mode:', err);
@@ -178,13 +178,13 @@ const Leads = () => {
           <h4 className="mb-0">Leads</h4>
           <span
             className={`badge ${
-              cashfreeMode === 'prod'
+              cashfreeMode === 'pro'
                 ? 'bg-danger-subtle text-danger border border-danger'
                 : 'bg-warning-subtle text-dark border border-warning'
             } px-3 py-2 rounded-pill`}
           >
-            <i className={`bi ${cashfreeMode === 'prod' ? 'bi-lightning-charge-fill' : 'bi-tools'} me-1`}></i>
-            Gateway: {cashfreeMode === 'prod' ? 'Production (Live)' : 'UAT (Sandbox)'}
+            <i className={`bi ${cashfreeMode === 'pro' ? 'bi-lightning-charge-fill' : 'bi-tools'} me-1`}></i>
+            Gateway: {cashfreeMode === 'pro' ? 'Production (Live)' : 'UAT (Sandbox)'}
           </span>
         </div>
 
@@ -193,7 +193,7 @@ const Leads = () => {
           <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
             <button
               type="button"
-              className={`btn ${cashfreeMode !== 'prod' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
+              className={`btn ${cashfreeMode !== 'pro' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
               disabled={modeLoading}
               onClick={() => handleToggleCashfreeMode('dev')}
             >
@@ -201,9 +201,9 @@ const Leads = () => {
             </button>
             <button
               type="button"
-              className={`btn ${cashfreeMode === 'prod' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
+              className={`btn ${cashfreeMode === 'pro' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
               disabled={modeLoading}
-              onClick={() => handleToggleCashfreeMode('prod')}
+              onClick={() => handleToggleCashfreeMode('pro')}
             >
               <i className="bi bi-shield-check me-1"></i>Production
             </button>
