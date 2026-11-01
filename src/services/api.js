@@ -1186,6 +1186,26 @@ export const paymentAPI = {
       console.error('Get Payment Status Error:', error);
       throw error;
     }
+  },
+
+  getCashfreeSettings: async () => {
+    try {
+      const response = await api.get('/settings/cashfree');
+      return response.data;
+    } catch (error) {
+      console.error('Get Cashfree Settings Error:', error);
+      throw error;
+    }
+  },
+
+  setCashfreeServerMode: async (mode) => {
+    try {
+      const response = await api.patch('/settings/key/server', { value: mode });
+      return response.data;
+    } catch (error) {
+      console.error('Set Cashfree Server Mode Error:', error);
+      throw error;
+    }
   }
 };
 

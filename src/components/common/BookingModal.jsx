@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const BookingModal = ({ show, handleClose, bookingData }) => {
+  const navigate = useNavigate();
+
   if (!show) return null;
 
   const formatDate = (dateString) => {
@@ -19,16 +22,19 @@ const BookingModal = ({ show, handleClose, bookingData }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `₹${parseFloat(amount).toFixed(2)}`;
+    return `₹${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   const getStatusBadge = (status) => {
     const statusMap = {
       'active': { class: 'bg-success', label: 'Active' },
-      'review': { class: 'bg-warning', label: 'Review' },
+      'on_going': { class: 'bg-primary', label: 'On Going' },
+      'pending': { class: 'bg-warning text-dark', label: 'Pending' },
+      'review': { class: 'bg-warning text-dark', label: 'Review' },
       'cancel': { class: 'bg-danger', label: 'Cancelled' },
-      'payment_pending': { class: 'bg-info', label: 'Payment Pending' },
-      'completed': { class: 'bg-primary', label: 'Completed' }
+      'payment_pending': { class: 'bg-info text-dark', label: 'Payment Pending' },
+      'completed': { class: 'bg-primary', label: 'Completed' },
+      'close': { class: 'bg-secondary', label: 'Closed' },
     };
     const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
     return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
@@ -43,6 +49,17 @@ const BookingModal = ({ show, handleClose, bookingData }) => {
     };
     const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
     return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
+  };
+
+  const canPay =
+    bookingData &&
+    bookingData.customerPayment !== 'received' &&
+    bookingData.workStatus !== 'cancel';
+
+  const handleProceedToPayment = () => {
+    if (!bookingData?.id) return;
+    handleClose();
+    navigate(`/payment/${bookingData.id}`);
   };
 
   return (
@@ -123,7 +140,7 @@ const BookingModal = ({ show, handleClose, bookingData }) => {
                         </div>
                         <div className="col-md-4">
                           <label className="text-muted small mb-1">Location</label>
-                          <div className="fw-semibold">{bookingData.locationName || 'N/A'}</div>
+                          <div className="fw-semibold">{bookingData.locationName || bookingData.fullAddress || 'N/A'}</div>
                         </div>
                       </div>
                     </div>
@@ -186,10 +203,29 @@ const BookingModal = ({ show, handleClose, bookingData }) => {
               </div>
             )}
           </div>
-          <div className="modal-footer border-top">
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>
-              <i className="bi bi-x-circle me-2"></i>Close
-            </button>
+          <div className="modal-footer border-top d-flex justify-content-between">
+            <div>
+              {bookingData?.customerPayment === 'received' && (
+                <span className="badge bg-success-subtle text-success border border-success px-3 py-2">
+                  <i className="bi bi-check-circle-fill me-1"></i>Payment Received
+                </span>
+              )}
+            </div>
+            <div className="d-flex gap-2">
+              {canPay && (
+                <button
+                  type="button"
+                  className="btn btn-success fw-semibold"
+                  onClick={handleProceedToPayment}
+                >
+                  <i className="bi bi-credit-card me-2"></i>
+                  Make Payment ({formatCurrency(bookingData.total)})
+                </button>
+              )}
+              <button type="button" className="btn btn-secondary" onClick={handleClose}>
+                <i className="bi bi-x-circle me-2"></i>Close
+              </button>
+            </div>
           </div>
         </div>
       </div>

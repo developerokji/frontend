@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BookingModal from './common/BookingModal';
 import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
-import { bookingsAPI } from '../services/api';
+import { bookingsAPI, paymentAPI } from '../services/api';
 import { CustomButton } from './common/CustomButton';
 
 const Leads = () => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookings, setBookings] = useState([]);
@@ -15,6 +17,8 @@ const Leads = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [cashfreeMode, setCashfreeMode] = useState('dev');
+  const [modeLoading, setModeLoading] = useState(false);
 
   const [limit, setLimit] = useState(25);
 
@@ -48,13 +52,50 @@ const Leads = () => {
     }
   };
 
+  // Load Cashfree gateway mode (UAT 'dev' vs Production 'pro' matching settings.server enum('dev','pro'))
+  const loadCashfreeMode = async () => {
+    try {
+      const data = await paymentAPI.getCashfreeSettings();
+      if (data?.settings?.server) {
+        const isProd = ['pro', 'prod', 'production', 'live'].includes(
+          String(data.settings.server).toLowerCase()
+        );
+        setCashfreeMode(isProd ? 'pro' : 'dev');
+      }
+    } catch (err) {
+      console.warn('Could not load Cashfree mode:', err);
+    }
+  };
+
+  const handleToggleCashfreeMode = async (newMode) => {
+    if (newMode === cashfreeMode || modeLoading) return;
+    try {
+      setModeLoading(true);
+      await paymentAPI.setCashfreeServerMode(newMode);
+      setCashfreeMode(newMode);
+    } catch (err) {
+      console.error('Failed to switch Cashfree mode:', err);
+      setError(err.response?.data?.message || 'Failed to switch payment environment mode.');
+    } finally {
+      setModeLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadBookings();
   }, [currentPage, searchTerm, limit]);
 
+  useEffect(() => {
+    loadCashfreeMode();
+  }, []);
+
   const handleViewBooking = (booking) => {
     setSelectedBooking(booking);
     setShowModal(true);
+  };
+
+  const handlePayBooking = (booking) => {
+    navigate(`/payment/${booking.id}`);
   };
 
   const handleCloseModal = () => {
@@ -96,18 +137,21 @@ const Leads = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `₹${parseFloat(amount).toFixed(2)}`;
+    return `₹${parseFloat(amount || 0).toFixed(2)}`;
   };
 
   const getStatusBadge = (status) => {
     const statusMap = {
       'active': { class: 'bg-success', label: 'Active' },
-      'review': { class: 'bg-warning', label: 'Review' },
+      'on_going': { class: 'bg-primary', label: 'On Going' },
+      'pending': { class: 'bg-warning text-dark', label: 'Pending' },
+      'review': { class: 'bg-warning text-dark', label: 'Review' },
       'cancel': { class: 'bg-danger', label: 'Cancelled' },
-      'payment_pending': { class: 'bg-info', label: 'Payment Pending' },
-      'completed': { class: 'bg-primary', label: 'Completed' }
+      'payment_pending': { class: 'bg-info text-dark', label: 'Payment Pending' },
+      'completed': { class: 'bg-primary', label: 'Completed' },
+      'close': { class: 'bg-secondary', label: 'Closed' },
     };
-    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
+    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status || 'N/A' };
     return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
   };
 
@@ -118,14 +162,61 @@ const Leads = () => {
       'not_transfer': { class: 'bg-danger', label: 'Not Transferred' },
       'transferred': { class: 'bg-success', label: 'Transferred' }
     };
-    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status };
+    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status || 'N/A' };
     return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
+  };
+
+  const isBookingPayable = (record) => {
+    if (!record) return false;
+    return record.customerPayment !== 'received' && record.workStatus !== 'cancel';
   };
 
   return (
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <h4 className="mb-0">Leads</h4>
+        <div className="d-flex align-items-center gap-3">
+          <h4 className="mb-0">Leads</h4>
+          <span
+            className={`badge ${
+              cashfreeMode === 'pro'
+                ? 'bg-danger-subtle text-danger border border-danger'
+                : 'bg-warning-subtle text-dark border border-warning'
+            } px-3 py-2 rounded-pill`}
+          >
+            <i className={`bi ${cashfreeMode === 'pro' ? 'bi-lightning-charge-fill' : 'bi-tools'} me-1`}></i>
+            Gateway: {cashfreeMode === 'pro' ? 'Production (Live)' : 'UAT (Sandbox)'}
+          </span>
+        </div>
+
+        <div className="d-flex align-items-center gap-2">
+          <span className="text-muted small fw-semibold me-1">Payment Mode:</span>
+          <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
+            <button
+              type="button"
+              className={`btn ${cashfreeMode !== 'pro' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
+              disabled={modeLoading}
+              onClick={() => handleToggleCashfreeMode('dev')}
+            >
+              <i className="bi bi-bug me-1"></i>UAT (Sandbox)
+            </button>
+            <button
+              type="button"
+              className={`btn ${cashfreeMode === 'pro' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
+              disabled={modeLoading}
+              onClick={() => handleToggleCashfreeMode('pro')}
+            >
+              <i className="bi bi-shield-check me-1"></i>Production
+            </button>
+          </div>
+          <CustomButton
+            variant="outline-primary"
+            size="sm"
+            icon="bi-arrow-clockwise"
+            onClick={loadBookings}
+            disabled={loading}
+            tooltip="Refresh Leads"
+          />
+        </div>
       </div>
 
       <div className="card flex-grow-1 d-flex flex-column w-100">
@@ -183,14 +274,14 @@ const Leads = () => {
                   title: 'Booking Id',
                   key: 'bookingOrderId',
                   render: (text, record) => (
-                    <div className="fw-semibold text-primary">{text}</div>
+                    <div className="fw-semibold text-primary">{text || `#${record.id}`}</div>
                   )
                 },
                 {
                   title: 'Service',
                   key: 'serviceName',
                   render: (text, record) => (
-                    <div className="text-muted">{text}</div>
+                    <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
@@ -229,6 +320,23 @@ const Leads = () => {
                   )
                 },
                 {
+                  title: 'Total',
+                  key: 'total',
+                  render: (text, record) => (
+                    <div className="fw-bold text-dark">{formatCurrency(text)}</div>
+                  )
+                },
+                {
+                  title: 'Work Status',
+                  key: 'workStatus',
+                  render: (text) => getStatusBadge(text)
+                },
+                {
+                  title: 'Payment',
+                  key: 'customerPayment',
+                  render: (text) => getPaymentBadge(text)
+                },
+                {
                   title: 'Action',
                   key: 'actions',
                   render: (_, record) => (
@@ -241,6 +349,24 @@ const Leads = () => {
                         tooltip="View Details"
                       >
                       </CustomButton>
+                      {isBookingPayable(record) ? (
+                        <CustomButton
+                          variant="success"
+                          size="sm"
+                          icon="bi-credit-card"
+                          onClick={() => handlePayBooking(record)}
+                          tooltip={`Pay ${formatCurrency(record.total)}`}
+                        >
+                          Pay
+                        </CustomButton>
+                      ) : record.customerPayment === 'received' ? (
+                        <span
+                          className="badge bg-success-subtle text-success border border-success px-2 py-1"
+                          title="Payment Completed"
+                        >
+                          <i className="bi bi-check-circle-fill me-1"></i>Paid
+                        </span>
+                      ) : null}
                     </div>
                   )
                 },

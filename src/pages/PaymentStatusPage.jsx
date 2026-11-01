@@ -10,8 +10,8 @@ const PaymentStatusPage = () => {
   const [error, setError] = useState(null);
 
   const queryParams = new URLSearchParams(location.search);
-  const orderId = queryParams.get('orderId');
-  const bookingId = queryParams.get('bookingId');
+  const orderId = queryParams.get('orderId') || queryParams.get('order_id');
+  const bookingId = queryParams.get('bookingId') || queryParams.get('booking_id');
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -65,6 +65,9 @@ const PaymentStatusPage = () => {
                   Retry Payment
                 </button>
               )}
+              <button className="btn btn-outline-primary py-2" onClick={() => navigate('/lead')} style={{ borderRadius: '8px' }}>
+                Back to Leads
+              </button>
               <button className="btn btn-outline-secondary py-2" onClick={() => navigate('/dashboard')} style={{ borderRadius: '8px' }}>
                 Go to Dashboard
               </button>
@@ -75,7 +78,8 @@ const PaymentStatusPage = () => {
     );
   }
 
-  const isSuccess = statusResult.verified || statusResult.status === 'SUCCESS';
+  const isSuccess =
+    statusResult.verified || String(statusResult.status || '').toLowerCase() === 'success';
 
   return (
     <div className="container py-5">
@@ -109,7 +113,7 @@ const PaymentStatusPage = () => {
                 <hr className="my-2 opacity-10" />
                 <div className="d-flex justify-content-between">
                   <span className="fw-bold text-dark">Amount Paid</span>
-                  <span className="fw-bold text-success fs-5">₹{statusResult.amount?.toFixed(2)}</span>
+                  <span className="fw-bold text-success fs-5">₹{Number(statusResult.amount || 0).toFixed(2)}</span>
                 </div>
               </div>
             </>
@@ -145,6 +149,9 @@ const PaymentStatusPage = () => {
                 <i className="bi bi-arrow-clockwise me-2"></i>Retry Payment
               </button>
             )}
+            <button className="btn btn-outline-primary py-2 fw-semibold" onClick={() => navigate('/lead')} style={{ borderRadius: '10px' }}>
+              <i className="bi bi-list-ul me-2"></i>Back to Leads
+            </button>
             <button className="btn btn-outline-dark py-2 fw-semibold" onClick={() => navigate('/dashboard')} style={{ borderRadius: '10px' }}>
               Go to Dashboard
             </button>
