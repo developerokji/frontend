@@ -156,13 +156,8 @@
   color: #495057;
   background-color: #f8f9fa;
   white-space: nowrap;
-}
-
-.table thead th {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table td {

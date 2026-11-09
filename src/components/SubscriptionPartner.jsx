@@ -67,12 +67,7 @@ const SubscriptionPartner = () => {
     <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <div className="d-flex align-items-center gap-2">
-          <h4 className="mb-0 fw-bold">Subscription Partners</h4>
-          <span className="badge bg-primary-subtle text-primary rounded-pill px-2 py-1">
-            {totalItems} Total
-          </span>
-        </div>
+        <h4 className="mb-0 fw-bold">Subscription Partners</h4>
         <button
           type="button"
           className="btn btn-sm btn-outline-secondary"
@@ -137,9 +132,9 @@ const SubscriptionPartner = () => {
                     <tr>
                       <th style={{ width: '6%' }}>#</th>
                       <th style={{ width: '25%' }}>Partner</th>
-                      <th style={{ width: '21%' }}>Package & Category</th>
+                      <th style={{ width: '20%' }}>Package & Category</th>
                       <th style={{ width: '10%' }}>Price</th>
-                      <th style={{ width: '14%' }}>Leads (Used / Total)</th>
+                      <th style={{ width: '15%' }}>Leads Usage</th>
                       <th style={{ width: '15%' }}>Validity</th>
                       <th style={{ width: '9%' }} className="text-center">
                         Status

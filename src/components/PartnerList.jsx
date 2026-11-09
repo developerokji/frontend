@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PartnerModal from './common/PartnerModal';
 import PartnerStepperModal from './common/PartnerStepperModal';
-import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
 import { partnersAPI } from '../services/api';
+import { useDebounce } from '../hooks/useApi';
 import { CustomButton } from './common/CustomButton';
 
 const PartnerList = () => {
@@ -13,37 +13,43 @@ const PartnerList = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
-
   const [limit, setLimit] = useState(25);
 
-  // Load partners
   const loadPartners = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await partnersAPI.getAll(currentPage, limit, searchTerm);
-      if (response.data && response.data.items) {
+      const response = await partnersAPI.getAll(currentPage, limit, debouncedSearch);
+      if (response?.data && response.data.items) {
         setPartners(response.data.items);
-        setTotalItems(response.data.meta?.totalItems || response.data.items.length);
+        setTotalItems(response.data.meta?.totalItems ?? response.data.items.length);
         setTotalPages(response.data.meta?.totalPages || 1);
-      } else if (response.data) {
-        setPartners(Array.isArray(response.data) ? response.data : []);
-        setTotalItems(Array.isArray(response.data) ? response.data.length : 0);
-        setTotalPages(1);
-      } else if (response.items) {
+      } else if (response?.items) {
         setPartners(response.items);
-        setTotalItems(response.meta?.totalItems || response.items.length);
+        setTotalItems(response.meta?.totalItems ?? response.items.length);
         setTotalPages(response.meta?.totalPages || 1);
+      } else if (response?.data) {
+        const list = Array.isArray(response.data) ? response.data : [];
+        setPartners(list);
+        setTotalItems(list.length);
+        setTotalPages(1);
+      } else {
+        setPartners([]);
+        setTotalItems(0);
+        setTotalPages(1);
       }
-    } catch (error) {
-      console.error('Failed to load partners:', error);
-      setError(error.message || 'Failed to load partners. Please try again.');
+    } catch (err) {
+      console.error('Failed to load partners:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load partners. Please try again.');
       setPartners([]);
       setTotalItems(0);
       setTotalPages(0);
@@ -54,13 +60,13 @@ const PartnerList = () => {
 
   useEffect(() => {
     loadPartners();
-  }, [currentPage, searchTerm, limit]);
+  }, [currentPage, debouncedSearch, limit]);
 
   const handleShowModal = () => {
     setEditMode(false);
     setSelectedPartner(null);
     setSelectedFile(null);
-    setShowStepperModal(true); // Use stepper modal for adding new partner
+    setShowStepperModal(true);
   };
 
   const handleCloseModal = () => {
@@ -75,41 +81,61 @@ const PartnerList = () => {
     setEditMode(true);
     setSelectedPartner(partner);
     setSelectedFile(null);
-    setShowStepperModal(true); // Use stepper modal for editing as well
+    setShowStepperModal(true);
   };
 
   const handleSavePartner = async (partnerData) => {
     try {
+      setError(null);
       if (editMode && selectedPartner) {
         await partnersAPI.update(selectedPartner.id, partnerData);
       } else {
         await partnersAPI.create(partnerData);
       }
-      loadPartners();
+      await loadPartners();
       handleCloseModal();
-    } catch (error) {
-      console.error('Save partner error:', error);
+    } catch (err) {
+      console.error('Save partner error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to save partner.');
     }
   };
 
-  const handleDeletePartner = async (partnerId) => {
-    if (window.confirm('Are you sure you want to delete this partner?')) {
-      try {
-        await partnersAPI.delete(partnerId);
-        loadPartners();
-      } catch (error) {
-        console.error('Delete partner error:', error);
-      }
+  const handleDeletePartner = async (partner) => {
+    const partnerId = partner.id;
+    const partnerName = partner.name || `#${partnerId}`;
+    if (!window.confirm(`Are you sure you want to delete partner "${partnerName}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(partnerId);
+      setError(null);
+      setSuccessMsg(null);
+      await partnersAPI.delete(partnerId);
+      // Optimistically remove from current list and reload from DB
+      setPartners((prev) => prev.filter((p) => p.id !== partnerId));
+      setTotalItems((prev) => Math.max(0, prev - 1));
+      setSuccessMsg(`Partner "${partnerName}" deleted successfully.`);
+      await loadPartners();
+    } catch (err) {
+      console.error('Delete partner error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to delete partner.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
+      setError(null);
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
       await partnersAPI.update(id, { accountStatus: newStatus });
-      loadPartners();
-    } catch (error) {
-      console.error('Error toggling partner status:', error);
+      setPartners((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, accountStatus: newStatus } : p))
+      );
+    } catch (err) {
+      console.error('Error toggling partner status:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to update partner status.');
     }
   };
 
@@ -124,12 +150,13 @@ const PartnerList = () => {
 
   const handleLimitChange = (newLimit) => {
     setLimit(newLimit);
-    setCurrentPage(1); // Reset to first page when changing limit
+    setCurrentPage(1);
   };
 
   return (
-    <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100 min-w-0">
-      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 flex-shrink-0">
+    <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
+      {/* Header */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h4 className="mb-0 fw-bold">Partner List</h4>
         <div className="d-flex align-items-center gap-2 flex-wrap">
           <button
@@ -147,26 +174,40 @@ const PartnerList = () => {
         </div>
       </div>
 
-      <div className="card flex-grow-1 d-flex flex-column w-100 min-w-0 shadow-sm border-0">
-        <div className="card-body flex-grow-1 d-flex flex-column w-100 min-w-0">
-          <div className="row mb-3 flex-shrink-0">
-            <div className="col-12 col-md-6 col-lg-4">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
+      {/* Main Card */}
+      <div className="card shadow-sm border-0 w-100 min-w-0">
+        <div className="card-body p-2 p-sm-3 w-100 min-w-0">
+          {/* Search & Page Size Toolbar */}
+          <div className="row g-2 mb-3 align-items-center">
+            <div className="col-12 col-md-6 col-lg-5">
+              <div className="input-group input-group-sm">
+                <span className="input-group-text bg-white">
+                  <i className="bi bi-search text-muted"></i>
                 </span>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search..."
+                  placeholder="Search partner name, phone, email, category..."
                   value={searchTerm}
                   onChange={handleSearch}
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <i className="bi bi-x"></i>
+                  </button>
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-4">
-              <PaginationDropdown 
-                limit={limit} 
+            <div className="col-12 col-md-6 col-lg-3 ms-md-auto">
+              <PaginationDropdown
+                limit={limit}
                 onLimitChange={handleLimitChange}
                 disabled={loading}
               />
@@ -174,11 +215,13 @@ const PartnerList = () => {
           </div>
 
           {error && (
-            <div className="alert alert-danger mb-3">
-              <i className="bi bi-exclamation-triangle me-2"></i>
-              {error}
-              <button 
-                type="button" 
+            <div className="alert alert-danger mb-3 d-flex align-items-center justify-content-between">
+              <div>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+              <button
+                type="button"
                 className="btn btn-sm btn-outline-danger ms-2"
                 onClick={loadPartners}
               >
@@ -188,86 +231,221 @@ const PartnerList = () => {
             </div>
           )}
 
-          <div className="table-responsive flex-grow-1">
-            <DataTable
-              columns={[
-                {
-                  title: 'Name',
-                  key: 'name',
-                  render: (text, record) => (
-                    <div className="fw-semibold">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Email',
-                  key: 'email',
-                  render: (email, record) => (
-                    <div className="text-muted">{email || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Phone',
-                  key: 'phone',
-                  render: (phone, record) => (
-                    <div className="text-muted">{phone || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Category',
-                  key: 'categoryName',
-                  render: (categoryName, record) => (
-                    <div className="text-muted">{categoryName || 'N/A'}</div>
-                  )
-                },
-                // {
-                //   title: 'Status',
-                //   key: 'account_status',
-                //   render: (status, record) => (
-                //     <span className={`badge ${status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                //       {status || 'inactive'}
-                //     </span>
-                //   )
-                // },
-                {
-                  title: 'Actions',
-                  key: 'actions',
-                  render: (_, record) => (
-                    <div className="d-inline-flex align-items-center gap-2 flex-nowrap">
-                      <div className="form-check form-switch mb-0 d-flex align-items-center">
-                        <input
-                          className="form-check-input m-0"
-                          type="checkbox"
-                          checked={record.accountStatus === 'active'}
-                          onChange={() => handleToggleStatus(record.id, record.accountStatus)}
-                          style={{ cursor: 'pointer', width: '2.25em', height: '1.15em' }}
-                          title={record.accountStatus === 'active' ? 'Active (Click to disable)' : 'Inactive (Click to enable)'}
-                        />
-                      </div>
-                      <CustomButton
-                        variant="primary"
-                        size="sm"
-                        icon="bi-pencil"
-                        onClick={() => handleEditPartner(record)}
-                        tooltip="Edit Partner"
-                      />
-                      <CustomButton
-                        variant="danger"
-                        size="sm"
-                        icon="bi-trash"
-                        onClick={() => handleDeletePartner(record.id)}
-                        tooltip="Delete Partner"
-                      />
-                    </div>
-                  ),
-                },
-              ]}
-              data={partners}
-              loading={loading}
-              className="flex-grow-1"
-            />
-          </div>
+          {successMsg && (
+            <div className="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center justify-content-between">
+              <div>
+                <i className="bi bi-check-circle-fill me-2"></i>
+                {successMsg}
+              </div>
+              <button
+                type="button"
+                className="btn-close"
+                aria-label="Close"
+                onClick={() => setSuccessMsg(null)}
+              ></button>
+            </div>
+          )}
 
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 flex-shrink-0">
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary me-2" role="status"></div>
+              <span className="text-muted">Loading partners...</span>
+            </div>
+          ) : partners.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              <i className="bi bi-people fs-1 d-block mb-2"></i>
+              No partners found
+            </div>
+          ) : (
+            <>
+              {/* Desktop / Laptop Table (fits 100% width with 0 horizontal overflow) */}
+              <div className="d-none d-md-block w-100">
+                <table
+                  className="table table-hover align-middle mb-0 w-100"
+                  style={{ fontSize: '0.875rem', tableLayout: 'fixed' }}
+                >
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: '7%' }}>#</th>
+                      <th style={{ width: '24%' }}>Partner Name</th>
+                      <th style={{ width: '27%' }}>Contact (Phone & Email)</th>
+                      <th style={{ width: '16%' }}>Category</th>
+                      <th style={{ width: '11%' }} className="text-center">
+                        Status
+                      </th>
+                      <th style={{ width: '15%' }} className="text-end">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {partners.map((record, index) => {
+                      const srNo = (currentPage - 1) * limit + index + 1;
+                      const isActive = record.accountStatus === 'active';
+                      const isDeleting = deletingId === record.id;
+
+                      return (
+                        <tr key={record.id ?? index}>
+                          <td className="fw-semibold text-muted">{srNo}</td>
+
+                          {/* Partner Name */}
+                          <td className="text-truncate">
+                            <div className="fw-semibold text-dark text-truncate" title={record.name}>
+                              {record.name || 'N/A'}
+                            </div>
+                            <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                              ID: #{record.id}
+                            </span>
+                          </td>
+
+                          {/* Contact (Phone + Email) */}
+                          <td className="text-truncate">
+                            <div className="text-dark">
+                              <i className="bi bi-telephone me-1 text-primary"></i>
+                              {record.phone || 'N/A'}
+                            </div>
+                            <div
+                              className="small text-muted text-truncate"
+                              title={record.email || 'N/A'}
+                            >
+                              <i className="bi bi-envelope me-1"></i>
+                              {record.email || 'N/A'}
+                            </div>
+                          </td>
+
+                          {/* Category */}
+                          <td>
+                            <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                              {record.categoryName || 'N/A'}
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="text-center">
+                            <span
+                              className={`badge ${
+                                isActive ? 'bg-success' : 'bg-secondary'
+                              } text-uppercase`}
+                              style={{ fontSize: '0.72rem' }}
+                            >
+                              {record.accountStatus || 'inactive'}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="text-end">
+                            <div className="d-inline-flex align-items-center justify-content-end gap-2 flex-nowrap">
+                              <div className="form-check form-switch mb-0 d-flex align-items-center">
+                                <input
+                                  className="form-check-input m-0"
+                                  type="checkbox"
+                                  checked={isActive}
+                                  onChange={() => handleToggleStatus(record.id, record.accountStatus)}
+                                  style={{ cursor: 'pointer', width: '2.25em', height: '1.15em' }}
+                                  title={
+                                    isActive
+                                      ? 'Active (Click to set inactive)'
+                                      : 'Inactive (Click to set active)'
+                                  }
+                                />
+                              </div>
+                              <CustomButton
+                                variant="primary"
+                                size="sm"
+                                icon="bi-pencil"
+                                onClick={() => handleEditPartner(record)}
+                                tooltip="Edit Partner"
+                                disabled={isDeleting}
+                              />
+                              <CustomButton
+                                variant="danger"
+                                size="sm"
+                                icon="bi-trash"
+                                loading={isDeleting}
+                                onClick={() => handleDeletePartner(record)}
+                                tooltip="Delete Partner"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View (< 768px) */}
+              <div className="d-md-none d-flex flex-column gap-2">
+                {partners.map((record, index) => {
+                  const srNo = (currentPage - 1) * limit + index + 1;
+                  const isActive = record.accountStatus === 'active';
+                  const isDeleting = deletingId === record.id;
+
+                  return (
+                    <div key={record.id ?? index} className="card border shadow-sm">
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <span className="badge bg-light text-secondary border me-2">#{srNo}</span>
+                            <span className="fw-bold text-dark">{record.name || 'N/A'}</span>
+                            <div className="small text-muted mt-1">
+                              <i className="bi bi-telephone me-1 text-primary"></i>
+                              {record.phone || 'N/A'}
+                            </div>
+                            {record.email && (
+                              <div className="small text-muted text-truncate">
+                                <i className="bi bi-envelope me-1"></i>
+                                {record.email}
+                              </div>
+                            )}
+                          </div>
+                          <span className={`badge ${isActive ? 'bg-success' : 'bg-secondary'}`}>
+                            {record.accountStatus || 'inactive'}
+                          </span>
+                        </div>
+
+                        <div className="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+                          <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                            {record.categoryName || 'N/A'}
+                          </span>
+                          <div className="d-inline-flex align-items-center gap-2">
+                            <div className="form-check form-switch mb-0 d-flex align-items-center">
+                              <input
+                                className="form-check-input m-0"
+                                type="checkbox"
+                                checked={isActive}
+                                onChange={() => handleToggleStatus(record.id, record.accountStatus)}
+                                style={{ cursor: 'pointer', width: '2.25em', height: '1.15em' }}
+                              />
+                            </div>
+                            <CustomButton
+                              variant="primary"
+                              size="sm"
+                              icon="bi-pencil"
+                              onClick={() => handleEditPartner(record)}
+                              tooltip="Edit Partner"
+                              disabled={isDeleting}
+                            />
+                            <CustomButton
+                              variant="danger"
+                              size="sm"
+                              icon="bi-trash"
+                              loading={isDeleting}
+                              onClick={() => handleDeletePartner(record)}
+                              tooltip="Delete Partner"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Pagination */}
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
             <span className="text-muted small">
               Showing {partners.length} of {totalItems} entries
             </span>
@@ -283,7 +461,10 @@ const PartnerList = () => {
                   </button>
                 </li>
                 {[...Array(totalPages)].map((_, index) => (
-                  <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                  <li
+                    key={index + 1}
+                    className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                  >
                     <button
                       className="page-link"
                       onClick={() => handlePageChange(index + 1)}
@@ -320,7 +501,7 @@ const PartnerList = () => {
       <PartnerStepperModal
         show={showStepperModal}
         handleClose={handleCloseModal}
-        handleSave={loadPartners}
+        onPartnerSaved={loadPartners}
         editMode={editMode}
         partnerData={selectedPartner}
       />

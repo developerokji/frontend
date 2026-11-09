@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BookingModal from './common/BookingModal';
 import PaginationDropdown from './common/PaginationDropdown';
 import { bookingsAPI, paymentAPI } from '../services/api';
+import { useDebounce } from '../hooks/useApi';
 import { isAdminUser } from '../utils/auth';
 
 const Leads = () => {
@@ -15,6 +16,7 @@ const Leads = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,7 +33,7 @@ const Leads = () => {
       if (statusFilter) {
         filters.workStatus = statusFilter;
       }
-      const response = await bookingsAPI.getAll(currentPage, limit, searchTerm, filters);
+      const response = await bookingsAPI.getAll(currentPage, limit, debouncedSearch, filters);
       if (response.data && response.data.items) {
         setBookings(response.data.items);
         setTotalItems(response.data.meta?.totalItems || response.data.items.length);
@@ -73,7 +75,7 @@ const Leads = () => {
 
   useEffect(() => {
     loadBookings();
-  }, [currentPage, searchTerm, statusFilter, limit]);
+  }, [currentPage, debouncedSearch, statusFilter, limit]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -227,12 +229,7 @@ const Leads = () => {
     <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
       {/* Top Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <div className="d-flex align-items-center gap-2 flex-wrap">
-          <h4 className="mb-0 fw-bold">Leads</h4>
-          <span className="badge bg-primary-subtle text-primary rounded-pill px-2 py-1">
-            {totalItems} Total
-          </span>
-        </div>
+        <h4 className="mb-0 fw-bold">Leads</h4>
 
         <div className="d-flex align-items-center gap-2 flex-wrap">
           {isAdmin && (

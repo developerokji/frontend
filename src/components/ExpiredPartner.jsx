@@ -66,12 +66,7 @@ const ExpiredPartner = () => {
     <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <div className="d-flex align-items-center gap-2">
-          <h4 className="mb-0 fw-bold">Expired Partners</h4>
-          <span className="badge bg-danger-subtle text-danger rounded-pill px-2 py-1">
-            {totalItems} Total
-          </span>
-        </div>
+        <h4 className="mb-0 fw-bold">Expired Partners</h4>
         <button
           type="button"
           className="btn btn-sm btn-outline-secondary"
