@@ -116,10 +116,21 @@ const Clients = () => {
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
         <h4 className="mb-0">Client List</h4>
-        <CustomButton variant="primary" onClick={handleShowModal}>
-          <i className="bi bi-plus-circle me-2"></i>
-          Add client +
-        </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={loadClients}
+            disabled={loading}
+          >
+            <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+            Refresh
+          </button>
+          <CustomButton variant="primary" onClick={handleShowModal}>
+            <i className="bi bi-plus-circle me-2"></i>
+            Add client +
+          </CustomButton>
+        </div>
       </div>
 
       <div className="card flex-grow-1 d-flex flex-column w-100">

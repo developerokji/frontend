@@ -226,9 +226,20 @@ const StoriesPage = () => {
     <div className="container-fluid p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
         <h4 className="mb-0">Stories List</h4>
-        <CustomButton variant="primary" icon="bi-plus-circle" onClick={handleShowModal}>
-          Add Stories
-        </CustomButton>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={refetch}
+            disabled={loading}
+          >
+            <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+            Refresh
+          </button>
+          <CustomButton variant="primary" icon="bi-plus-circle" onClick={handleShowModal}>
+            Add Stories
+          </CustomButton>
+        </div>
       </div>
 
       <div className="card">
