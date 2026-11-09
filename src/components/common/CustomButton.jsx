@@ -59,7 +59,8 @@ const CustomButton = ({
     
     // Don't add margin if it's an icon-only button
     const marginClass = children ? (iconPosition === 'right' ? 'ms-2' : 'me-2') : '';
-    const iconElement = <i className={`${icon} ${marginClass}`}></i>;
+    const normalizedIcon = icon.startsWith('bi-') ? `bi ${icon}` : icon;
+    const iconElement = <i className={`${normalizedIcon} ${marginClass}`} aria-hidden="true"></i>;
     
     if (iconPosition === 'right') {
       return (

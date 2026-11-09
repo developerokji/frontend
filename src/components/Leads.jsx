@@ -9,11 +9,13 @@ import { CustomButton } from './common/CustomButton';
 const Leads = () => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState('details');
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -27,7 +29,11 @@ const Leads = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await bookingsAPI.getAll(currentPage, limit, searchTerm);
+      const filters = {};
+      if (statusFilter) {
+        filters.workStatus = statusFilter;
+      }
+      const response = await bookingsAPI.getAll(currentPage, limit, searchTerm, filters);
       if (response.data && response.data.items) {
         setBookings(response.data.items);
         setTotalItems(response.data.meta?.totalItems || response.data.items.length);
@@ -83,14 +89,15 @@ const Leads = () => {
 
   useEffect(() => {
     loadBookings();
-  }, [currentPage, searchTerm, limit]);
+  }, [currentPage, searchTerm, statusFilter, limit]);
 
   useEffect(() => {
     loadCashfreeMode();
   }, []);
 
-  const handleViewBooking = (booking) => {
+  const handleOpenBookingModal = (booking, tab = 'details') => {
     setSelectedBooking(booking);
+    setModalInitialTab(tab);
     setShowModal(true);
   };
 
@@ -103,8 +110,20 @@ const Leads = () => {
     setSelectedBooking(null);
   };
 
+  const handleBookingUpdated = (updatedBooking) => {
+    if (updatedBooking) {
+      setSelectedBooking(updatedBooking);
+    }
+    loadBookings();
+  };
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
     setCurrentPage(1);
   };
 
@@ -160,6 +179,7 @@ const Leads = () => {
       'not_received': { class: 'bg-danger', label: 'Not Received' },
       'received': { class: 'bg-success', label: 'Received' },
       'not_transfer': { class: 'bg-danger', label: 'Not Transferred' },
+      'transfer': { class: 'bg-success', label: 'Transferred' },
       'transferred': { class: 'bg-success', label: 'Transferred' }
     };
     const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status || 'N/A' };
@@ -208,21 +228,22 @@ const Leads = () => {
               <i className="bi bi-shield-check me-1"></i>Production
             </button>
           </div>
-          <CustomButton
-            variant="outline-primary"
-            size="sm"
-            icon="bi-arrow-clockwise"
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
             onClick={loadBookings}
             disabled={loading}
-            tooltip="Refresh Leads"
-          />
+          >
+            <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+            Refresh
+          </button>
         </div>
       </div>
 
       <div className="card flex-grow-1 d-flex flex-column w-100">
         <div className="card-body flex-grow-1 d-flex flex-column w-100">
-          <div className="row mb-3 flex-shrink-0">
-            <div className="col-12 col-md-6 col-lg-4">
+          <div className="row mb-3 g-2 flex-shrink-0">
+            <div className="col-12 col-md-5 col-lg-4">
               <div className="input-group">
                 <span className="input-group-text">
                   <i className="bi bi-search"></i>
@@ -230,13 +251,29 @@ const Leads = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search leads..."
+                  placeholder="Search order ID, client, partner, pincode..."
                   value={searchTerm}
                   onChange={handleSearch}
                 />
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-4">
+            <div className="col-12 col-md-4 col-lg-3">
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+              >
+                <option value="">All Work Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="review">Review</option>
+                <option value="active">Active</option>
+                <option value="on_going">On Going</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="close">Closed</option>
+                <option value="cancel">Cancelled</option>
+              </select>
+            </div>
+            <div className="col-12 col-md-3 col-lg-3">
               <PaginationDropdown 
                 limit={limit} 
                 onLimitChange={handleLimitChange}
@@ -263,13 +300,6 @@ const Leads = () => {
           <div className="table-responsive flex-grow-1">
             <DataTable
               columns={[
-                // {
-                //   title: 'Id',
-                //   key: 'id',
-                //   render: (text, record) => (
-                //     <div className="fw-semibold">{text}</div>
-                //   )
-                // },
                 {
                   title: 'Booking Id',
                   key: 'bookingOrderId',
@@ -280,35 +310,35 @@ const Leads = () => {
                 {
                   title: 'Service',
                   key: 'serviceName',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
                   title: 'Client Name',
                   key: 'clientName',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
                   title: 'Client Number',
                   key: 'clientPhone',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="text-muted">{text || 'N/A'}</div>
                   )
                 },
                 {
                   title: 'Date',
                   key: 'workDate',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="text-muted">{formatDate(text)}</div>
                   )
                 },
                 {
                   title: 'Time',
                   key: 'workTime',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="text-muted">{formatTime(text)}</div>
                   )
                 },
@@ -316,13 +346,22 @@ const Leads = () => {
                   title: 'Partner',
                   key: 'acceptedPartnerName',
                   render: (text, record) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
+                    <div>
+                      {text ? (
+                        <span className="fw-semibold text-dark">{text}</span>
+                      ) : (
+                        <span className="badge bg-warning-subtle text-dark border">Unassigned</span>
+                      )}
+                      {record.pincode && (
+                        <div className="text-muted small">Pin: {record.pincode}</div>
+                      )}
+                    </div>
                   )
                 },
                 {
                   title: 'Total',
                   key: 'total',
-                  render: (text, record) => (
+                  render: (text) => (
                     <div className="fw-bold text-dark">{formatCurrency(text)}</div>
                   )
                 },
@@ -340,15 +379,28 @@ const Leads = () => {
                   title: 'Action',
                   key: 'actions',
                   render: (_, record) => (
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-1 flex-wrap">
                       <CustomButton 
                         variant="primary" 
                         size="sm"
                         icon="bi-eye"
-                        onClick={() => handleViewBooking(record)}
-                        tooltip="View Details"
-                      >
-                      </CustomButton>
+                        onClick={() => handleOpenBookingModal(record, 'details')}
+                        tooltip="View Lead Details"
+                      />
+                      <CustomButton
+                        variant="outline-warning"
+                        size="sm"
+                        icon="bi-pencil-square"
+                        onClick={() => handleOpenBookingModal(record, 'status')}
+                        tooltip="Change Lead Status"
+                      />
+                      <CustomButton
+                        variant="outline-info"
+                        size="sm"
+                        icon="bi-person-lines-fill"
+                        onClick={() => handleOpenBookingModal(record, 'reassign')}
+                        tooltip="Re-assign Partner"
+                      />
                       {isBookingPayable(record) ? (
                         <CustomButton
                           variant="success"
@@ -421,6 +473,8 @@ const Leads = () => {
         show={showModal}
         handleClose={handleCloseModal}
         bookingData={selectedBooking}
+        initialTab={modalInitialTab}
+        onBookingUpdated={handleBookingUpdated}
       />
     </div>
   );

@@ -75,6 +75,15 @@ const ExpiredPartner = () => {
     <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
         <h4 className="mb-0">Expired Partners</h4>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          onClick={loadSubscriptions}
+          disabled={loading}
+        >
+          <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+          Refresh
+        </button>
       </div>
 
       <div className="card flex-grow-1 d-flex flex-column w-100">
