@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { bookingsAPI, paymentAPI } from '../services/api';
+import { isAdminUser } from '../utils/auth';
 
 const PaymentPage = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const isAdmin = isAdminUser();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,10 +66,12 @@ const PaymentPage = () => {
 
     if (bookingId) {
       fetchBookingDetails();
-      fetchCashfreeMode();
+      if (isAdmin) {
+        fetchCashfreeMode();
+      }
       checkExistingTransaction();
     }
-  }, [bookingId, navigate]);
+  }, [bookingId, navigate, isAdmin]);
 
   const handleToggleCashfreeMode = async (newMode) => {
     if (newMode === cashfreeMode || modeLoading) return;
@@ -197,24 +201,26 @@ const PaymentPage = () => {
         </div>
 
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
-            <button
-              type="button"
-              className={`btn ${cashfreeMode !== 'prod' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
-              disabled={modeLoading || paymentLoading}
-              onClick={() => handleToggleCashfreeMode('dev')}
-            >
-              <i className="bi bi-bug me-1"></i>UAT (Sandbox)
-            </button>
-            <button
-              type="button"
-              className={`btn ${cashfreeMode === 'prod' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
-              disabled={modeLoading || paymentLoading}
-              onClick={() => handleToggleCashfreeMode('prod')}
-            >
-              <i className="bi bi-shield-check me-1"></i>Production
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
+              <button
+                type="button"
+                className={`btn ${cashfreeMode !== 'prod' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
+                disabled={modeLoading || paymentLoading}
+                onClick={() => handleToggleCashfreeMode('dev')}
+              >
+                <i className="bi bi-bug me-1"></i>UAT (Sandbox)
+              </button>
+              <button
+                type="button"
+                className={`btn ${cashfreeMode === 'prod' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
+                disabled={modeLoading || paymentLoading}
+                onClick={() => handleToggleCashfreeMode('prod')}
+              >
+                <i className="bi bi-shield-check me-1"></i>Production
+              </button>
+            </div>
+          )}
 
           <span className="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill fw-semibold">
             {booking.customerPayment === 'received' ? 'Payment Received' : 'Payment Pending'}

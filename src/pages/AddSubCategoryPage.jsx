@@ -156,36 +156,33 @@ const AddSubCategoryPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="d-flex align-items-center gap-2">
-          <div className="form-check form-switch">
-            <input 
-              className="form-check-input" 
-              type="checkbox" 
+        <div className="d-inline-flex align-items-center gap-2 flex-nowrap">
+          <div className="form-check form-switch mb-0 d-flex align-items-center">
+            <input
+              className="form-check-input m-0"
+              type="checkbox"
               checked={record.status === 'active'}
               onChange={() => handleToggleStatus(record.id, record.status)}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', width: '2.25em', height: '1.15em' }}
+              title={record.status === 'active' ? 'Active (Click to disable)' : 'Inactive (Click to enable)'}
             />
           </div>
-          <div className="btn-group btn-group-sm d-flex gap-2" role="group">
-            <CustomButton 
-              variant="primary" 
-              size="sm"
-              icon="bi-pencil"
-              onClick={() => handleEditSubCategory(record.id)}
-              tooltip="Edit Sub Category"
-            >
-            </CustomButton>
-            <CustomButton 
-              variant="danger" 
-              size="sm"
-              icon="bi-trash"
-              onClick={() => handleDeleteSubCategory(record.id)}
-              tooltip="Delete Sub Category"
-            >
-            </CustomButton>
-          </div>
+          <CustomButton
+            variant="primary"
+            size="sm"
+            icon="bi-pencil"
+            onClick={() => handleEditSubCategory(record.id)}
+            tooltip="Edit Sub Category"
+          />
+          <CustomButton
+            variant="danger"
+            size="sm"
+            icon="bi-trash"
+            onClick={() => handleDeleteSubCategory(record.id)}
+            tooltip="Delete Sub Category"
+          />
         </div>
-      )
+      ),
     }
   ];
 
@@ -231,10 +228,10 @@ const AddSubCategoryPage = () => {
   const totalItems = meta.totalItems || subcategoriesData.length;
 
   return (
-    <div className="container-fluid p-3 p-lg-4 w-100">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
-        <h4 className="mb-0">Add Sub Categories</h4>
-        <div className="d-flex align-items-center gap-2">
+    <div className="container-fluid p-3 p-lg-4 w-100 min-w-0">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <h4 className="mb-0 fw-bold">Add Sub Categories</h4>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary"
@@ -244,7 +241,7 @@ const AddSubCategoryPage = () => {
             <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
             Refresh
           </button>
-          <CustomButton variant="primary" icon="bi-plus-circle" onClick={handleShowModal}>
+          <CustomButton variant="primary" size="sm" icon="bi-plus-circle" onClick={handleShowModal}>
             Add Sub Category
           </CustomButton>
         </div>

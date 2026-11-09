@@ -138,10 +138,10 @@ const Services = () => {
   };
 
   return (
-    <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <h4 className="mb-0">Services</h4>
-        <div className="d-flex align-items-center gap-2">
+    <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100 min-w-0">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 flex-shrink-0">
+        <h4 className="mb-0 fw-bold">Services</h4>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary"
@@ -151,15 +151,14 @@ const Services = () => {
             <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
             Refresh
           </button>
-          <CustomButton variant="primary" onClick={handleShowModal}>
-            <i className="bi bi-plus-circle me-2"></i>
+          <CustomButton variant="primary" size="sm" icon="bi-plus-circle" onClick={handleShowModal}>
             Add Service
           </CustomButton>
         </div>
       </div>
 
-      <div className="card flex-grow-1 d-flex flex-column w-100">
-        <div className="card-body flex-grow-1 d-flex flex-column w-100">
+      <div className="card flex-grow-1 d-flex flex-column w-100 min-w-0 shadow-sm border-0">
+        <div className="card-body flex-grow-1 d-flex flex-column w-100 min-w-0">
           <div className="row mb-3 flex-shrink-0">
             <div className="col-12 col-md-6 col-lg-4">
               <div className="input-group">
@@ -248,36 +247,33 @@ const Services = () => {
                   title: 'Actions',
                   key: 'actions',
                   render: (_, record) => (
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="form-check form-switch">
-                        <input 
-                          className="form-check-input" 
-                          type="checkbox" 
+                    <div className="d-inline-flex align-items-center gap-2 flex-nowrap">
+                      <div className="form-check form-switch mb-0 d-flex align-items-center">
+                        <input
+                          className="form-check-input m-0"
+                          type="checkbox"
                           checked={record.status === 'on'}
                           onChange={() => handleToggleStatus(record.id, record.status)}
-                          style={{ cursor: 'pointer' }}
+                          style={{ cursor: 'pointer', width: '2.25em', height: '1.15em' }}
+                          title={record.status === 'on' ? 'Active (Click to disable)' : 'Inactive (Click to enable)'}
                         />
                       </div>
-                      <div className="btn-group btn-group-sm" role="group">
-                        <CustomButton 
-                          variant="primary" 
-                          size="sm"
-                          icon="bi-pencil"
-                          onClick={() => handleEditService(record)}
-                          tooltip="Edit Service"
-                        >
-                        </CustomButton>
-                        <CustomButton 
-                          variant="danger" 
-                          size="sm"
-                          icon="bi-trash"
-                          onClick={() => handleDeleteService(record.id)}
-                          tooltip="Delete Service"
-                        >
-                        </CustomButton>
-                      </div>
+                      <CustomButton
+                        variant="primary"
+                        size="sm"
+                        icon="bi-pencil"
+                        onClick={() => handleEditService(record)}
+                        tooltip="Edit Service"
+                      />
+                      <CustomButton
+                        variant="danger"
+                        size="sm"
+                        icon="bi-trash"
+                        onClick={() => handleDeleteService(record.id)}
+                        tooltip="Delete Service"
+                      />
                     </div>
-                  )
+                  ),
                 },
                               ]}
               data={services}

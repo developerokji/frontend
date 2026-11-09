@@ -21,11 +21,11 @@ const DataTable = ({ data, columns, loading = false, className = '' }) => {
 
   return (
     <div className={`table-responsive ${className}`}>
-      <table className="table table-hover table-striped">
+      <table className="table table-hover table-striped align-middle mb-0">
         <thead>
           <tr>
             {columns.map((column, index) => (
-              <th key={index} scope="col" className={column.className}>
+              <th key={index} scope="col" className={column.headerClassName || column.className}>
                 {column.title}
               </th>
             ))}
@@ -33,7 +33,7 @@ const DataTable = ({ data, columns, loading = false, className = '' }) => {
         </thead>
         <tbody>
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={row.id ?? rowIndex}>
               {columns.map((column, colIndex) => (
                 <td key={colIndex} className={column.className}>
                   {column.render ? column.render(row[column.key], row) : row[column.key]}

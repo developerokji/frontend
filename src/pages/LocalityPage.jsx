@@ -93,25 +93,23 @@ const LocalityPage = () => {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <div className="btn-group btn-group-sm d-flex gap-2" role="group">
-          <CustomButton 
-            variant="primary" 
+        <div className="d-inline-flex align-items-center gap-2 flex-nowrap">
+          <CustomButton
+            variant="primary"
             size="sm"
             icon="bi-pencil"
             onClick={() => handleEditLocality(record.id)}
             tooltip="Edit Locality"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
+          />
+          <CustomButton
+            variant="danger"
             size="sm"
             icon="bi-trash"
             onClick={() => handleDeleteLocality(record.id)}
             tooltip="Delete Locality"
-          >
-          </CustomButton>
+          />
         </div>
-      )
+      ),
     }
   ];
 
@@ -149,10 +147,10 @@ const LocalityPage = () => {
   const totalItems = meta.totalItems || localitiesData.length;
 
   return (
-    <div className="container-fluid p-3 p-lg-4 w-100">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
-        <h4 className="mb-0">Locality List</h4>
-        <div className="d-flex align-items-center gap-2">
+    <div className="container-fluid p-3 p-lg-4 w-100 min-w-0">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <h4 className="mb-0 fw-bold">Locality List</h4>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary"
@@ -162,7 +160,7 @@ const LocalityPage = () => {
             <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
             Refresh
           </button>
-          <CustomButton variant="primary" icon="bi-plus-circle" onClick={handleShowModal}>
+          <CustomButton variant="primary" size="sm" icon="bi-plus-circle" onClick={handleShowModal}>
             Add Locality
           </CustomButton>
         </div>

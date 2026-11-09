@@ -1238,3 +1238,32 @@ export const paymentAPI = {
     }
   }
 };
+
+
+// Settings API
+export const settingsAPI = {
+  getAll: async () => {
+    const response = await api.get('/settings/all');
+    return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/settings/categories');
+    return response.data;
+  },
+
+  getCategory: async (category) => {
+    const response = await api.get(`/settings/${category}`);
+    return response.data;
+  },
+
+  updateCategory: async (category, payload) => {
+    const response = await api.patch(`/settings/${category}`, payload);
+    return response.data;
+  },
+
+  updateKey: async (key, value) => {
+    const response = await api.patch(`/settings/key/${key}`, { value });
+    return response.data;
+  },
+};

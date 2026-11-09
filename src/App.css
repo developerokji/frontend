@@ -502,3 +502,10 @@ input[type='datetime-local'].form-control {
     margin-top: 14px;
   }
 }
+
+
+/* Ensure separated buttons in a btn-group with gap keep rounded corners */
+.btn-group.gap-1 > .btn,
+.btn-group.gap-2 > .btn {
+  border-radius: 0.25rem !important;
+}
