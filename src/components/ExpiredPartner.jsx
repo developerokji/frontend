@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
 import { partnerSubscriptionsAPI } from '../services/api';
 
@@ -13,7 +12,6 @@ const ExpiredPartner = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [limit, setLimit] = useState(25);
 
-  // Load expired partner subscriptions
   const loadSubscriptions = async () => {
     setLoading(true);
     setError(null);
@@ -47,11 +45,6 @@ const ExpiredPartner = () => {
     loadSubscriptions();
   }, [currentPage, searchTerm, limit]);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -64,17 +57,16 @@ const ExpiredPartner = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   return (
-    <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <h4 className="mb-0">Expired Partners</h4>
+    <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
+      {/* Header */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h4 className="mb-0 fw-bold">Expired Partners</h4>
         <button
           type="button"
           className="btn btn-sm btn-outline-secondary"
@@ -86,26 +78,14 @@ const ExpiredPartner = () => {
         </button>
       </div>
 
-      <div className="card flex-grow-1 d-flex flex-column w-100">
-        <div className="card-body flex-grow-1 d-flex flex-column w-100">
-          <div className="row mb-3 flex-shrink-0 g-3">
-            {/* <div className="col-12 col-md-6 col-lg-4">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search partner, package, category..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                />
-              </div>
-            </div> */}
-            <div className="col-12 col-md-6 col-lg-4">
-              <PaginationDropdown 
-                limit={limit} 
+      {/* Main Card */}
+      <div className="card shadow-sm border-0 w-100 min-w-0">
+        <div className="card-body p-2 p-sm-3 w-100 min-w-0">
+          {/* Toolbar */}
+          <div className="row g-2 mb-3 align-items-center">
+            <div className="col-12 col-sm-6 col-md-4 col-lg-3">
+              <PaginationDropdown
+                limit={limit}
                 onLimitChange={handleLimitChange}
                 disabled={loading}
               />
@@ -113,11 +93,13 @@ const ExpiredPartner = () => {
           </div>
 
           {error && (
-            <div className="alert alert-danger mb-3">
-              <i className="bi bi-exclamation-triangle me-2"></i>
-              {error}
-              <button 
-                type="button" 
+            <div className="alert alert-danger mb-3 d-flex align-items-center justify-content-between">
+              <div>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+              <button
+                type="button"
                 className="btn btn-sm btn-outline-danger ms-2"
                 onClick={loadSubscriptions}
               >
@@ -127,83 +109,164 @@ const ExpiredPartner = () => {
             </div>
           )}
 
-          <div className="table-responsive flex-grow-1">
-            <DataTable
-              columns={[
-                {
-                  title: 'Sr No',
-                  key: 'sr_no',
-                  render: (text, record) => {
-                    const index = subscriptions.findIndex(sub => sub.subscriptionId === record.subscriptionId);
-                    return <div className="fw-semibold">{(currentPage - 1) * limit + index + 1}</div>;
-                  }
-                },
-                {
-                  title: 'Partner Name',
-                  key: 'partnerName',
-                  render: (text, record) => (
-                    <div>
-                      <div className="fw-semibold">{text || 'N/A'}</div>
-                      <div className="text-muted small">{record.partnerEmail || ''}</div>
-                    </div>
-                  )
-                },
-                {
-                  title: 'Partner Phone',
-                  key: 'partnerPhone',
-                  render: (text) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Package Name',
-                  key: 'packageName',
-                  render: (text) => (
-                    <div className="fw-semibold">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Category',
-                  key: 'categoryName',
-                  render: (text) => (
-                    <span className="badge bg-secondary">{text || 'N/A'}</span>
-                  )
-                },
-                {
-                  title: 'Price',
-                  key: 'packagePrice',
-                  render: (price, record) => {
-                    const finalPrice = price || record.packageAmount;
-                    return <div className="fw-bold text-success">₹{finalPrice || 0}</div>;
-                  }
-                },
-                {
-                  title: 'Expiry Date',
-                  key: 'planEndDate',
-                  render: (date) => (
-                    <div className="text-muted fw-semibold">{formatDate(date)}</div>
-                  )
-                },
-                {
-                  title: 'Status',
-                  key: 'status',
-                  render: (val) => {
-                    const isStyleActive = val === 'active' || val === 'on';
-                    return (
-                      <span className={`badge ${isStyleActive ? 'bg-success' : 'bg-danger'}`}>
-                        {val}
-                      </span>
-                    );
-                  }
-                }
-              ]}
-              data={subscriptions}
-              loading={loading}
-              className="flex-grow-1"
-            />
-          </div>
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary me-2" role="status"></div>
+              <span className="text-muted">Loading expired subscriptions...</span>
+            </div>
+          ) : subscriptions.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              <i className="bi bi-inbox fs-1 d-block mb-2"></i>
+              No expired partner subscriptions found
+            </div>
+          ) : (
+            <>
+              {/* Desktop / Laptop Table (fits 100% width with 0 horizontal overflow) */}
+              <div className="d-none d-md-block w-100">
+                <table
+                  className="table table-hover align-middle mb-0 w-100"
+                  style={{ fontSize: '0.875rem', tableLayout: 'fixed' }}
+                >
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: '7%' }}>#</th>
+                      <th style={{ width: '30%' }}>Partner</th>
+                      <th style={{ width: '25%' }}>Package & Category</th>
+                      <th style={{ width: '13%' }}>Price</th>
+                      <th style={{ width: '15%' }}>Expiry Date</th>
+                      <th style={{ width: '10%' }} className="text-center">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptions.map((record, index) => {
+                      const srNo = (currentPage - 1) * limit + index + 1;
+                      const finalPrice = record.packagePrice || record.packageAmount || 0;
+                      const isStyleActive = record.status === 'active' || record.status === 'on';
 
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 flex-shrink-0">
+                      return (
+                        <tr key={record.subscriptionId ?? record.id ?? index}>
+                          <td className="fw-semibold text-muted">{srNo}</td>
+
+                          {/* Partner Name + Phone + Email */}
+                          <td className="text-truncate">
+                            <div className="fw-semibold text-dark text-truncate" title={record.partnerName}>
+                              {record.partnerName || 'N/A'}
+                            </div>
+                            <div className="small text-muted">
+                              <i className="bi bi-telephone me-1 text-primary"></i>
+                              {record.partnerPhone || 'N/A'}
+                            </div>
+                            {record.partnerEmail && (
+                              <div
+                                className="small text-muted text-truncate"
+                                style={{ fontSize: '0.75rem' }}
+                                title={record.partnerEmail}
+                              >
+                                {record.partnerEmail}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Package & Category */}
+                          <td>
+                            <div className="fw-semibold text-dark text-truncate" title={record.packageName}>
+                              {record.packageName || 'N/A'}
+                            </div>
+                            <span
+                              className="badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-1"
+                              style={{ fontSize: '0.72rem' }}
+                            >
+                              {record.categoryName || 'N/A'}
+                            </span>
+                          </td>
+
+                          {/* Price */}
+                          <td>
+                            <span className="fw-bold text-success">₹{finalPrice}</span>
+                          </td>
+
+                          {/* Expiry Date */}
+                          <td>
+                            <div className="small fw-semibold text-dark text-nowrap">
+                              <i className="bi bi-calendar-x me-1 text-danger"></i>
+                              {formatDate(record.planEndDate)}
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="text-center">
+                            <span
+                              className={`badge ${
+                                isStyleActive ? 'bg-success' : 'bg-danger'
+                              } text-uppercase`}
+                              style={{ fontSize: '0.72rem' }}
+                            >
+                              {record.status || 'expired'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View (< 768px) */}
+              <div className="d-md-none d-flex flex-column gap-2">
+                {subscriptions.map((record, index) => {
+                  const srNo = (currentPage - 1) * limit + index + 1;
+                  const finalPrice = record.packagePrice || record.packageAmount || 0;
+                  const isStyleActive = record.status === 'active' || record.status === 'on';
+
+                  return (
+                    <div key={record.subscriptionId ?? record.id ?? index} className="card border shadow-sm">
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <span className="badge bg-light text-secondary border me-2">#{srNo}</span>
+                            <span className="fw-bold text-dark">{record.partnerName || 'N/A'}</span>
+                            <div className="small text-muted mt-1">
+                              <i className="bi bi-telephone me-1 text-primary"></i>
+                              {record.partnerPhone || 'N/A'}
+                            </div>
+                          </div>
+                          <span className={`badge ${isStyleActive ? 'bg-success' : 'bg-danger'}`}>
+                            {record.status || 'expired'}
+                          </span>
+                        </div>
+
+                        <div className="row g-2 small border-top pt-2 mt-2">
+                          <div className="col-6">
+                            <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                              PACKAGE & CATEGORY
+                            </div>
+                            <div className="fw-semibold text-dark">{record.packageName || 'N/A'}</div>
+                            <span className="badge bg-secondary-subtle text-secondary mt-1">
+                              {record.categoryName || 'N/A'}
+                            </span>
+                          </div>
+                          <div className="col-6">
+                            <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                              PRICE & EXPIRY
+                            </div>
+                            <div className="fw-bold text-success">₹{finalPrice}</div>
+                            <div className="text-danger small">
+                              Exp: {formatDate(record.planEndDate)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Pagination */}
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
             <span className="text-muted small">
               Showing {subscriptions.length} of {totalItems} entries
             </span>
@@ -219,7 +282,10 @@ const ExpiredPartner = () => {
                   </button>
                 </li>
                 {[...Array(totalPages)].map((_, index) => (
-                  <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                  <li
+                    key={index + 1}
+                    className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                  >
                     <button
                       className="page-link"
                       onClick={() => handlePageChange(index + 1)}

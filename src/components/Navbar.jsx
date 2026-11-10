@@ -1,7 +1,12 @@
 import React from 'react';
 import LogoutButton from './common/LogoutButton';
+import { getCurrentUser } from '../utils/auth';
 
 const Navbar = ({ onToggleSidebar, sidebarOpen = false, sidebarId = 'app-sidebar' }) => {
+  const currentUser = getCurrentUser();
+  const displayName = currentUser?.name || currentUser?.email || 'User';
+  const roleLabel = currentUser?.role ? currentUser.role.toUpperCase() : null;
+
   return (
     <nav className="app-navbar navbar navbar-light bg-white border-bottom flex-shrink-0">
       <div className="container-fluid flex-nowrap gap-2">
@@ -17,9 +22,22 @@ const Navbar = ({ onToggleSidebar, sidebarOpen = false, sidebarId = 'app-sidebar
         </button>
 
         <div className="ms-auto d-flex align-items-center gap-3 min-w-0">
-          <small className="text-muted text-truncate">
-            <i className="bi bi-person-circle me-1" aria-hidden="true"></i>
-            Developer
+          <small className="text-muted text-truncate d-flex align-items-center gap-2">
+            <span>
+              <i className="bi bi-person-circle me-1" aria-hidden="true"></i>
+              {displayName}
+            </span>
+            {roleLabel && (
+              <span
+                className={`badge rounded-pill ${
+                  currentUser?.role === 'admin'
+                    ? 'bg-primary-subtle text-primary border border-primary-subtle'
+                    : 'bg-secondary-subtle text-secondary'
+                }`}
+              >
+                {roleLabel}
+              </span>
+            )}
           </small>
           <LogoutButton />
         </div>

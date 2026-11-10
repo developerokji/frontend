@@ -156,13 +156,8 @@
   color: #495057;
   background-color: #f8f9fa;
   white-space: nowrap;
-}
-
-.table thead th {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table td {
@@ -501,4 +496,11 @@ input[type='datetime-local'].form-control {
   .partner-stepper-line {
     margin-top: 14px;
   }
+}
+
+
+/* Ensure separated buttons in a btn-group with gap keep rounded corners */
+.btn-group.gap-1 > .btn,
+.btn-group.gap-2 > .btn {
+  border-radius: 0.25rem !important;
 }

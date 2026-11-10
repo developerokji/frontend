@@ -37,37 +37,35 @@ const UsersPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <div className="btn-group" role="group">
-          <CustomButton 
-            variant="primary" 
+      render: () => (
+        <div className="d-inline-flex align-items-center gap-2 flex-nowrap">
+          <CustomButton
+            variant="primary"
             size="sm"
             icon="bi-pencil"
             tooltip="Edit User"
-          >
-          </CustomButton>
-          <CustomButton 
-            variant="danger" 
+          />
+          <CustomButton
+            variant="danger"
             size="sm"
             icon="bi-trash"
             tooltip="Delete User"
-          >
-          </CustomButton>
+          />
         </div>
       )
     }
   ];
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid p-3 p-lg-4 w-100 min-w-0">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h2 className="fw-bold h4 mb-0">Users Management</h2>
-        <CustomButton variant="primary" icon="bi-plus-circle">
+        <h4 className="fw-bold mb-0">Users Management</h4>
+        <CustomButton variant="primary" size="sm" icon="bi-plus-circle">
           Add User
         </CustomButton>
       </div>
 
-      <div className="card">
+      <div className="card shadow-sm border-0">
         <div className="card-body">
           <DataTable
             columns={columns}
