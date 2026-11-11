@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
@@ -29,9 +29,48 @@ import ExpiredPartner from './components/ExpiredPartner';
 const CategoriesPage = () => <div className="p-4"><h2>Categories Management</h2><p>Categories content will go here...</p></div>;
 const PartnerPage = () => <div className="p-4"><h2>Partner Management</h2><p>Partner content will go here...</p></div>;
 
+const ROUTE_TITLES = {
+  '/login': 'Login | OKJi',
+  '/dashboard': 'Dashboard | OKJi',
+  '/stories': 'Stories | OKJi',
+  '/locality': 'Locality | OKJi',
+  '/banner': 'Banner | OKJi',
+  '/categories': 'Categories | OKJi',
+  '/categories/add': 'Add Category | OKJi',
+  '/categories/subcategory': 'Add Sub Category | OKJi',
+  '/client': 'Client | OKJi',
+  '/partner': 'Partner | OKJi',
+  '/partner/list': 'Partner List | OKJi',
+  '/partner/subscription': 'Subscription Partner | OKJi',
+  '/partner/expire': 'Expire Partner | OKJi',
+  '/services': 'Services | OKJi',
+  '/package': 'Package | OKJi',
+  '/lead': 'Lead | OKJi',
+  '/users': 'Users | OKJi',
+  '/settings': 'Settings | OKJi',
+  '/payment-success': 'Payment Status | OKJi',
+};
+
+const PageTitleUpdater = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (ROUTE_TITLES[pathname]) {
+      document.title = ROUTE_TITLES[pathname];
+    } else if (pathname.startsWith('/payment/')) {
+      document.title = 'Payment | OKJi';
+    } else {
+      document.title = 'Dashboard | OKJi';
+    }
+  }, [pathname]);
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <PageTitleUpdater />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

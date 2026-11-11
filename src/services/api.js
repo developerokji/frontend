@@ -965,10 +965,10 @@ export const partnerSubscriptionsAPI = {
 
 // Bookings API (Leads)
 export const bookingsAPI = {
-  getAll: async (page = 1, limit = 25, search = '') => {
+  getAll: async (page = 1, limit = 25, search = '', filters = {}) => {
     try {
       const response = await api.get('/bookings', {
-        params: { page, limit, search }
+        params: { page, limit, search, ...filters }
       });
       return response.data;
     } catch (error) {
@@ -983,6 +983,36 @@ export const bookingsAPI = {
       return response.data;
     } catch (error) {
       console.error('Get Booking Error:', error);
+      throw error;
+    }
+  },
+
+  updateStatus: async (id, payload) => {
+    try {
+      const response = await api.patch(`/bookings/${id}`, payload);
+      return response;
+    } catch (error) {
+      console.error('Update Booking Status Error:', error);
+      throw error;
+    }
+  },
+
+  getEligiblePartners: async (id) => {
+    try {
+      const response = await api.get(`/bookings/${id}/eligible-partners`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Eligible Partners Error:', error);
+      throw error;
+    }
+  },
+
+  reassignPartner: async (id, payload) => {
+    try {
+      const response = await api.post(`/bookings/${id}/reassign`, payload);
+      return response;
+    } catch (error) {
+      console.error('Reassign Partner Error:', error);
       throw error;
     }
   }
@@ -1209,3 +1239,31 @@ export const paymentAPI = {
   }
 };
 
+
+// Settings API
+export const settingsAPI = {
+  getAll: async () => {
+    const response = await api.get('/settings/all');
+    return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/settings/categories');
+    return response.data;
+  },
+
+  getCategory: async (category) => {
+    const response = await api.get(`/settings/${category}`);
+    return response.data;
+  },
+
+  updateCategory: async (category, payload) => {
+    const response = await api.patch(`/settings/${category}`, payload);
+    return response.data;
+  },
+
+  updateKey: async (key, value) => {
+    const response = await api.patch(`/settings/key/${key}`, { value });
+    return response.data;
+  },
+};

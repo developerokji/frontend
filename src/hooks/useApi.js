@@ -1,5 +1,30 @@
-import { useState, useEffect, useCallback } from 'react';
-import { storiesAPI, usersAPI, localitiesAPI, bannersAPI, dashboardAPI, statesAPI, citiesAPI, categoriesAPI, subCategoriesAPI, authAPI } from '../services/api';
+import { useState, useEffect } from 'react';
+import {
+  storiesAPI,
+  usersAPI,
+  localitiesAPI,
+  bannersAPI,
+  dashboardAPI,
+  statesAPI,
+  citiesAPI,
+  categoriesAPI,
+  subCategoriesAPI,
+} from '../services/api';
+
+// Reusable debounce hook so search inputs don't fire API queries on every keystroke
+export const useDebounce = (value, delay = 350) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 // Custom hook for API data management
 export const useApi = (apiFunction, dependencies = []) => {
@@ -11,7 +36,6 @@ export const useApi = (apiFunction, dependencies = []) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('API call with args:', args); // Debug log
       const result = await apiFunction(...args);
       setData(result.data || result);
     } catch (err) {
@@ -31,22 +55,25 @@ export const useApi = (apiFunction, dependencies = []) => {
   return { data, loading, error, refetch };
 };
 
-// Specific hooks for different data types
-export const useStories = (page = 1, limit, search = '') => {
-  return useApi(() => storiesAPI.getAll(page, limit, search),[page, limit, search]);
+// Specific hooks for different data types (with automatic 350ms search debounce)
+export const useStories = (page = 1, limit = 25, search = '') => {
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => storiesAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };
 
 export const useUsers = (page = 1, limit = 10, search = '') => {
-  return useApi(usersAPI.getAll, [page, limit, search]);
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => usersAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };
 
-export const useLocalities = (page = 1, limit = 10, search = '') => {
-  console.log('useLocalities called with:', { page, limit, search });
-  return useApi(() => localitiesAPI.getAll(page, limit, search), [page, limit, search]);
+export const useLocalities = (page = 1, limit = 25, search = '') => {
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => localitiesAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };
 
-export const useBanners = (page = 1, limit = 10, search = '') => {
-  return useApi(() => bannersAPI.getAll(page, limit, search), [page, limit, search]);
+export const useBanners = (page = 1, limit = 25, search = '') => {
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => bannersAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };
 
 export const useDashboardStats = () => {
@@ -61,22 +88,22 @@ export const useStates = () => {
 export const useCities = (stateId) => {
   return useApi(
     () => {
-      // Only make API call if stateId is provided and not empty
       if (stateId && stateId !== '') {
         return citiesAPI.getByState(stateId);
       }
-      // Return empty data when no stateId
       return Promise.resolve({ data: [] });
     },
-    [stateId] // Always include stateId in dependencies
+    [stateId]
   );
 };
 
 // Categories and SubCategories hooks
-export const useCategories = (page = 1, limit = 10, search = '') => {
-  return useApi(() => categoriesAPI.getAll(page, limit, search), [page, limit, search]);
+export const useCategories = (page = 1, limit = 25, search = '') => {
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => categoriesAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };
 
-export const useSubCategories = (page = 1, limit = 10, search = '') => {
-  return useApi(() => subCategoriesAPI.getAll(page, limit, search), [page, limit, search]);
+export const useSubCategories = (page = 1, limit = 25, search = '') => {
+  const debouncedSearch = useDebounce(search, 350);
+  return useApi(() => subCategoriesAPI.getAll(page, limit, debouncedSearch), [page, limit, debouncedSearch]);
 };

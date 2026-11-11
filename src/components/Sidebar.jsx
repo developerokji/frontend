@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { isAdminUser } from '../utils/auth';
 
 const menuItems = [
   { icon: 'bi-speedometer2', text: 'Dashboard', path: '/dashboard' },
@@ -12,6 +13,7 @@ const menuItems = [
   { icon: 'bi-people', text: 'Partner', path: '/partner', hasSubmenu: true },
   { icon: 'bi-box', text: 'Package', path: '/package' },
   { icon: 'bi-telephone', text: 'Lead', path: '/lead' },
+  { icon: 'bi-sliders', text: 'Settings', path: '/settings', adminOnly: true },
 ];
 
 const submenus = {
@@ -32,6 +34,8 @@ const submenus = {
  */
 const Sidebar = ({ id = 'app-sidebar', open = false, onClose }) => {
   const location = useLocation();
+  const isAdmin = isAdminUser();
+  const visibleMenuItems = menuItems.filter((item) => !item.adminOnly || isAdmin);
   // Start with the section that contains the current page expanded.
   const [expanded, setExpanded] = useState(() => ({
     Partner: location.pathname.startsWith('/partner'),
@@ -58,7 +62,7 @@ const Sidebar = ({ id = 'app-sidebar', open = false, onClose }) => {
 
       <nav>
         <ul className="nav nav-pills flex-column mb-auto">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             if (!item.hasSubmenu) {
               return (
                 <li className="nav-item" key={item.path}>

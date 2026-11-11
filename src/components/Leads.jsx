@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookingModal from './common/BookingModal';
-import DataTable from './common/DataTable';
 import PaginationDropdown from './common/PaginationDropdown';
 import { bookingsAPI, paymentAPI } from '../services/api';
-import { CustomButton } from './common/CustomButton';
+import { useDebounce } from '../hooks/useApi';
+import { isAdminUser } from '../utils/auth';
 
 const Leads = () => {
   const navigate = useNavigate();
+  const isAdmin = isAdminUser();
   const [showModal, setShowModal] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState('details');
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 350);
+  const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [cashfreeMode, setCashfreeMode] = useState('dev');
-  const [modeLoading, setModeLoading] = useState(false);
-
   const [limit, setLimit] = useState(25);
 
   // Load bookings
@@ -27,7 +29,11 @@ const Leads = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await bookingsAPI.getAll(currentPage, limit, searchTerm);
+      const filters = {};
+      if (statusFilter) {
+        filters.workStatus = statusFilter;
+      }
+      const response = await bookingsAPI.getAll(currentPage, limit, debouncedSearch, filters);
       if (response.data && response.data.items) {
         setBookings(response.data.items);
         setTotalItems(response.data.meta?.totalItems || response.data.items.length);
@@ -41,9 +47,9 @@ const Leads = () => {
         setTotalItems(Array.isArray(response.data) ? response.data.length : 0);
         setTotalPages(1);
       }
-    } catch (error) {
-      console.error('Failed to load bookings:', error);
-      setError(error.message || 'Failed to load bookings. Please try again.');
+    } catch (err) {
+      console.error('Failed to load bookings:', err);
+      setError(err.message || 'Failed to load bookings. Please try again.');
       setBookings([]);
       setTotalItems(0);
       setTotalPages(0);
@@ -52,7 +58,7 @@ const Leads = () => {
     }
   };
 
-  // Load Cashfree gateway mode (UAT 'dev' vs Production 'pro' matching settings.server enum('dev','pro'))
+  // Load Cashfree gateway mode (UAT 'dev' vs Production 'pro')
   const loadCashfreeMode = async () => {
     try {
       const data = await paymentAPI.getCashfreeSettings();
@@ -67,30 +73,19 @@ const Leads = () => {
     }
   };
 
-  const handleToggleCashfreeMode = async (newMode) => {
-    if (newMode === cashfreeMode || modeLoading) return;
-    try {
-      setModeLoading(true);
-      await paymentAPI.setCashfreeServerMode(newMode);
-      setCashfreeMode(newMode);
-    } catch (err) {
-      console.error('Failed to switch Cashfree mode:', err);
-      setError(err.response?.data?.message || 'Failed to switch payment environment mode.');
-    } finally {
-      setModeLoading(false);
-    }
-  };
-
   useEffect(() => {
     loadBookings();
-  }, [currentPage, searchTerm, limit]);
+  }, [currentPage, debouncedSearch, statusFilter, limit]);
 
   useEffect(() => {
-    loadCashfreeMode();
-  }, []);
+    if (isAdmin) {
+      loadCashfreeMode();
+    }
+  }, [isAdmin]);
 
-  const handleViewBooking = (booking) => {
+  const handleOpenBookingModal = (booking, tab = 'details') => {
     setSelectedBooking(booking);
+    setModalInitialTab(tab);
     setShowModal(true);
   };
 
@@ -103,8 +98,20 @@ const Leads = () => {
     setSelectedBooking(null);
   };
 
+  const handleBookingUpdated = (updatedBooking) => {
+    if (updatedBooking) {
+      setSelectedBooking(updatedBooking);
+    }
+    loadBookings();
+  };
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
     setCurrentPage(1);
   };
 
@@ -130,7 +137,7 @@ const Leads = () => {
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A';
     const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
+    const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${ampm}`;
@@ -142,28 +149,29 @@ const Leads = () => {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      'active': { class: 'bg-success', label: 'Active' },
-      'on_going': { class: 'bg-primary', label: 'On Going' },
-      'pending': { class: 'bg-warning text-dark', label: 'Pending' },
-      'review': { class: 'bg-warning text-dark', label: 'Review' },
-      'cancel': { class: 'bg-danger', label: 'Cancelled' },
-      'payment_pending': { class: 'bg-info text-dark', label: 'Payment Pending' },
-      'completed': { class: 'bg-primary', label: 'Completed' },
-      'close': { class: 'bg-secondary', label: 'Closed' },
+      active: { class: 'bg-success-subtle text-success border border-success-subtle', label: 'Active' },
+      on_going: { class: 'bg-primary-subtle text-primary border border-primary-subtle', label: 'On Going' },
+      pending: { class: 'bg-warning-subtle text-dark border border-warning-subtle', label: 'Pending' },
+      review: { class: 'bg-warning-subtle text-dark border border-warning-subtle', label: 'Review' },
+      cancel: { class: 'bg-danger-subtle text-danger border border-danger-subtle', label: 'Cancelled' },
+      payment_pending: { class: 'bg-info-subtle text-dark border border-info-subtle', label: 'Payment Pending' },
+      completed: { class: 'bg-primary-subtle text-primary border border-primary-subtle', label: 'Completed' },
+      close: { class: 'bg-secondary-subtle text-secondary border border-secondary-subtle', label: 'Closed' },
     };
-    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status || 'N/A' };
-    return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
+    const statusInfo = statusMap[status] || { class: 'bg-secondary-subtle text-secondary', label: status || 'N/A' };
+    return <span className={`badge ${statusInfo.class} fw-medium`}>{statusInfo.label}</span>;
   };
 
   const getPaymentBadge = (status) => {
     const statusMap = {
-      'not_received': { class: 'bg-danger', label: 'Not Received' },
-      'received': { class: 'bg-success', label: 'Received' },
-      'not_transfer': { class: 'bg-danger', label: 'Not Transferred' },
-      'transferred': { class: 'bg-success', label: 'Transferred' }
+      not_received: { class: 'bg-danger-subtle text-danger border border-danger-subtle', label: 'Unpaid' },
+      received: { class: 'bg-success-subtle text-success border border-success-subtle', label: 'Received' },
+      not_transfer: { class: 'bg-danger-subtle text-danger border border-danger-subtle', label: 'Not Transferred' },
+      transfer: { class: 'bg-success-subtle text-success border border-success-subtle', label: 'Transferred' },
+      transferred: { class: 'bg-success-subtle text-success border border-success-subtle', label: 'Transferred' },
     };
-    const statusInfo = statusMap[status] || { class: 'bg-secondary', label: status || 'N/A' };
-    return <span className={`badge ${statusInfo.class}`}>{statusInfo.label}</span>;
+    const statusInfo = statusMap[status] || { class: 'bg-secondary-subtle text-secondary', label: status || 'N/A' };
+    return <span className={`badge ${statusInfo.class} fw-medium`}>{statusInfo.label}</span>;
   };
 
   const isBookingPayable = (record) => {
@@ -171,87 +179,158 @@ const Leads = () => {
     return record.customerPayment !== 'received' && record.workStatus !== 'cancel';
   };
 
-  return (
-    <div className="h-100 d-flex flex-column p-3 p-lg-4 w-100">
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 flex-shrink-0">
-        <div className="d-flex align-items-center gap-3">
-          <h4 className="mb-0">Leads</h4>
-          <span
-            className={`badge ${
-              cashfreeMode === 'pro'
-                ? 'bg-danger-subtle text-danger border border-danger'
-                : 'bg-warning-subtle text-dark border border-warning'
-            } px-3 py-2 rounded-pill`}
-          >
-            <i className={`bi ${cashfreeMode === 'pro' ? 'bi-lightning-charge-fill' : 'bi-tools'} me-1`}></i>
-            Gateway: {cashfreeMode === 'pro' ? 'Production (Live)' : 'UAT (Sandbox)'}
-          </span>
-        </div>
+  const renderActionButtons = (record) => (
+    <div className="d-inline-flex align-items-center gap-1 flex-nowrap">
+      <button
+        type="button"
+        className="btn btn-sm btn-primary px-2 py-1"
+        onClick={() => handleOpenBookingModal(record, 'details')}
+        title="View Lead Details"
+      >
+        <i className="bi bi-eye"></i>
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-warning px-2 py-1"
+        onClick={() => handleOpenBookingModal(record, 'status')}
+        title="Change Lead Status"
+      >
+        <i className="bi bi-pencil-square"></i>
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-info px-2 py-1"
+        onClick={() => handleOpenBookingModal(record, 'reassign')}
+        title="Re-assign Partner"
+      >
+        <i className="bi bi-person-lines-fill"></i>
+      </button>
+      {isBookingPayable(record) ? (
+        <button
+          type="button"
+          className="btn btn-sm btn-success px-2 py-1 text-nowrap"
+          onClick={() => handlePayBooking(record)}
+          title={`Pay ${formatCurrency(record.total)}`}
+        >
+          <i className="bi bi-credit-card me-1"></i>Pay
+        </button>
+      ) : record.customerPayment === 'received' ? (
+        <span
+          className="badge bg-success-subtle text-success border border-success px-2 py-1 text-nowrap"
+          title="Payment Completed"
+        >
+          <i className="bi bi-check-circle-fill me-1"></i>Paid
+        </span>
+      ) : null}
+    </div>
+  );
 
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted small fw-semibold me-1">Payment Mode:</span>
-          <div className="btn-group btn-group-sm" role="group" aria-label="Payment Gateway Environment">
+  return (
+    <div className="container-fluid p-2 p-md-3 p-xl-4 w-100 min-w-0">
+      {/* Top Header */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h4 className="mb-0 fw-bold">Leads</h4>
+
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {isAdmin && (
             <button
               type="button"
-              className={`btn ${cashfreeMode !== 'pro' ? 'btn-warning fw-semibold' : 'btn-outline-secondary'}`}
-              disabled={modeLoading}
-              onClick={() => handleToggleCashfreeMode('dev')}
+              className={`btn btn-sm ${
+                cashfreeMode === 'pro' ? 'btn-outline-danger' : 'btn-outline-warning text-dark'
+              }`}
+              onClick={() => navigate('/settings')}
+              title="Click to configure Payment Gateway in Settings"
             >
-              <i className="bi bi-bug me-1"></i>UAT (Sandbox)
+              <i
+                className={`bi ${
+                  cashfreeMode === 'pro' ? 'bi-lightning-charge-fill' : 'bi-tools'
+                } me-1`}
+              ></i>
+              Gateway: {cashfreeMode === 'pro' ? 'Production' : 'UAT (Sandbox)'}
+              <i className="bi bi-gear ms-2"></i>
             </button>
-            <button
-              type="button"
-              className={`btn ${cashfreeMode === 'pro' ? 'btn-danger fw-semibold' : 'btn-outline-secondary'}`}
-              disabled={modeLoading}
-              onClick={() => handleToggleCashfreeMode('pro')}
-            >
-              <i className="bi bi-shield-check me-1"></i>Production
-            </button>
-          </div>
-          <CustomButton
-            variant="outline-primary"
-            size="sm"
-            icon="bi-arrow-clockwise"
+          )}
+
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
             onClick={loadBookings}
             disabled={loading}
-            tooltip="Refresh Leads"
-          />
+          >
+            <i className="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>
+            Refresh
+          </button>
         </div>
       </div>
 
-      <div className="card flex-grow-1 d-flex flex-column w-100">
-        <div className="card-body flex-grow-1 d-flex flex-column w-100">
-          <div className="row mb-3 flex-shrink-0">
-            <div className="col-12 col-md-6 col-lg-4">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
+      {/* Main Card */}
+      <div className="card shadow-sm border-0 w-100 min-w-0">
+        <div className="card-body p-2 p-sm-3 w-100 min-w-0">
+          {/* Filters Toolbar */}
+          <div className="row g-2 mb-3 align-items-center">
+            <div className="col-12 col-md-5 col-lg-5">
+              <div className="input-group input-group-sm">
+                <span className="input-group-text bg-white">
+                  <i className="bi bi-search text-muted"></i>
                 </span>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search leads..."
+                  placeholder="Search order ID, client, phone, partner, pincode..."
                   value={searchTerm}
                   onChange={handleSearch}
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <i className="bi bi-x"></i>
+                  </button>
+                )}
               </div>
             </div>
-            <div className="col-12 col-md-6 col-lg-4">
-              <PaginationDropdown 
-                limit={limit} 
+
+            <div className="col-6 col-md-4 col-lg-4">
+              <select
+                className="form-select form-select-sm"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+              >
+                <option value="">All Work Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="review">Review</option>
+                <option value="active">Active</option>
+                <option value="on_going">On Going</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="close">Closed</option>
+                <option value="cancel">Cancelled</option>
+              </select>
+            </div>
+
+            <div className="col-6 col-md-3 col-lg-3">
+              <PaginationDropdown
+                limit={limit}
                 onLimitChange={handleLimitChange}
                 disabled={loading}
               />
             </div>
           </div>
 
+          {/* Error Banner */}
           {error && (
-            <div className="alert alert-danger mb-3">
-              <i className="bi bi-exclamation-triangle me-2"></i>
-              {error}
-              <button 
-                type="button" 
-                className="btn btn-sm btn-outline-danger ms-2"
+            <div className="alert alert-danger py-2 px-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                {error}
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
                 onClick={loadBookings}
               >
                 <i className="bi bi-arrow-clockwise me-1"></i>
@@ -260,124 +339,183 @@ const Leads = () => {
             </div>
           )}
 
-          <div className="table-responsive flex-grow-1">
-            <DataTable
-              columns={[
-                // {
-                //   title: 'Id',
-                //   key: 'id',
-                //   render: (text, record) => (
-                //     <div className="fw-semibold">{text}</div>
-                //   )
-                // },
-                {
-                  title: 'Booking Id',
-                  key: 'bookingOrderId',
-                  render: (text, record) => (
-                    <div className="fw-semibold text-primary">{text || `#${record.id}`}</div>
-                  )
-                },
-                {
-                  title: 'Service',
-                  key: 'serviceName',
-                  render: (text, record) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Client Name',
-                  key: 'clientName',
-                  render: (text, record) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Client Number',
-                  key: 'clientPhone',
-                  render: (text, record) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Date',
-                  key: 'workDate',
-                  render: (text, record) => (
-                    <div className="text-muted">{formatDate(text)}</div>
-                  )
-                },
-                {
-                  title: 'Time',
-                  key: 'workTime',
-                  render: (text, record) => (
-                    <div className="text-muted">{formatTime(text)}</div>
-                  )
-                },
-                {
-                  title: 'Partner',
-                  key: 'acceptedPartnerName',
-                  render: (text, record) => (
-                    <div className="text-muted">{text || 'N/A'}</div>
-                  )
-                },
-                {
-                  title: 'Total',
-                  key: 'total',
-                  render: (text, record) => (
-                    <div className="fw-bold text-dark">{formatCurrency(text)}</div>
-                  )
-                },
-                {
-                  title: 'Work Status',
-                  key: 'workStatus',
-                  render: (text) => getStatusBadge(text)
-                },
-                {
-                  title: 'Payment',
-                  key: 'customerPayment',
-                  render: (text) => getPaymentBadge(text)
-                },
-                {
-                  title: 'Action',
-                  key: 'actions',
-                  render: (_, record) => (
-                    <div className="d-flex align-items-center gap-2">
-                      <CustomButton 
-                        variant="primary" 
-                        size="sm"
-                        icon="bi-eye"
-                        onClick={() => handleViewBooking(record)}
-                        tooltip="View Details"
-                      >
-                      </CustomButton>
-                      {isBookingPayable(record) ? (
-                        <CustomButton
-                          variant="success"
-                          size="sm"
-                          icon="bi-credit-card"
-                          onClick={() => handlePayBooking(record)}
-                          tooltip={`Pay ${formatCurrency(record.total)}`}
-                        >
-                          Pay
-                        </CustomButton>
-                      ) : record.customerPayment === 'received' ? (
-                        <span
-                          className="badge bg-success-subtle text-success border border-success px-2 py-1"
-                          title="Payment Completed"
-                        >
-                          <i className="bi bi-check-circle-fill me-1"></i>Paid
-                        </span>
-                      ) : null}
-                    </div>
-                  )
-                },
-              ]}
-              data={bookings}
-              loading={loading}
-              className="flex-grow-1"
-            />
-          </div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+              <span className="text-muted">Loading leads...</span>
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+              <div className="text-muted">No leads found</div>
+            </div>
+          ) : (
+            <>
+              {/* Desktop & Laptop Table View (fits 100% zoom without horizontal overflow) */}
+              <div className="d-none d-md-block table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th scope="col" className="ps-3">Lead / Service</th>
+                      <th scope="col">Client</th>
+                      <th scope="col">Schedule</th>
+                      <th scope="col">Partner</th>
+                      <th scope="col">Total</th>
+                      <th scope="col">Status & Payment</th>
+                      <th scope="col" className="text-end pe-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bookings.map((record) => (
+                      <tr key={record.id}>
+                        {/* 1. Lead ID + Service */}
+                        <td className="ps-3">
+                          <div
+                            className="fw-bold text-primary small cursor-pointer"
+                            onClick={() => handleOpenBookingModal(record, 'details')}
+                          >
+                            {record.bookingOrderId || `#${record.id}`}
+                          </div>
+                          <div
+                            className="text-dark fw-medium text-truncate"
+                            style={{ maxWidth: '170px' }}
+                            title={record.serviceName || 'N/A'}
+                          >
+                            {record.serviceName || 'N/A'}
+                          </div>
+                        </td>
 
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-3 flex-shrink-0">
+                        {/* 2. Client Name + Phone */}
+                        <td>
+                          <div
+                            className="fw-semibold text-dark text-truncate"
+                            style={{ maxWidth: '150px' }}
+                            title={record.clientName || 'N/A'}
+                          >
+                            {record.clientName || 'N/A'}
+                          </div>
+                          <div className="text-muted small text-nowrap">
+                            <i className="bi bi-telephone me-1"></i>
+                            {record.clientPhone || 'N/A'}
+                          </div>
+                        </td>
+
+                        {/* 3. Date + Time */}
+                        <td className="text-nowrap">
+                          <div className="fw-medium text-dark small">{formatDate(record.workDate)}</div>
+                          <div className="text-muted small">
+                            <i className="bi bi-clock me-1"></i>
+                            {formatTime(record.workTime)}
+                          </div>
+                        </td>
+
+                        {/* 4. Partner + Pincode */}
+                        <td>
+                          {record.acceptedPartnerName ? (
+                            <div
+                              className="fw-semibold text-dark text-truncate"
+                              style={{ maxWidth: '140px' }}
+                              title={record.acceptedPartnerName}
+                            >
+                              {record.acceptedPartnerName}
+                            </div>
+                          ) : (
+                            <span className="badge bg-warning-subtle text-dark border">
+                              Unassigned
+                            </span>
+                          )}
+                          {record.pincode && (
+                            <div className="text-muted small text-nowrap">
+                              <i className="bi bi-geo-alt me-1"></i>
+                              {record.pincode}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* 5. Total */}
+                        <td className="text-nowrap">
+                          <span className="fw-bold text-dark">{formatCurrency(record.total)}</span>
+                        </td>
+
+                        {/* 6. Status & Payment Badges */}
+                        <td>
+                          <div className="d-flex flex-wrap align-items-center gap-1">
+                            {getStatusBadge(record.workStatus)}
+                            {getPaymentBadge(record.customerPayment)}
+                          </div>
+                        </td>
+
+                        {/* 7. Actions (Always Horizontal) */}
+                        <td className="text-end pe-3 text-nowrap">
+                          {renderActionButtons(record)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile / Small Screen Card View (< 768px) */}
+              <div className="d-md-none d-flex flex-column gap-2">
+                {bookings.map((record) => (
+                  <div key={record.id} className="border rounded-3 p-3 bg-white shadow-sm">
+                    <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                      <div>
+                        <div className="fw-bold text-primary small">
+                          {record.bookingOrderId || `#${record.id}`}
+                        </div>
+                        <div className="fw-semibold text-dark">{record.serviceName || 'N/A'}</div>
+                      </div>
+                      <div className="text-end">
+                        <div className="fw-bold text-dark">{formatCurrency(record.total)}</div>
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-wrap gap-1 mb-2">
+                      {getStatusBadge(record.workStatus)}
+                      {getPaymentBadge(record.customerPayment)}
+                    </div>
+
+                    <div className="row g-2 small text-muted mb-3">
+                      <div className="col-6">
+                        <div className="text-dark fw-medium">{record.clientName || 'N/A'}</div>
+                        <div>
+                          <i className="bi bi-telephone me-1"></i>
+                          {record.clientPhone || 'N/A'}
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="text-dark fw-medium">{formatDate(record.workDate)}</div>
+                        <div>
+                          <i className="bi bi-clock me-1"></i>
+                          {formatTime(record.workTime)}
+                        </div>
+                      </div>
+                      <div className="col-12 pt-1 border-top">
+                        <span className="text-muted me-1">Partner:</span>
+                        <span className="fw-semibold text-dark">
+                          {record.acceptedPartnerName || 'Unassigned'}
+                        </span>
+                        {record.pincode && (
+                          <span className="ms-2 badge bg-light text-dark border">
+                            Pin: {record.pincode}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end pt-2 border-top">
+                      {renderActionButtons(record)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Pagination Footer */}
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
             <span className="text-muted small">
               Showing {bookings.length} of {totalItems} entries
             </span>
@@ -389,11 +527,14 @@ const Leads = () => {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                   >
-                    <span aria-hidden="true">&laquo;</span> Previous
+                    <span aria-hidden="true">&laquo;</span> Prev
                   </button>
                 </li>
                 {[...Array(totalPages)].map((_, index) => (
-                  <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                  <li
+                    key={index + 1}
+                    className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                  >
                     <button
                       className="page-link"
                       onClick={() => handlePageChange(index + 1)}
@@ -421,6 +562,8 @@ const Leads = () => {
         show={showModal}
         handleClose={handleCloseModal}
         bookingData={selectedBooking}
+        initialTab={modalInitialTab}
+        onBookingUpdated={handleBookingUpdated}
       />
     </div>
   );
