@@ -43,6 +43,12 @@ const TABS = [
     categories: ['fees'],
   },
   {
+    id: 'slots',
+    label: 'Booking Hours & Timeframe',
+    icon: 'bi-clock-history',
+    categories: ['slots'],
+  },
+  {
     id: 'server_otp',
     label: 'Server & MSG91 OTP',
     icon: 'bi-hdd-network',
@@ -453,6 +459,136 @@ const SettingsPage = () => {
     </div>
   );
 
+  const renderSlotsSettings = () => {
+    const startH = Number.isFinite(Number(formData.BOOKING_START_HOUR))
+      ? Math.min(23, Math.max(0, Math.floor(Number(formData.BOOKING_START_HOUR))))
+      : 9;
+    const endH = Number.isFinite(Number(formData.BOOKING_END_HOUR))
+      ? Math.min(23, Math.max(startH, Math.floor(Number(formData.BOOKING_END_HOUR))))
+      : 18;
+    const intervalH = Number.isFinite(Number(formData.BOOKING_SLOT_INTERVAL))
+      ? Math.min(24, Math.max(1, Math.floor(Number(formData.BOOKING_SLOT_INTERVAL))))
+      : 2;
+    const maxDays = Number.isFinite(Number(formData.BOOKING_MAX_DAYS))
+      ? Math.min(30, Math.max(1, Math.floor(Number(formData.BOOKING_MAX_DAYS))))
+      : 3;
+
+    const previewSlots = [];
+    for (let h = startH; h <= endH; h += intervalH) {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      previewSlots.push(`${hour12}:00 ${period}`);
+    }
+
+    return (
+      <div className="row g-3">
+        <div className="col-12 col-md-6">
+          <label className="form-label fw-semibold">
+            Booking Start Hour (24h){' '}
+            <code className="small text-muted fw-normal">(BOOKING_START_HOUR)</code>
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="23"
+            step="1"
+            className="form-control"
+            value={formData.BOOKING_START_HOUR ?? 9}
+            onChange={(e) => handleFieldChange('BOOKING_START_HOUR', e.target.value)}
+            placeholder="9"
+          />
+          <div className="form-text">
+            First booking slot hour of the day in 24-hour format (e.g., <code>9</code> = 9:00 AM).
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6">
+          <label className="form-label fw-semibold">
+            Booking End / Cutoff Hour (24h){' '}
+            <code className="small text-muted fw-normal">(BOOKING_END_HOUR)</code>
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="23"
+            step="1"
+            className="form-control"
+            value={formData.BOOKING_END_HOUR ?? 18}
+            onChange={(e) => handleFieldChange('BOOKING_END_HOUR', e.target.value)}
+            placeholder="18"
+          />
+          <div className="form-text">
+            Latest hour for slots & daily cutoff in 24-hour format (e.g., <code>18</code> = 6:00 PM).
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6">
+          <label className="form-label fw-semibold">
+            Slot Interval / Gap (Hours){' '}
+            <code className="small text-muted fw-normal">(BOOKING_SLOT_INTERVAL)</code>
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="12"
+            step="1"
+            className="form-control"
+            value={formData.BOOKING_SLOT_INTERVAL ?? 2}
+            onChange={(e) => handleFieldChange('BOOKING_SLOT_INTERVAL', e.target.value)}
+            placeholder="2"
+          />
+          <div className="form-text">
+            Hour gap between consecutive time slots (e.g., <code>2</code> = every 2 hours,{' '}
+            <code>1</code> = every 1 hour).
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6">
+          <label className="form-label fw-semibold">
+            Booking Date Timeframe (Days){' '}
+            <code className="small text-muted fw-normal">(BOOKING_MAX_DAYS)</code>
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="30"
+            step="1"
+            className="form-control"
+            value={formData.BOOKING_MAX_DAYS ?? 3}
+            onChange={(e) => handleFieldChange('BOOKING_MAX_DAYS', e.target.value)}
+            placeholder="3"
+          />
+          <div className="form-text">
+            Number of upcoming selectable days returned by <code>/bookings/dates</code> (e.g.,{' '}
+            <code>3</code> days).
+          </div>
+        </div>
+
+        <div className="col-12 mt-3">
+          <div className="p-3 rounded-3 border bg-light">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+              <span className="fw-semibold small text-secondary">
+                <i className="bi bi-calendar2-check me-1 text-primary"></i>
+                Live Slot Preview ({previewSlots.length} slots/day • {maxDays}-day booking window)
+              </span>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              {previewSlots.map((slot) => (
+                <span
+                  key={slot}
+                  className="badge bg-white text-dark border px-3 py-2 fw-medium shadow-xs"
+                >
+                  <i className="bi bi-clock me-1 text-primary"></i>
+                  {slot}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderServerOtpSettings = () => (
     <div className="row g-3">
       <div className="col-12 col-md-6 col-xl-4">
@@ -713,6 +849,8 @@ const SettingsPage = () => {
         return renderCashfreeSettings();
       case 'fees':
         return renderFeesSettings();
+      case 'slots':
+        return renderSlotsSettings();
       case 'server_otp':
         return renderServerOtpSettings();
       case 'integrations':
