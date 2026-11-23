@@ -174,10 +174,13 @@ const BookingModal = ({
 
   const getLeadStatusBadge = (status) => {
     const map = {
-      assigned: { class: 'bg-success', label: 'Assigned' },
+      pending: { class: 'bg-info text-dark', label: 'Broadcasted (Pending)' },
+      assigned: { class: 'bg-success', label: 'Accepted / Assigned' },
       reassigned: { class: 'bg-warning text-dark', label: 'Re-assigned' },
       completed: { class: 'bg-primary', label: 'Completed' },
       cancelled: { class: 'bg-danger', label: 'Cancelled' },
+      rejected: { class: 'bg-danger-subtle text-danger border border-danger', label: 'Declined' },
+      expired: { class: 'bg-secondary', label: 'Expired (Taken)' },
     };
     const info = map[status] || { class: 'bg-secondary', label: status || 'N/A' };
     return <span className={`badge ${info.class}`}>{info.label}</span>;
@@ -951,18 +954,23 @@ const BookingModal = ({
                                   <td>
                                     <span
                                       className={`badge ${
-                                        partner.isOnline && partner.isAvailable
-                                          ? 'bg-success'
-                                          : partner.isOnline
-                                            ? 'bg-info text-dark'
-                                            : 'bg-secondary'
+                                        partner.isBusy
+                                          ? 'bg-danger'
+                                          : partner.isOnline && partner.isAvailable
+                                            ? 'bg-success'
+                                            : partner.isOnline
+                                              ? 'bg-info text-dark'
+                                              : 'bg-secondary'
                                       }`}
+                                      title={partner.busyReason || ''}
                                     >
-                                      {partner.isOnline && partner.isAvailable
-                                        ? 'Online & Available'
-                                        : partner.isOnline
-                                          ? 'Online'
-                                          : 'Offline'}
+                                      {partner.isBusy
+                                        ? 'Busy'
+                                        : partner.isOnline && partner.isAvailable
+                                          ? 'Online & Available'
+                                          : partner.isOnline
+                                            ? 'Online'
+                                            : 'Offline'}
                                     </span>
                                   </td>
                                   <td className="fw-semibold text-center">{partner.activeJobs}</td>
